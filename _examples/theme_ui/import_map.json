@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0?target=es2020",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?target=es2020",
+    "@emotion/react": "https://esm.sh/@emotion/react@11.10.5?target=es2020&external=react,react-dom",
+    "@theme-ui/core": "https://esm.sh/@theme-ui/core@0.15.4?target=es2020&external=react,@emotion/react",
+    "https://esm.sh/v100/@emotion/react@11.10.5/X-ZS9yZWFjdA/es2020/package.json.js": "./vendor/emotion_react_package.js"
+  }
+}
