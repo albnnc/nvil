@@ -4,6 +4,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
+import { App } from "./components/app.tsx";
 
 const root = document.getElementById("root");
-ReactDOM.render(<div>abc</div>, root);
+ReactDOM.render(<App />, root);

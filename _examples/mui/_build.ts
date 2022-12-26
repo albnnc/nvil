@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno run -A
 import { koat } from "../../koat.ts";
 import { path } from "../../deps.ts";
 import { createEsbuildPlugin } from "../../plugins/esbuild.ts";
@@ -11,7 +12,7 @@ await koat({
   entryPoints: ["./index.tsx"],
   plugins: [
     createEsbuildPlugin({
-      importMapURL: import.meta.resolve("../import_map.json"),
+      importMapURL: import.meta.resolve("./import_map.json"),
     }),
     createLiveReloadPlugin(),
     createHtmlTemplatePlugin({
