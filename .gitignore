@@ -1,0 +1,17 @@
+**/.cache
+**/.data
+**/.docker_images
+**/.DS_Store
+**/.idea
+**/.next
+**/.shared
+**/.swc
+**/.vscode
+**/*.pem
+**/node_modules
+**/output
+**/public/*sw*
+**/public/*workbox*
+tmp
+tmp.*
+tmp/
