@@ -24,6 +24,7 @@ export function build(
         write: false,
         bundle: true,
         minify: !dev,
+        target: "es2020",
         platform: "browser",
         format: "esm",
         logLevel: "error",
