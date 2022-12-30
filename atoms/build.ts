@@ -1,9 +1,7 @@
 import { Atom } from "../atom.ts";
-import * as esbuild from "https://deno.land/x/esbuild@v0.15.10/mod.js";
-import { denoPlugin } from "https://deno.land/x/esbuild_deno_loader@0.6.0/mod.ts";
-import { watchModule } from "../utils/watch_module.ts";
-import { async, log } from "../deps.ts";
+import { async, esbuild, esbuildDenoPlugin, log } from "../deps.ts";
 import { completePath } from "../utils/complete_path.ts";
+import { watchModule } from "../utils/watch_module.ts";
 
 export interface BuildConfig {
   scope?: string;
@@ -48,7 +46,7 @@ export function build(
               });
             },
           },
-          denoPlugin({
+          esbuildDenoPlugin({
             importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
           }),
         ],
