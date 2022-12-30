@@ -10,7 +10,7 @@ const importMapGlob = path.fromFileUrl(
 log.info("Searching for import maps");
 let importMap: Record<string, unknown> = {};
 for await (const v of fs.expandGlob(importMapGlob, { globstar: true })) {
-  if (!v.isFile) {
+  if (!v.isFile || v.path.includes(".vscode")) {
     continue;
   }
   log.info(`Found import map at ${path.relative(rootDir, v.path)}`);
