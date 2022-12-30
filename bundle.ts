@@ -1,8 +1,8 @@
-import { path } from "./deps.ts";
+import { fs, path } from "./deps.ts";
 
 export interface BundleChunk {
   data: Uint8Array;
-  entryPoint?: string;
+  scope?: string;
 }
 
 export class Bundle extends Map<string, BundleChunk> {
@@ -33,14 +33,17 @@ export class Bundle extends Map<string, BundleChunk> {
     return Array.from(this.#changes.values());
   }
 
-  async writeChanges(dir: string) {
+  async writeChanges(destDir: string) {
     for (const k of this.getChanges()) {
       const { data } = this.get(k) ?? {};
       if (!data) {
         throw new Error(`Unable to get data for change "${k}"`);
       }
       this.#changes.delete(k);
-      await Deno.writeFile(path.join(dir, k), data);
+      const targetPath = path.join(destDir, k);
+      const targetDir = path.dirname(targetPath);
+      await fs.ensureDir(targetDir);
+      await Deno.writeFile(targetPath, data);
     }
   }
 }

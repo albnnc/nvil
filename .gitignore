@@ -8,6 +8,8 @@
 **/.swc
 **/.vscode
 **/*.pem
+**/dest
+**/dist
 **/node_modules
 **/output
 **/public/*sw*

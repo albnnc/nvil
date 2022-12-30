@@ -1,24 +1,25 @@
-#!/usr/bin/env -S deno run -A
-import { koat } from "../../koat.ts";
-import { path } from "../../deps.ts";
-import { createEsbuildPlugin } from "../../plugins/esbuild.ts";
-import { createHtmlTemplatePlugin } from "../../plugins/html_template.ts";
-import { createLiveReloadPlugin } from "../../plugins/live_reload.ts";
+#!/usr/bin/env -S deno run --unstable -A
+import { build } from "../../atoms/build.ts";
+import { clean } from "../../atoms/clean.ts";
+import { devServer } from "../../atoms/dev_server.ts";
+import { htmlTemplate } from "../../atoms/html_template.ts";
+import { liveReload } from "../../atoms/live_reload.ts";
+import { createKoat } from "../../koat.ts";
 
-await koat({
-  dev: Deno.args[0] === "dev",
-  rootDir: import.meta.resolve("./"),
-  outputDir: "./output",
-  entryPoints: ["./index.tsx"],
-  plugins: [
-    createEsbuildPlugin({
-      importMapURL: import.meta.resolve("./import_map.json"),
-    }),
-    createLiveReloadPlugin(),
-    createHtmlTemplatePlugin({
-      template: await Deno.readTextFile(
-        path.fromFileUrl(import.meta.resolve("./index.html"))
-      ),
-    }),
+const koat = createKoat(
+  [
+    clean(),
+    build("./index.tsx"),
+    htmlTemplate("./index.html"),
+    liveReload(),
+    devServer(),
   ],
-});
+  {
+    dev: Deno.args[0] === "dev",
+    rootDir: import.meta.resolve("./"),
+    destDir: "./dest",
+    importMapUrl: import.meta.resolve("./import_map.json"),
+  }
+);
+
+await koat.bootstrap();
