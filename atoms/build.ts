@@ -31,6 +31,17 @@ export function build(
         },
         plugins: [
           {
+            name: "esm-sh-package-json",
+            setup(build) {
+              build.onLoad({ filter: /package\.json\.js/ }, () => {
+                return {
+                  contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
+                  loader: "json",
+                };
+              });
+            },
+          },
+          {
             // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
             name: "no-side-effects",
             setup(build) {
