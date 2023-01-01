@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { colors, log, path } from "../deps.ts";
+import { log, path } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
@@ -33,8 +33,10 @@ export function exec(
         const decoder = new TextDecoder();
         while (true) {
           const chunk = await reader.read();
-          const text = colors.stripColor(decoder.decode(chunk.value).trim());
-          error ? logger.error(text) : logger.info(text);
+          const text = decoder.decode(chunk.value);
+          if (text.trim().length) {
+            error ? logger.error(text) : logger.info(text);
+          }
           if (chunk.done) {
             return;
           }

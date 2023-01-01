@@ -19,62 +19,66 @@ export function build(
     const handle = async () => {
       logger.info(`Building ${entryPoint}`);
       await run("BUILD_START", completeEntryPoint);
-      const { outputFiles } = await esbuild.build({
-        entryPoints: [completeEntryPoint],
-        write: false,
-        bundle: true,
-        minify: !dev,
-        target: "esnext",
-        platform: "browser",
-        format: "esm",
-        logLevel: "error",
-        define: {
-          "import.meta.main": "false",
-        },
-        plugins: [
-          {
-            name: "esm-sh-package-json",
-            setup(build) {
-              build.onLoad({ filter: /package\.json\.js/ }, () => {
-                return {
-                  contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
-                  loader: "json",
-                };
-              });
-            },
+      try {
+        const { outputFiles } = await esbuild.build({
+          entryPoints: [completeEntryPoint],
+          write: false,
+          bundle: true,
+          minify: !dev,
+          target: "esnext",
+          platform: "browser",
+          format: "esm",
+          logLevel: "silent",
+          define: {
+            "import.meta.main": "false",
           },
-          {
-            // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
-            name: "no-side-effects",
-            setup(build) {
-              build.onResolve({ filter: /.*/ }, async (args) => {
-                if (args.pluginData) {
-                  return;
-                }
-                const { path, ...rest } = args;
-                rest.pluginData = true;
-                const result = await build.resolve(path, rest);
-                result.sideEffects = false;
-                return result;
-              });
+          plugins: [
+            {
+              name: "esm-sh-package-json",
+              setup(build) {
+                build.onLoad({ filter: /package\.json\.js/ }, () => {
+                  return {
+                    contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
+                    loader: "json",
+                  };
+                });
+              },
             },
-          },
-          esbuildDenoPlugin({
-            importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
-          }),
-        ],
-        ...esbuildOptions,
-      });
-      esbuild.stop();
-      const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
-      if (!indexJs) {
-        return;
+            {
+              // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
+              name: "no-side-effects",
+              setup(build) {
+                build.onResolve({ filter: /.*/ }, async (args) => {
+                  if (args.pluginData) {
+                    return;
+                  }
+                  const { path, ...rest } = args;
+                  rest.pluginData = true;
+                  const result = await build.resolve(path, rest);
+                  result.sideEffects = false;
+                  return result;
+                });
+              },
+            },
+            esbuildDenoPlugin({
+              importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
+            }),
+          ],
+          ...esbuildOptions,
+        });
+        esbuild.stop();
+        const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
+        if (!indexJs) {
+          return;
+        }
+        const relativePath =
+          "./" +
+          completeEntryPoint.replace(rootDir, "").replace(/.(j|t)sx?/, ".js");
+        bundle.set(relativePath, { data: indexJs.contents, scope });
+        await run("BUILD_END", completeEntryPoint);
+      } catch (e) {
+        logger.error(e.message);
       }
-      const relativePath =
-        "./" +
-        completeEntryPoint.replace(rootDir, "").replace(/.(j|t)sx?/, ".js");
-      bundle.set(relativePath, { data: indexJs.contents, scope });
-      await run("BUILD_END", completeEntryPoint);
     };
     const watch = async () => {
       logger.info(`Watching ${entryPoint}`);

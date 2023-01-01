@@ -12,12 +12,17 @@ class Handler extends log.handlers.BaseHandler {
             [log.LogLevels.INFO]: colors.blue,
             [log.LogLevels.WARNING]: colors.yellow,
           }[level] || colors.stripColor;
+        let content = colors.stripColor(msg.trim());
+        if (content.includes("\n")) {
+          const prefix = "\n  " + colors.dim("|") + " ";
+          content = prefix + content.replace("\n", prefix);
+        }
         return [
           colors.dim(datetime.format(new Date(), "HH:mm:ss")),
           levelColor(log.LogLevels[level]),
           scope && colors.dim(scope),
           levelColor(">"),
-          msg,
+          content,
         ]
           .filter(Boolean)
           .join(" ");
