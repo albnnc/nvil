@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { log } from "../deps.ts";
+import { createLogger } from "../logger.ts";
 
 const callbacks = new Map<string, () => void>();
 
@@ -23,6 +23,7 @@ export function handleLiveReloadRequest(request: Request) {
 }
 
 export function liveReload(): Atom {
+  const log = createLogger("LIVE_RELOAD");
   return ({ config: { dev }, bundle, on, run }) => {
     if (!dev) {
       return;
@@ -31,7 +32,7 @@ export function liveReload(): Atom {
     on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
-      log.info("Populating live reload script");
+      log.info("Populating script");
       bundle.set(key, { data });
       await run("LIVE_RELOAD_INJECT");
     });

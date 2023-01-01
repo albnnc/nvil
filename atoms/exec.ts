@@ -1,8 +1,10 @@
 import { Atom } from "../atom.ts";
-import { log, path } from "../deps.ts";
+import { path } from "../deps.ts";
+import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
 export function exec(scope: string): Atom {
+  const log = createLogger("EXEC");
   return ({ config: { dev, destDir }, bundle, on }) => {
     if (!dev) {
       return;

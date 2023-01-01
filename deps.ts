@@ -1,5 +1,7 @@
 export * as async from "https://deno.land/std@0.170.0/async/mod.ts";
 export { deepMerge } from "https://deno.land/std@0.170.0/collections/deep_merge.ts";
+export * as datetime from "https://deno.land/std@0.170.0/datetime/mod.ts";
+export * as colors from "https://deno.land/std@0.170.0/fmt/colors.ts";
 export * as fs from "https://deno.land/std@0.170.0/fs/mod.ts";
 export * as fileServer from "https://deno.land/std@0.170.0/http/file_server.ts";
 export * as http from "https://deno.land/std@0.170.0/http/mod.ts";

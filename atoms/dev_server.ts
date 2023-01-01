@@ -1,8 +1,10 @@
 import { Atom } from "../atom.ts";
-import { server, log, path, fileServer } from "../deps.ts";
+import { server, path, fileServer } from "../deps.ts";
+import { createLogger } from "../logger.ts";
 import { handleLiveReloadRequest } from "./live_reload.ts";
 
 export function devServer(): Atom {
+  const log = createLogger("DEV_SERVER");
   return ({ config: { dev, destDir }, on }) => {
     if (!dev) {
       return;
@@ -22,7 +24,7 @@ export function devServer(): Atom {
         },
         {
           onListen: ({ hostname, port }) => {
-            log.info(`Started dev server on ${hostname}:${port}`);
+            log.info(`Listening ${hostname}:${port}`);
           },
         }
       );

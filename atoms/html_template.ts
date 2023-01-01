@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { log } from "../deps.ts";
+import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
 export interface HtmlTemplateConfig {
@@ -11,6 +11,7 @@ export function htmlTemplate(
   entryPoint: string,
   { scope }: HtmlTemplateConfig = {}
 ): Atom {
+  const log = createLogger("HTML_TEMPLATE");
   return ({ config: { rootDir }, bundle, on }) => {
     const handle = async () => {
       log.info(`Updating index.html`);
