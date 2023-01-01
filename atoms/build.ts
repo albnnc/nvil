@@ -1,23 +1,23 @@
 import { Atom } from "../atom.ts";
-import { async, esbuild, esbuildDenoPlugin } from "../deps.ts";
+import { async, esbuild, esbuildDenoPlugin, log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
 export interface BuildConfig {
   scope?: string;
+  logger?: log.Logger;
   esbuildOptions?: esbuild.BuildOptions;
 }
 
 export function build(
   entryPoint: string,
-  { scope, esbuildOptions }: BuildConfig = {}
+  { scope, logger = createLogger("BUILD"), esbuildOptions }: BuildConfig = {}
 ): Atom {
-  const log = createLogger("BUILD");
   return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
     const completeEntryPoint = completePath(entryPoint, rootDir);
     const handle = async () => {
-      log.info(`Handling ${entryPoint}`);
+      logger.info(`Handling ${entryPoint}`);
       await run("BUILD_START", completeEntryPoint);
       const { outputFiles } = await esbuild.build({
         entryPoints: [completeEntryPoint],
@@ -77,7 +77,7 @@ export function build(
       await run("BUILD_END", completeEntryPoint);
     };
     const watch = async () => {
-      log.info(`Watching ${entryPoint}`);
+      logger.info(`Watching ${entryPoint}`);
       const watcher = watchModule(completeEntryPoint);
       const debounced = async.debounce(handle, 200);
       for await (const event of watcher) {

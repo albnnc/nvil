@@ -1,4 +1,5 @@
 import { Atom } from "../atom.ts";
+import { log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 
 const callbacks = new Map<string, () => void>();
@@ -22,8 +23,13 @@ export function handleLiveReloadRequest(request: Request) {
   });
 }
 
-export function liveReload(): Atom {
-  const log = createLogger("LIVE_RELOAD");
+export interface LiveReloadConfig {
+  logger?: log.Logger;
+}
+
+export function liveReload({
+  logger = createLogger("LIVE_RELOAD"),
+}: LiveReloadConfig = {}): Atom {
   return ({ config: { dev }, bundle, on, run }) => {
     if (!dev) {
       return;
@@ -32,7 +38,7 @@ export function liveReload(): Atom {
     on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
-      log.info(`Adding ${key}`);
+      logger.info(`Adding ${key}`);
       bundle.set(key, { data });
       await run("LIVE_RELOAD_INJECT");
     });
@@ -40,7 +46,7 @@ export function liveReload(): Atom {
       if (!bundle.has(key)) {
         return;
       }
-      log.info("Reloading");
+      logger.info("Reloading");
       callbacks.forEach((fn) => fn());
     });
   };

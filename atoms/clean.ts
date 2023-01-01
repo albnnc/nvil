@@ -1,13 +1,18 @@
 import { Atom } from "../atom.ts";
-import { path } from "../deps.ts";
+import { log, path } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 
-export function clean(): Atom {
-  const log = createLogger("CLEAN");
+export interface CleanConfig {
+  logger?: log.Logger;
+}
+
+export function clean({
+  logger = createLogger("CLEAN"),
+}: CleanConfig = {}): Atom {
   return ({ config: { rootDir, destDir }, on }) => {
     on("BOOTSTRAP", async () => {
       const relativeDestDir = path.relative(rootDir, destDir);
-      log.info(
+      logger.info(
         `Deleting ${
           relativeDestDir.startsWith(".")
             ? relativeDestDir

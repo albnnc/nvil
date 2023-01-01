@@ -1,20 +1,21 @@
 import { Atom } from "../atom.ts";
+import { log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
 export interface HtmlTemplateConfig {
   scope?: string;
+  logger?: log.Logger;
 }
 
 // TODO: Watch entry point changes.
 export function htmlTemplate(
   entryPoint: string,
-  { scope }: HtmlTemplateConfig = {}
+  { scope, logger = createLogger("HTML_TEMPLATE") }: HtmlTemplateConfig = {}
 ): Atom {
-  const log = createLogger("HTML_TEMPLATE");
   return ({ config: { rootDir }, bundle, on }) => {
     const handle = async () => {
-      log.info(`Updating ./index.html`);
+      logger.info(`Updating ./index.html`);
       const completeEntryPoint = completePath(entryPoint, rootDir);
       const template = await Deno.readTextFile(completeEntryPoint);
       const scripts = Array.from(bundle.entries())

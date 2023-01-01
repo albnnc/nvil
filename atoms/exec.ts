@@ -1,17 +1,23 @@
 import { Atom } from "../atom.ts";
-import { path } from "../deps.ts";
+import { log, path } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
-export function exec(scope: string): Atom {
-  const log = createLogger("EXEC");
+export interface ExecConfig {
+  logger?: log.Logger;
+}
+
+export function exec(
+  scope: string,
+  { logger = createLogger("EXEC") }: ExecConfig = {}
+): Atom {
   return ({ config: { dev, destDir }, bundle, on }) => {
     if (!dev) {
       return;
     }
     let childProcess: Deno.ChildProcess;
     const handle = (entryPoint: string) => {
-      log.info(`Executing ${path.relative(destDir, entryPoint)}`);
+      logger.info(`Executing ${path.relative(destDir, entryPoint)}`);
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
         args: ["run", "-A", entryPoint],
