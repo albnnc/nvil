@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { log, path } from "../deps.ts";
+import { colors, log, path } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 
@@ -21,7 +21,27 @@ export function exec(
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
         args: ["run", "-A", entryPoint],
+        stdout: "piped",
+        stderr: "piped",
       }).spawn();
+
+      const handleOutput = async (
+        stream: ReadableStream<Uint8Array>,
+        error = false
+      ) => {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const chunk = await reader.read();
+          const text = colors.stripColor(decoder.decode(chunk.value).trim());
+          error ? logger.error(text) : logger.info(text);
+          if (chunk.done) {
+            return;
+          }
+        }
+      };
+      handleOutput(childProcess.stdout);
+      handleOutput(childProcess.stderr, true);
     };
     on("BUILD_END", () => {
       for (const [k, v] of bundle.entries()) {

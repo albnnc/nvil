@@ -1,6 +1,7 @@
-import * as path from "std/path/mod.ts";
-import { serve } from "std/http/server.ts";
 import { serveDir, serveFile } from "std/http/file_server.ts";
+import { serve } from "std/http/server.ts";
+import * as log from "std/log/mod.ts";
+import * as path from "std/path/mod.ts";
 import { handleLiveReloadRequest } from "../../atoms/live_reload.ts";
 
 const currentDir = path.fromFileUrl(import.meta.resolve("./"));
@@ -17,7 +18,7 @@ serve(
   },
   {
     onListen: ({ hostname, port }) => {
-      console.log(`Started server on ${hostname}:${port}`);
+      log.info(`Started server on ${hostname}:${port}`);
     },
   }
 );

@@ -17,14 +17,14 @@ export function build(
   return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
     const completeEntryPoint = completePath(entryPoint, rootDir);
     const handle = async () => {
-      logger.info(`Handling ${entryPoint}`);
+      logger.info(`Building ${entryPoint}`);
       await run("BUILD_START", completeEntryPoint);
       const { outputFiles } = await esbuild.build({
         entryPoints: [completeEntryPoint],
         write: false,
         bundle: true,
         minify: !dev,
-        target: "es2020",
+        target: "esnext",
         platform: "browser",
         format: "esm",
         logLevel: "error",
