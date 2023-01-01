@@ -24,7 +24,6 @@ export function exec(
         stdout: "piped",
         stderr: "piped",
       }).spawn();
-
       const handleOutput = async (
         stream: ReadableStream<Uint8Array>,
         error = false
