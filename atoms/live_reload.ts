@@ -32,7 +32,7 @@ export function liveReload(): Atom {
     on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
-      log.info("Populating script");
+      log.info(`Adding ${key}`);
       bundle.set(key, { data });
       await run("LIVE_RELOAD_INJECT");
     });
