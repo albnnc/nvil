@@ -12,8 +12,8 @@ const koat = createKoat(
     build("./index.tsx"),
     htmlTemplate("./index.html"),
     liveReload(),
-    build("./server.ts", { scope: "SERVER" }),
-    exec("SERVER"),
+    build("./server.ts", { scope: "server" }),
+    exec("server"),
   ],
   {
     dev: Deno.args[0] === "dev",

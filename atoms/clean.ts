@@ -7,7 +7,7 @@ export interface CleanConfig {
 }
 
 export function clean({
-  logger = createLogger("CLEAN"),
+  logger = createLogger("clean"),
 }: CleanConfig = {}): Atom {
   return ({ config: { rootDir, destDir }, on }) => {
     on("BOOTSTRAP", async () => {

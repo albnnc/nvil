@@ -11,7 +11,7 @@ export interface HtmlTemplateConfig {
 // TODO: Watch entry point changes.
 export function htmlTemplate(
   entryPoint: string,
-  { scope, logger = createLogger("HTML_TEMPLATE") }: HtmlTemplateConfig = {}
+  { scope, logger = createLogger("htmlTemplate") }: HtmlTemplateConfig = {}
 ): Atom {
   return ({ config: { rootDir }, bundle, on }) => {
     const handle = async () => {

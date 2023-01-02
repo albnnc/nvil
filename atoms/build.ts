@@ -12,7 +12,7 @@ export interface BuildConfig {
 
 export function build(
   entryPoint: string,
-  { scope, logger = createLogger("BUILD"), esbuildOptions }: BuildConfig = {}
+  { scope, logger = createLogger("build"), esbuildOptions }: BuildConfig = {}
 ): Atom {
   return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
     const completeEntryPoint = completePath(entryPoint, rootDir);

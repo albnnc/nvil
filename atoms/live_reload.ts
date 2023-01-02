@@ -28,7 +28,7 @@ export interface LiveReloadConfig {
 }
 
 export function liveReload({
-  logger = createLogger("LIVE_RELOAD"),
+  logger = createLogger("liveReload"),
 }: LiveReloadConfig = {}): Atom {
   return ({ config: { dev }, bundle, on, run }) => {
     if (!dev) {

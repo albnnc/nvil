@@ -17,15 +17,16 @@ class Handler extends log.handlers.BaseHandler {
           const prefix = "\n  " + colors.dim("|") + " ";
           content = prefix + content.replace("\n", prefix);
         }
-        return [
-          colors.dim(datetime.format(new Date(), "HH:mm:ss")),
-          levelColor(log.LogLevels[level]),
-          scope && colors.dim(scope),
-          levelColor(">"),
-          content,
-        ]
-          .filter(Boolean)
-          .join(" ");
+        return (
+          colors.dim(datetime.format(new Date(), "HH:mm:ss")) +
+          " " +
+          levelColor(log.LogLevels[level].toLocaleLowerCase()) +
+          (scope
+            ? levelColor("(") + colors.dim(scope) + levelColor("):")
+            : levelColor(":")) +
+          " " +
+          content
+        );
       },
     });
   }

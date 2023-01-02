@@ -8,7 +8,7 @@ export interface DevServerConfig {
 }
 
 export function devServer({
-  logger = createLogger("DEV_SERVER"),
+  logger = createLogger("devServer"),
 }: DevServerConfig = {}): Atom {
   return ({ config: { dev, destDir }, on }) => {
     if (!dev) {

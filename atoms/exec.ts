@@ -9,7 +9,7 @@ export interface ExecConfig {
 
 export function exec(
   scope: string,
-  { logger = createLogger("EXEC") }: ExecConfig = {}
+  { logger = createLogger("exec") }: ExecConfig = {}
 ): Atom {
   return ({ config: { dev, destDir }, bundle, on }) => {
     if (!dev) {
