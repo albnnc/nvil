@@ -15,7 +15,7 @@ export async function updateStorySet(
   const nextSet = new Set<string>();
   const targetGlob = path.fromFileUrl(new URL(glob, rootUrl));
   for await (const v of fs.expandGlob(targetGlob, { globstar: true })) {
-    v.isFile && nextSet.add(v.path);
+    v.isFile && nextSet.add(path.toFileUrl(v.path).toString());
   }
   update(set, nextSet, config);
 }
@@ -28,7 +28,7 @@ export function updateStorySetSync(
   const nextSet = new Set<string>();
   const targetGlob = path.fromFileUrl(new URL(glob, rootUrl));
   for (const v of fs.expandGlobSync(targetGlob, { globstar: true })) {
-    v.isFile && nextSet.add(v.path);
+    v.isFile && nextSet.add(path.toFileUrl(v.path).toString());
   }
   update(set, nextSet, config);
 }

@@ -17,7 +17,7 @@ const koat = createKoat(
   ],
   {
     rootUrl: import.meta.resolve("./"),
-    destUrl: "./dest",
+    destUrl: "./dest/",
     importMapUrl: "./import_map.json",
     dev: Deno.args[0] === "dev",
   }

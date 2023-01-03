@@ -2,7 +2,10 @@
   "imports": {
     "react": "https://esm.sh/react@18.2.0?target=esnext",
     "react-dom": "https://esm.sh/react-dom@18.2.0?target=esnext",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.6.1?target=esnext&external=react,react-dom",
+    "swr": "https://esm.sh/swr@2.0.0?target=esnext&external=react",
     "@emotion/react": "https://esm.sh/@emotion/react@11.10.5?target=esnext&external=react,react-dom",
-    "@theme-ui/core": "https://esm.sh/@theme-ui/core@0.15.4?target=esnext&external=react,@emotion/react"
+    "@theme-ui/core": "https://esm.sh/@theme-ui/core@0.15.4?target=esnext&external=react,@emotion/react",
+    "case": "https://deno.land/x/case@2.1.1/mod.ts"
   }
 }

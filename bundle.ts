@@ -25,6 +25,10 @@ export class Bundle extends Map<string, BundleChunk> {
     return this;
   }
 
+  isChanged(url: string) {
+    return this.#changes.has(url);
+  }
+
   clearChanges() {
     this.#changes.clear();
   }

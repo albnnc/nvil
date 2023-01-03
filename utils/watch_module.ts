@@ -33,7 +33,9 @@ export function watchModule(specifier: string) {
         yield event;
         const nextExpanded = await expandModule(specifier);
         if (nextExpanded.commonUrl !== expanded.commonUrl) {
-          const nextWatcher = Deno.watchFs(nextExpanded.commonUrl);
+          const nextWatcher = Deno.watchFs(
+            path.fromFileUrl(nextExpanded.commonUrl)
+          );
           iterable.add(nextWatcher);
           watcher.close();
           expanded = nextExpanded;

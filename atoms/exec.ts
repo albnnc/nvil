@@ -3,7 +3,7 @@ import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export function exec(scope: string): Atom {
   return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
-    const logger = getLogger("devServer");
+    const logger = getLogger("exec");
     if (!dev) {
       return;
     }
@@ -38,7 +38,7 @@ export function exec(scope: string): Atom {
     };
     onStage("BUILD_END", () => {
       for (const [k, v] of bundle.entries()) {
-        if (v.scope === scope) {
+        if (v.scope === scope && bundle.isChanged(k)) {
           handle(new URL(k, destUrl).toString());
         }
       }
