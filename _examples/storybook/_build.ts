@@ -10,7 +10,7 @@ const koat = createKoat(
     clean(),
     storybook("./**/*_story.{ts,tsx}", (v) => [
       build(v),
-      htmlTemplate("./index.html"),
+      htmlTemplate(import.meta.resolve("./index.html")),
     ]),
   ],
   {

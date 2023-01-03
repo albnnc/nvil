@@ -1,19 +1,19 @@
 import { Atom } from "../../atom.ts";
-import { deepMerge, path } from "../../deps.ts";
+import { deepMerge } from "../../deps.ts";
 import { createKoat, Koat, KoatConfig } from "../../mod.ts";
 import { cyrb53 } from "../../utils/cyrb53.ts";
-import { relativisePath } from "../../utils/relativise_path.ts";
 import { updateStorySetSync } from "./update_story_set.ts";
 import { watchStorySet } from "./watch_story_set.ts";
 import { build } from "../build.ts";
 import { htmlTemplate } from "../html_template.ts";
+import { relativiseUrl } from "../../utils/relativise_url.ts";
 
 export function storybook(
   glob: string,
   getAtoms: (entryPoint: string) => Atom[]
 ): Atom {
-  return ({ config, config: { dev, rootDir }, getLogger, onStage }) => {
-    const logger = getLogger("storybook");
+  return ({ config, config: { dev, rootUrl }, getLogger, onStage }) => {
+    const logger = getLogger("sb");
     const storySet = new Set<string>();
     const instanceMap = new Map<
       string,
@@ -23,25 +23,25 @@ export function storybook(
       }
     >();
     const onFind = (entryPoint: string) => {
-      const relativeEntryPoint = relativisePath(entryPoint, rootDir);
+      const relativeEntryPoint = relativiseUrl(entryPoint, rootUrl);
       logger.info(`Found story ${relativeEntryPoint}`);
-      const destDir = path.join(
-        config.destDir,
-        `./stories/${cyrb53(relativeEntryPoint)}/`
-      );
+      const id = cyrb53(relativeEntryPoint).toString();
+      const destUrl = new URL(`./stories/${id}/`, config.destUrl).toString();
       const abortController = new AbortController();
-      const koat = createKoat(
+      const storykoat = createKoat(
         getAtoms(entryPoint),
         deepMerge(config, {
-          destDir,
+          destUrl,
           signal: abortController.signal,
+          overrideLogger: (scope: string) =>
+            getLogger(`sb/story/${id.slice(0, 4)}/${scope}`),
         }) as KoatConfig
       );
-      onStage("BOOSTRAP", koat.bootstrap);
-      instanceMap.set(entryPoint, { abortController, koat });
+      onStage("BOOTSTRAP", storykoat.bootstrap);
+      instanceMap.set(entryPoint, { abortController, koat: storykoat });
     };
     const onLoss = (entryPoint: string) => {
-      const relativeEntryPoint = relativisePath(entryPoint, rootDir);
+      const relativeEntryPoint = relativiseUrl(entryPoint, rootUrl);
       logger.info(`Lost story ${relativeEntryPoint}`);
       const instance = instanceMap.get(entryPoint);
       if (!instance) {
@@ -52,18 +52,18 @@ export function storybook(
       // TODO: Delete story destDir.
       // TODO: Cleanup story bootstrap bindings.
     };
-    updateStorySetSync(storySet, { rootDir, glob, onFind, onLoss });
+    updateStorySetSync(storySet, { rootUrl, glob, onFind, onLoss });
     const uiKoat = createKoat(
-      [build("./index.tsx"), htmlTemplate("./index.tsx")],
+      [build("./index.tsx"), htmlTemplate("./index.html")],
       deepMerge(config, {
-        rootDir: import.meta.resolve("./ui"),
-        importMapUrl: import.meta.resolve("./ui/import_map.json"),
-        overrideLogger: (_: string) => getLogger("storybook/ui"),
+        rootUrl: import.meta.resolve("./ui/"),
+        importMapUrl: "./import_map.json",
+        overrideLogger: (scope: string) => getLogger(`sb/ui/${scope}`),
       }) as KoatConfig
     );
-    onStage("BOOTSTRAP", async () => {
-      await uiKoat.bootstrap();
-      dev && watchStorySet(storySet, { rootDir, glob, onFind, onLoss });
+    onStage("BOOTSTRAP", uiKoat.bootstrap);
+    onStage("BOOTSTRAP", () => {
+      dev && watchStorySet(storySet, { rootUrl, glob, onFind, onLoss });
     });
   };
 }
