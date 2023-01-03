@@ -4,18 +4,18 @@ export type StageHandler = (context?: unknown) => void | Promise<void>;
 
 export function createStager() {
   const stages: Record<string, StageHandler[]> = {};
-  const on = (name: string, fn: StageHandler) => {
-    if (stages[name]) {
-      stages[name].push(fn);
+  const on = (stageName: string, fn: StageHandler) => {
+    if (stages[stageName]) {
+      stages[stageName].push(fn);
     } else {
-      stages[name] = [fn];
+      stages[stageName] = [fn];
     }
   };
   let runCount = 0;
   let runCycleDeferred = async.deferred();
-  const run = async (name: string, context?: unknown) => {
+  const run = async (stageName: string, context?: unknown) => {
     ++runCount;
-    for (const fn of stages[name] || []) {
+    for (const fn of stages[stageName] || []) {
       await fn(context);
     }
     --runCount;

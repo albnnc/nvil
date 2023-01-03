@@ -16,9 +16,9 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
   const completeRootDir = completePath(config.rootDir);
   const completeDestDir = completePath(config.destDir, completeRootDir);
   const completeImportMapUrl = config.importMapUrl?.startsWith(".")
-    ? new URL(path.toFileUrl(completeRootDir), config.importMapUrl)
+    ? new URL(path.toFileUrl(completeRootDir), config.importMapUrl).toString()
     : config.importMapUrl?.startsWith("/")
-    ? path.toFileUrl(completeRootDir)
+    ? path.toFileUrl(completeRootDir).toString()
     : config.importMapUrl;
   const completeConfig = {
     ...config,

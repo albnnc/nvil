@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { async, esbuild, esbuildDenoPlugin, log } from "../deps.ts";
+import { async, esbuild, esbuildDenoPlugin, log, path } from "../deps.ts";
 import { createLogger } from "../logger.ts";
 import { completePath } from "../utils/complete_path.ts";
 import { watchModule } from "../utils/watch_module.ts";
@@ -15,9 +15,10 @@ export function build(
   { scope, logger = createLogger("build"), esbuildOptions }: BuildConfig = {}
 ): Atom {
   return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
+    const relativeEntryPoint = path.relative(rootDir, entryPoint);
     const completeEntryPoint = completePath(entryPoint, rootDir);
     const handle = async () => {
-      logger.info(`Building ${entryPoint}`);
+      logger.info(`Building ${relativeEntryPoint}`);
       await run("BUILD_START", completeEntryPoint);
       try {
         const { outputFiles } = await esbuild.build({
