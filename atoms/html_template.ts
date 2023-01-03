@@ -1,7 +1,7 @@
 import { Atom } from "../atom.ts";
 import { log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
-import { completePath } from "../utils/complete_path.ts";
+import { absolutisePath } from "../utils/absolutise_path.ts";
 
 export interface HtmlTemplateConfig {
   scope?: string;
@@ -15,9 +15,9 @@ export function htmlTemplate(
 ): Atom {
   return ({ config: { rootDir }, bundle, on }) => {
     const handle = async () => {
-      logger.info(`Updating ./index.html`);
-      const completeEntryPoint = completePath(entryPoint, rootDir);
-      const template = await Deno.readTextFile(completeEntryPoint);
+      logger.info(`Populating ./index.html`);
+      const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);
+      const template = await Deno.readTextFile(absoluteEntryPoint);
       const scripts = Array.from(bundle.entries())
         .filter(([k, v]) => k.endsWith(".js") && v.scope === scope)
         .map(([k]) => `<script type="module" src="${k}"></script>`);
@@ -31,6 +31,6 @@ export function htmlTemplate(
       bundle.set("./index.html", { data });
     };
     on("BUILD_END", handle);
-    on("LIVE_RELOAD_INJECT", handle);
+    on("LIVE_RELOAD_SCRIPT_POPULATE", handle);
   };
 }

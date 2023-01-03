@@ -3,6 +3,7 @@ import { deepMerge, log, path } from "../../deps.ts";
 import { createKoat, Koat, KoatConfig } from "../../koat.ts";
 import { createLogger } from "../../logger.ts";
 import { cyrb53 } from "../../utils/cyrb53.ts";
+import { relativisePath } from "../../utils/relativise_path.ts";
 import { updateStorySetSync } from "./update_story_set.ts";
 import { watchStorySet } from "./watch_story_set.ts";
 
@@ -25,7 +26,7 @@ export function storybook(
       }
     >();
     const onFind = (entryPoint: string) => {
-      const relativeEntryPoint = path.relative(rootDir, entryPoint);
+      const relativeEntryPoint = relativisePath(entryPoint, rootDir);
       logger.info(`Found story ${relativeEntryPoint}`);
       const destDir = path.join(
         config.destDir,
@@ -43,7 +44,7 @@ export function storybook(
       instanceMap.set(entryPoint, { abortController, koat });
     };
     const onLoss = (entryPoint: string) => {
-      const relativeEntryPoint = path.relative(rootDir, entryPoint);
+      const relativeEntryPoint = relativisePath(entryPoint, rootDir);
       logger.info(`Lost story ${relativeEntryPoint}`);
       const instance = instanceMap.get(entryPoint);
       if (!instance) {

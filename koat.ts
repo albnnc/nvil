@@ -2,7 +2,7 @@ import { Atom } from "./atom.ts";
 import { Bundle } from "./bundle.ts";
 import { path } from "./deps.ts";
 import { createStager } from "./stager.ts";
-import { completePath } from "./utils/complete_path.ts";
+import { absolutisePath } from "./utils/absolutise_path.ts";
 
 export interface KoatConfig {
   dev?: boolean;
@@ -13,8 +13,8 @@ export interface KoatConfig {
 }
 
 export function createKoat(atoms: Atom[], config: KoatConfig) {
-  const completeRootDir = completePath(config.rootDir);
-  const completeDestDir = completePath(config.destDir, completeRootDir);
+  const completeRootDir = absolutisePath(config.rootDir);
+  const completeDestDir = absolutisePath(config.destDir, completeRootDir);
   const completeImportMapUrl = config.importMapUrl?.startsWith(".")
     ? new URL(path.toFileUrl(completeRootDir), config.importMapUrl).toString()
     : config.importMapUrl?.startsWith("/")

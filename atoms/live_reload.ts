@@ -38,9 +38,9 @@ export function liveReload({
     on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
-      logger.info(`Adding ${key}`);
+      logger.info(`Populating ${key}`);
       bundle.set(key, { data });
-      await run("LIVE_RELOAD_INJECT");
+      await run("LIVE_RELOAD_SCRIPT_POPULATE");
     });
     on("BUILD_END", () => {
       if (!bundle.has(key)) {

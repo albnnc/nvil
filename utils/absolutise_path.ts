@@ -1,6 +1,6 @@
 import { path } from "../deps.ts";
 
-export function completePath(value: string, base?: string) {
+export function absolutisePath(value: string, base?: string) {
   if (value.startsWith("file://")) {
     return path.fromFileUrl(value);
   }

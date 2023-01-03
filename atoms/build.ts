@@ -1,7 +1,8 @@
 import { Atom } from "../atom.ts";
-import { async, esbuild, esbuildDenoPlugin, log, path } from "../deps.ts";
+import { async, esbuild, esbuildDenoPlugin, log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
-import { completePath } from "../utils/complete_path.ts";
+import { absolutisePath } from "../utils/absolutise_path.ts";
+import { relativisePath } from "../utils/relativise_path.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
 export interface BuildConfig {
@@ -15,14 +16,14 @@ export function build(
   { scope, logger = createLogger("build"), esbuildOptions }: BuildConfig = {}
 ): Atom {
   return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
-    const relativeEntryPoint = path.relative(rootDir, entryPoint);
-    const completeEntryPoint = completePath(entryPoint, rootDir);
+    const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);
+    const relativeEntryPoint = relativisePath(entryPoint, rootDir);
     const handle = async () => {
       logger.info(`Building ${relativeEntryPoint}`);
-      await run("BUILD_START", completeEntryPoint);
+      await run("BUILD_START", absoluteEntryPoint);
       try {
         const { outputFiles } = await esbuild.build({
-          entryPoints: [completeEntryPoint],
+          entryPoints: [absoluteEntryPoint],
           write: false,
           bundle: true,
           minify: !dev,
@@ -74,16 +75,16 @@ export function build(
         }
         const relativePath =
           "./" +
-          completeEntryPoint.replace(rootDir, "").replace(/.(j|t)sx?/, ".js");
+          absoluteEntryPoint.replace(rootDir, "").replace(/.(j|t)sx?/, ".js");
         bundle.set(relativePath, { data: indexJs.contents, scope });
-        await run("BUILD_END", completeEntryPoint);
+        await run("BUILD_END", absoluteEntryPoint);
       } catch (e) {
         logger.error(e.message);
       }
     };
     const watch = async () => {
       logger.info(`Watching ${entryPoint}`);
-      const watcher = watchModule(completeEntryPoint);
+      const watcher = watchModule(absoluteEntryPoint);
       const debounced = async.debounce(handle, 200);
       for await (const event of watcher) {
         if (

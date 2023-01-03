@@ -1,5 +1,5 @@
 import { fs } from "../../deps.ts";
-import { completePath } from "../../utils/complete_path.ts";
+import { absolutisePath } from "../../utils/absolutise_path.ts";
 
 export interface UpdateStorySetOptions {
   rootDir: string;
@@ -14,7 +14,7 @@ export async function updateStorySet(
 ) {
   const { rootDir, glob } = config;
   const nextSet = new Set<string>();
-  const completeGlob = completePath(glob, rootDir);
+  const completeGlob = absolutisePath(glob, rootDir);
   for await (const v of fs.expandGlob(completeGlob, { globstar: true })) {
     v.isFile && nextSet.add(v.path);
   }
@@ -27,7 +27,7 @@ export function updateStorySetSync(
 ) {
   const { rootDir, glob } = config;
   const nextSet = new Set<string>();
-  const completeGlob = completePath(glob, rootDir);
+  const completeGlob = absolutisePath(glob, rootDir);
   for (const v of fs.expandGlobSync(completeGlob, { globstar: true })) {
     v.isFile && nextSet.add(v.path);
   }

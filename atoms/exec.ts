@@ -1,7 +1,8 @@
 import { Atom } from "../atom.ts";
-import { log, path } from "../deps.ts";
+import { log } from "../deps.ts";
 import { createLogger } from "../logger.ts";
-import { completePath } from "../utils/complete_path.ts";
+import { absolutisePath } from "../utils/absolutise_path.ts";
+import { relativisePath } from "../utils/relativise_path.ts";
 
 export interface ExecConfig {
   logger?: log.Logger;
@@ -17,7 +18,7 @@ export function exec(
     }
     let childProcess: Deno.ChildProcess;
     const handle = (entryPoint: string) => {
-      logger.info(`Executing ${path.relative(destDir, entryPoint)}`);
+      logger.info(`Executing ${relativisePath(entryPoint, destDir)}`);
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
         args: ["run", "-A", entryPoint],
@@ -47,7 +48,7 @@ export function exec(
     on("BUILD_END", () => {
       for (const [k, v] of bundle.entries()) {
         if (v.scope === scope) {
-          const entryPoint = completePath(k, destDir);
+          const entryPoint = absolutisePath(k, destDir);
           handle(entryPoint);
         }
       }
