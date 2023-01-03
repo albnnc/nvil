@@ -1,6 +1,7 @@
 import { Atom } from "./atom.ts";
 import { Bundle } from "./bundle.ts";
-import { path } from "./deps.ts";
+import { log, path } from "./deps.ts";
+import { createLogger } from "./logger.ts";
 import { createStager } from "./stager.ts";
 import { absolutisePath } from "./utils/absolutise_path.ts";
 
@@ -10,6 +11,7 @@ export interface KoatConfig {
   destDir: string;
   importMapUrl?: string;
   signal?: AbortSignal;
+  getLogger?: (scope: string) => log.Logger;
 }
 
 export function createKoat(atoms: Atom[], config: KoatConfig) {
@@ -20,7 +22,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     : config.importMapUrl?.startsWith("/")
     ? path.toFileUrl(completeRootDir).toString()
     : config.importMapUrl;
-  const completeConfig = {
+  const completeConfig: KoatConfig = {
     ...config,
     rootDir: completeRootDir,
     destDir: completeDestDir,
@@ -43,6 +45,8 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     config: completeConfig,
     bundle,
     bootstrap,
+    getLogger: (scope: string) =>
+      config.getLogger?.(scope) ?? createLogger(scope),
     ...stager,
   };
   for (const fn of atoms) {

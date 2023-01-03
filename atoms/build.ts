@@ -1,21 +1,26 @@
 import { Atom } from "../atom.ts";
-import { async, esbuild, esbuildDenoPlugin, log } from "../deps.ts";
-import { createLogger } from "../logger.ts";
+import { async, esbuild, esbuildDenoPlugin } from "../deps.ts";
 import { absolutisePath } from "../utils/absolutise_path.ts";
 import { relativisePath } from "../utils/relativise_path.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
 export interface BuildConfig {
   scope?: string;
-  logger?: log.Logger;
   esbuildOptions?: esbuild.BuildOptions;
 }
 
 export function build(
   entryPoint: string,
-  { scope, logger = createLogger("build"), esbuildOptions }: BuildConfig = {}
+  { scope, esbuildOptions }: BuildConfig = {}
 ): Atom {
-  return ({ config: { dev, rootDir, importMapUrl }, bundle, on, run }) => {
+  return ({
+    config: { dev, rootDir, importMapUrl },
+    bundle,
+    getLogger,
+    on,
+    run,
+  }) => {
+    const logger = getLogger("build");
     const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);
     const relativeEntryPoint = relativisePath(entryPoint, rootDir);
     const handle = async () => {

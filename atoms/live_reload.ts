@@ -1,6 +1,4 @@
 import { Atom } from "../atom.ts";
-import { log } from "../deps.ts";
-import { createLogger } from "../logger.ts";
 
 const callbacks = new Map<string, () => void>();
 
@@ -23,14 +21,9 @@ export function handleLiveReloadRequest(request: Request) {
   });
 }
 
-export interface LiveReloadConfig {
-  logger?: log.Logger;
-}
-
-export function liveReload({
-  logger = createLogger("liveReload"),
-}: LiveReloadConfig = {}): Atom {
-  return ({ config: { dev }, bundle, on, run }) => {
+export function liveReload(): Atom {
+  return ({ config: { dev }, bundle, getLogger, on, run }) => {
+    const logger = getLogger("liveReload");
     if (!dev) {
       return;
     }

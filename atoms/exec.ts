@@ -1,18 +1,10 @@
 import { Atom } from "../atom.ts";
-import { log } from "../deps.ts";
-import { createLogger } from "../logger.ts";
 import { absolutisePath } from "../utils/absolutise_path.ts";
 import { relativisePath } from "../utils/relativise_path.ts";
 
-export interface ExecConfig {
-  logger?: log.Logger;
-}
-
-export function exec(
-  scope: string,
-  { logger = createLogger("exec") }: ExecConfig = {}
-): Atom {
-  return ({ config: { dev, destDir }, bundle, on }) => {
+export function exec(scope: string): Atom {
+  return ({ config: { dev, destDir }, bundle, getLogger, on }) => {
+    const logger = getLogger("devServer");
     if (!dev) {
       return;
     }

@@ -1,19 +1,17 @@
 import { Atom } from "../atom.ts";
-import { log } from "../deps.ts";
-import { createLogger } from "../logger.ts";
 import { absolutisePath } from "../utils/absolutise_path.ts";
 
 export interface HtmlTemplateConfig {
   scope?: string;
-  logger?: log.Logger;
 }
 
 // TODO: Watch entry point changes.
 export function htmlTemplate(
   entryPoint: string,
-  { scope, logger = createLogger("htmlTemplate") }: HtmlTemplateConfig = {}
+  { scope }: HtmlTemplateConfig = {}
 ): Atom {
-  return ({ config: { rootDir }, bundle, on }) => {
+  return ({ config: { rootDir }, bundle, getLogger, on }) => {
+    const logger = getLogger("htmlTemplate");
     const handle = async () => {
       logger.info(`Populating ./index.html`);
       const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);

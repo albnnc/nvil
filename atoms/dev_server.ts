@@ -1,16 +1,10 @@
 import { Atom } from "../atom.ts";
-import { server, path, fileServer, log } from "../deps.ts";
-import { createLogger } from "../logger.ts";
+import { server, path, fileServer } from "../deps.ts";
 import { handleLiveReloadRequest } from "./live_reload.ts";
 
-export interface DevServerConfig {
-  logger?: log.Logger;
-}
-
-export function devServer({
-  logger = createLogger("devServer"),
-}: DevServerConfig = {}): Atom {
-  return ({ config: { dev, destDir }, on }) => {
+export function devServer(): Atom {
+  return ({ config: { dev, destDir }, getLogger, on }) => {
+    const logger = getLogger("devServer");
     if (!dev) {
       return;
     }

@@ -1,22 +1,17 @@
 import { Atom } from "../../atom.ts";
-import { deepMerge, log, path } from "../../deps.ts";
+import { deepMerge, path } from "../../deps.ts";
 import { createKoat, Koat, KoatConfig } from "../../mod.ts";
-import { createLogger } from "../../logger.ts";
 import { cyrb53 } from "../../utils/cyrb53.ts";
 import { relativisePath } from "../../utils/relativise_path.ts";
 import { updateStorySetSync } from "./update_story_set.ts";
 import { watchStorySet } from "./watch_story_set.ts";
 
-export interface StorybookConfig {
-  logger?: log.Logger;
-}
-
 export function storybook(
   glob: string,
-  getAtoms: (entryPoint: string) => Atom[],
-  { logger = createLogger("storybook") }: StorybookConfig = {}
+  getAtoms: (entryPoint: string) => Atom[]
 ): Atom {
-  return ({ config, config: { dev, rootDir }, on }) => {
+  return ({ config, config: { dev, rootDir }, getLogger, on }) => {
+    const logger = getLogger("storybook");
     const storySet = new Set<string>();
     const instanceMap = new Map<
       string,
