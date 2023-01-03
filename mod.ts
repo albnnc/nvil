@@ -11,7 +11,7 @@ export interface KoatConfig {
   destDir: string;
   importMapUrl?: string;
   signal?: AbortSignal;
-  getLogger?: (scope: string) => log.Logger;
+  overrideLogger?: (scope: string) => log.Logger;
 }
 
 export function createKoat(atoms: Atom[], config: KoatConfig) {
@@ -46,7 +46,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     bundle,
     bootstrap,
     getLogger: (scope: string) =>
-      config.getLogger?.(scope) ?? createLogger(scope),
+      config.overrideLogger?.(scope) ?? createLogger(scope),
     ...stager,
   };
   for (const fn of atoms) {
