@@ -4,14 +4,16 @@ import { absolutisePath } from "../utils/absolutise_path.ts";
 import { relativisePath } from "../utils/relativise_path.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
+export type EsbuildConfig = esbuild.BuildOptions;
+
 export interface BuildConfig {
   scope?: string;
-  esbuildOptions?: esbuild.BuildOptions;
+  overrideEsbuildConfig?: (config: EsbuildConfig) => EsbuildConfig;
 }
 
 export function build(
   entryPoint: string,
-  { scope, esbuildOptions }: BuildConfig = {}
+  { scope, overrideEsbuildConfig }: BuildConfig = {}
 ): Atom {
   return ({
     config: { dev, rootDir, importMapUrl },
@@ -27,7 +29,7 @@ export function build(
       logger.info(`Building ${relativeEntryPoint}`);
       await runStage("BUILD_START", absoluteEntryPoint);
       try {
-        const { outputFiles } = await esbuild.build({
+        const esbuildConfig: EsbuildConfig = {
           entryPoints: [absoluteEntryPoint],
           write: false,
           bundle: true,
@@ -71,8 +73,9 @@ export function build(
               importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
             }),
           ],
-          ...esbuildOptions,
-        });
+        };
+        overrideEsbuildConfig?.(esbuildConfig);
+        const { outputFiles } = await esbuild.build(esbuildConfig);
         esbuild.stop();
         const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
         if (!indexJs) {
