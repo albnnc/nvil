@@ -22,11 +22,14 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     : config.importMapUrl?.startsWith("/")
     ? path.toFileUrl(completeRootDir).toString()
     : config.importMapUrl;
+  const abortController = new AbortController();
+  config.signal?.addEventListener("abort", () => abortController.abort());
   const completeConfig: KoatConfig = {
     ...config,
     rootDir: completeRootDir,
     destDir: completeDestDir,
     importMapUrl: completeImportMapUrl,
+    signal: abortController.signal,
   };
   const bundle = new Bundle();
   const bootstrap = async () => {
@@ -37,7 +40,11 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
       await bundle.writeChanges(completeDestDir);
       writeDeferred();
     };
-    config.dev && writeDeferred();
+    if (config.dev) {
+      writeDeferred();
+    } else {
+      abortController.abort();
+    }
   };
   const stager = createStager();
   const koat = {

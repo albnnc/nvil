@@ -16,7 +16,7 @@ export function build(
   { scope, overrideEsbuildConfig }: BuildConfig = {}
 ): Atom {
   return ({
-    config: { dev, rootDir, importMapUrl },
+    config: { dev, rootDir, signal, importMapUrl },
     bundle,
     getLogger,
     onStage,
@@ -76,7 +76,9 @@ export function build(
         };
         overrideEsbuildConfig?.(esbuildConfig);
         const { outputFiles } = await esbuild.build(esbuildConfig);
-        esbuild.stop();
+        signal?.addEventListener("abort", () => {
+          esbuild.stop();
+        });
         const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
         if (!indexJs) {
           return;
