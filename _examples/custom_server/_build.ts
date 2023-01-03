@@ -4,7 +4,7 @@ import { clean } from "../../atoms/clean.ts";
 import { exec } from "../../atoms/exec.ts";
 import { htmlTemplate } from "../../atoms/html_template.ts";
 import { liveReload } from "../../atoms/live_reload.ts";
-import { createKoat } from "../../koat.ts";
+import { createKoat } from "../../mod.ts";
 
 const koat = createKoat(
   [

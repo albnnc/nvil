@@ -3,7 +3,7 @@ import { build } from "../../atoms/build.ts";
 import { clean } from "../../atoms/clean.ts";
 import { htmlTemplate } from "../../atoms/html_template.ts";
 import { storybook } from "../../atoms/storybook/mod.ts";
-import { createKoat } from "../../koat.ts";
+import { createKoat } from "../../mod.ts";
 
 const koat = createKoat(
   [

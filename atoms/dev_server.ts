@@ -21,7 +21,7 @@ export function devServer({
           return (
             handleLiveReloadRequest(req) ||
             fileServer
-              .serveDir(req, { fsRoot: destDir })
+              .serveDir(req, { fsRoot: destDir, quiet: true })
               .then((v) =>
                 v.status === 404 ? fileServer.serveFile(req, indexHtml) : v
               )

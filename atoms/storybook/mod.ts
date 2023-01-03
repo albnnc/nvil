@@ -1,6 +1,6 @@
 import { Atom } from "../../atom.ts";
 import { deepMerge, log, path } from "../../deps.ts";
-import { createKoat, Koat, KoatConfig } from "../../koat.ts";
+import { createKoat, Koat, KoatConfig } from "../../mod.ts";
 import { createLogger } from "../../logger.ts";
 import { cyrb53 } from "../../utils/cyrb53.ts";
 import { relativisePath } from "../../utils/relativise_path.ts";

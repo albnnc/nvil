@@ -73,17 +73,18 @@ export function build(
         if (!indexJs) {
           return;
         }
-        const relativePath =
-          "./" +
-          absoluteEntryPoint.replace(rootDir, "").replace(/.(j|t)sx?/, ".js");
-        bundle.set(relativePath, { data: indexJs.contents, scope });
+        const targetPath = relativisePath(absoluteEntryPoint, rootDir).replace(
+          /.(j|t)sx?/,
+          ".js"
+        );
+        bundle.set(targetPath, { data: indexJs.contents, scope });
         await run("BUILD_END", absoluteEntryPoint);
       } catch (e) {
         logger.error(e.message);
       }
     };
     const watch = async () => {
-      logger.info(`Watching ${entryPoint}`);
+      logger.info(`Watching ${relativeEntryPoint}`);
       const watcher = watchModule(absoluteEntryPoint);
       const debounced = async.debounce(handle, 200);
       for await (const event of watcher) {
