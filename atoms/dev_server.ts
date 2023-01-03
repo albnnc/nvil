@@ -3,12 +3,12 @@ import { server, path, fileServer } from "../deps.ts";
 import { handleLiveReloadRequest } from "./live_reload.ts";
 
 export function devServer(): Atom {
-  return ({ config: { dev, destDir }, getLogger, on }) => {
+  return ({ config: { dev, destDir }, getLogger, onStage }) => {
     const logger = getLogger("devServer");
     if (!dev) {
       return;
     }
-    on("BOOTSTRAP", () => {
+    onStage("BOOTSTRAP", () => {
       const indexHtml = path.join(destDir, "index.html");
       server.serve(
         (req) => {

@@ -10,7 +10,7 @@ export function storybook(
   glob: string,
   getAtoms: (entryPoint: string) => Atom[]
 ): Atom {
-  return ({ config, config: { dev, rootDir }, getLogger, on }) => {
+  return ({ config, config: { dev, rootDir }, getLogger, onStage }) => {
     const logger = getLogger("storybook");
     const storySet = new Set<string>();
     const instanceMap = new Map<
@@ -50,7 +50,7 @@ export function storybook(
       // TODO: Delete story destDir.
     };
     updateStorySetSync(storySet, { rootDir, glob, onFind, onLoss });
-    on("BOOTSTRAP", () => {
+    onStage("BOOTSTRAP", () => {
       dev && watchStorySet(storySet, { rootDir, glob, onFind, onLoss });
     });
   };

@@ -4,7 +4,7 @@ export type StageHandler = (context?: unknown) => void | Promise<void>;
 
 export function createStager() {
   const stages: Record<string, StageHandler[]> = {};
-  const on = (stageName: string, fn: StageHandler) => {
+  const onStage = (stageName: string, fn: StageHandler) => {
     if (stages[stageName]) {
       stages[stageName].push(fn);
     } else {
@@ -13,7 +13,7 @@ export function createStager() {
   };
   let runCount = 0;
   let runCycleDeferred = async.deferred();
-  const run = async (stageName: string, context?: unknown) => {
+  const runStage = async (stageName: string, context?: unknown) => {
     ++runCount;
     for (const fn of stages[stageName] || []) {
       await fn(context);
@@ -24,10 +24,10 @@ export function createStager() {
       runCycleDeferred = async.deferred();
     }
   };
-  const wait = () => {
+  const waitStages = () => {
     return runCycleDeferred;
   };
-  return { stages, on, run, wait };
+  return { stages, onStage, runStage, waitStages };
 }
 
 export type Stager = ReturnType<typeof createStager>;

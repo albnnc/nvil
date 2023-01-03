@@ -22,20 +22,20 @@ export function handleLiveReloadRequest(request: Request) {
 }
 
 export function liveReload(): Atom {
-  return ({ config: { dev }, bundle, getLogger, on, run }) => {
+  return ({ config: { dev }, bundle, getLogger, onStage, runStage }) => {
     const logger = getLogger("liveReload");
     if (!dev) {
       return;
     }
     const key = "./live-reload.js";
-    on("BOOTSTRAP", async () => {
+    onStage("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
       logger.info(`Populating ${key}`);
       bundle.set(key, { data });
-      await run("LIVE_RELOAD_SCRIPT_POPULATE");
+      await runStage("LIVE_RELOAD_SCRIPT_POPULATE");
     });
-    on("BUILD_END", () => {
+    onStage("BUILD_END", () => {
       if (!bundle.has(key)) {
         return;
       }

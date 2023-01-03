@@ -30,10 +30,10 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
   };
   const bundle = new Bundle();
   const bootstrap = async () => {
-    await koat.run("BOOTSTRAP");
+    await koat.runStage("BOOTSTRAP");
     await bundle.writeChanges(completeDestDir);
     const writeDeferred = async () => {
-      await stager.wait();
+      await stager.waitStages();
       await bundle.writeChanges(completeDestDir);
       writeDeferred();
     };

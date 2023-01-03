@@ -3,7 +3,7 @@ import { absolutisePath } from "../utils/absolutise_path.ts";
 import { relativisePath } from "../utils/relativise_path.ts";
 
 export function exec(scope: string): Atom {
-  return ({ config: { dev, destDir }, bundle, getLogger, on }) => {
+  return ({ config: { dev, destDir }, bundle, getLogger, onStage }) => {
     const logger = getLogger("devServer");
     if (!dev) {
       return;
@@ -37,7 +37,7 @@ export function exec(scope: string): Atom {
       handleOutput(childProcess.stdout);
       handleOutput(childProcess.stderr, true);
     };
-    on("BUILD_END", () => {
+    onStage("BUILD_END", () => {
       for (const [k, v] of bundle.entries()) {
         if (v.scope === scope) {
           const entryPoint = absolutisePath(k, destDir);

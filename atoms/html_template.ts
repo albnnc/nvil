@@ -10,7 +10,7 @@ export function htmlTemplate(
   entryPoint: string,
   { scope }: HtmlTemplateConfig = {}
 ): Atom {
-  return ({ config: { rootDir }, bundle, getLogger, on }) => {
+  return ({ config: { rootDir }, bundle, getLogger, onStage }) => {
     const logger = getLogger("htmlTemplate");
     const handle = async () => {
       logger.info(`Populating ./index.html`);
@@ -28,7 +28,7 @@ export function htmlTemplate(
       );
       bundle.set("./index.html", { data });
     };
-    on("BUILD_END", handle);
-    on("LIVE_RELOAD_SCRIPT_POPULATE", handle);
+    onStage("BUILD_END", handle);
+    onStage("LIVE_RELOAD_SCRIPT_POPULATE", handle);
   };
 }

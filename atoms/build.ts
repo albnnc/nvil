@@ -17,15 +17,15 @@ export function build(
     config: { dev, rootDir, importMapUrl },
     bundle,
     getLogger,
-    on,
-    run,
+    onStage,
+    runStage,
   }) => {
     const logger = getLogger("build");
     const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);
     const relativeEntryPoint = relativisePath(entryPoint, rootDir);
     const handle = async () => {
       logger.info(`Building ${relativeEntryPoint}`);
-      await run("BUILD_START", absoluteEntryPoint);
+      await runStage("BUILD_START", absoluteEntryPoint);
       try {
         const { outputFiles } = await esbuild.build({
           entryPoints: [absoluteEntryPoint],
@@ -83,7 +83,7 @@ export function build(
           ".js"
         );
         bundle.set(targetPath, { data: indexJs.contents, scope });
-        await run("BUILD_END", absoluteEntryPoint);
+        await runStage("BUILD_END", absoluteEntryPoint);
       } catch (e) {
         logger.error(e.message);
       }
@@ -102,7 +102,7 @@ export function build(
         }
       }
     };
-    on("BOOTSTRAP", async () => {
+    onStage("BOOTSTRAP", async () => {
       await handle();
       dev && watch();
     });
