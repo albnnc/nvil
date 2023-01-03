@@ -16,10 +16,10 @@ const koat = createKoat(
     exec("server"),
   ],
   {
+    rootUrl: import.meta.resolve("./"),
+    destUrl: "./dest",
+    importMapUrl: "./import_map.json",
     dev: Deno.args[0] === "dev",
-    rootDir: import.meta.resolve("./"),
-    destDir: "./dest",
-    importMapUrl: import.meta.resolve("./import_map.json"),
   }
 );
 

@@ -1,13 +1,13 @@
 import { Atom } from "../atom.ts";
-import { relativisePath } from "../utils/relativise_path.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export function clean(): Atom {
-  return ({ config: { rootDir, destDir }, getLogger, onStage }) => {
+  return ({ config: { rootUrl, destUrl }, getLogger, onStage }) => {
     const logger = getLogger("clean");
     onStage("BOOTSTRAP", async () => {
-      const relativeDestDir = relativisePath(destDir, rootDir);
-      logger.info(`Deleting ${relativeDestDir}`);
-      await Deno.remove(destDir, {
+      const relativeDestUrl = relativiseUrl(destUrl, rootUrl);
+      logger.info(`Deleting ${relativeDestUrl}`);
+      await Deno.remove(new URL(destUrl), {
         recursive: true,
       }).catch(() => undefined);
     });

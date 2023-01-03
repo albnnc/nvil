@@ -1,16 +1,15 @@
 import { Atom } from "../atom.ts";
-import { absolutisePath } from "../utils/absolutise_path.ts";
-import { relativisePath } from "../utils/relativise_path.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export function exec(scope: string): Atom {
-  return ({ config: { dev, destDir }, bundle, getLogger, onStage }) => {
+  return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("devServer");
     if (!dev) {
       return;
     }
     let childProcess: Deno.ChildProcess;
     const handle = (entryPoint: string) => {
-      logger.info(`Executing ${relativisePath(entryPoint, destDir)}`);
+      logger.info(`Executing ${relativiseUrl(entryPoint, destUrl)}`);
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
         args: ["run", "-A", entryPoint],
@@ -40,8 +39,7 @@ export function exec(scope: string): Atom {
     onStage("BUILD_END", () => {
       for (const [k, v] of bundle.entries()) {
         if (v.scope === scope) {
-          const entryPoint = absolutisePath(k, destDir);
-          handle(entryPoint);
+          handle(new URL(k, destUrl).toString());
         }
       }
     });

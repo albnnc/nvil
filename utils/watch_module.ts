@@ -1,7 +1,7 @@
-import { async } from "../deps.ts";
+import { async, path } from "../deps.ts";
 import { expandModule } from "./expand_module.ts";
 
-export function watchModule(modulePath: string) {
+export function watchModule(specifier: string) {
   let closed = false;
   return {
     close: () => {
@@ -12,8 +12,8 @@ export function watchModule(modulePath: string) {
         return;
       }
       const iterable = new async.MuxAsyncIterator<Deno.FsEvent>();
-      let expanded = await expandModule(modulePath);
-      let watcher = Deno.watchFs(expanded.commonDir);
+      let expanded = await expandModule(specifier);
+      let watcher = Deno.watchFs(path.fromFileUrl(expanded.commonUrl));
       this.close = () => {
         closed = true;
         watcher.close();
@@ -23,13 +23,17 @@ export function watchModule(modulePath: string) {
         if (closed) {
           break;
         }
-        if (event.paths.every((v) => !expanded.filePaths.includes(v))) {
+        if (
+          event.paths.every((v) =>
+            expanded.fileUrls.every((t) => t !== path.toFileUrl(v).toString())
+          )
+        ) {
           continue;
         }
         yield event;
-        const nextExpanded = await expandModule(modulePath);
-        if (nextExpanded.commonDir !== expanded.commonDir) {
-          const nextWatcher = Deno.watchFs(nextExpanded.commonDir);
+        const nextExpanded = await expandModule(specifier);
+        if (nextExpanded.commonUrl !== expanded.commonUrl) {
+          const nextWatcher = Deno.watchFs(nextExpanded.commonUrl);
           iterable.add(nextWatcher);
           watcher.close();
           expanded = nextExpanded;

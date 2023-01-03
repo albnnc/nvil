@@ -1,7 +1,6 @@
 import { Atom } from "../atom.ts";
 import { async, esbuild, esbuildDenoPlugin } from "../deps.ts";
-import { absolutisePath } from "../utils/absolutise_path.ts";
-import { relativisePath } from "../utils/relativise_path.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
 export type EsbuildConfig = esbuild.BuildOptions;
@@ -16,15 +15,15 @@ export function build(
   { scope, overrideEsbuildConfig }: BuildConfig = {}
 ): Atom {
   return ({
-    config: { dev, rootDir, signal, importMapUrl },
+    config: { rootUrl, importMapUrl, dev, signal },
     bundle,
     getLogger,
     onStage,
     runStage,
   }) => {
     const logger = getLogger("build");
-    const absoluteEntryPoint = absolutisePath(entryPoint, rootDir);
-    const relativeEntryPoint = relativisePath(entryPoint, rootDir);
+    const absoluteEntryPoint = new URL(entryPoint, rootUrl).toString();
+    const relativeEntryPoint = relativiseUrl(absoluteEntryPoint, rootUrl);
     const handle = async () => {
       logger.info(`Building ${relativeEntryPoint}`);
       await runStage("BUILD_START", absoluteEntryPoint);
@@ -83,11 +82,8 @@ export function build(
         if (!indexJs) {
           return;
         }
-        const targetPath = relativisePath(absoluteEntryPoint, rootDir).replace(
-          /.(j|t)sx?/,
-          ".js"
-        );
-        bundle.set(targetPath, { data: indexJs.contents, scope });
+        const targetUrl = relativeEntryPoint.replace(/.(j|t)sx?/, ".js");
+        bundle.set(targetUrl, { data: indexJs.contents, scope });
         await runStage("BUILD_END", absoluteEntryPoint);
       } catch (e) {
         logger.error(e.message);

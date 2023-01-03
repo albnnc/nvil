@@ -16,12 +16,12 @@ export class Bundle extends Map<string, BundleChunk> {
     super(entries);
   }
 
-  set(key: string, value: BundleChunk) {
-    if (!key.startsWith(".")) {
+  set(url: string, chunk: BundleChunk) {
+    if (!url.startsWith(".")) {
       throw new Error("Only realative paths are allowed");
     }
-    super.set(key, value);
-    this.#changes.add(key);
+    super.set(url, chunk);
+    this.#changes.add(url);
     return this;
   }
 
@@ -33,14 +33,15 @@ export class Bundle extends Map<string, BundleChunk> {
     return Array.from(this.#changes.values());
   }
 
-  async writeChanges(destDir: string) {
+  async writeChanges(destUrl: string) {
     for (const k of this.getChanges()) {
       const { data } = this.get(k) ?? {};
       if (!data) {
         throw new Error(`Unable to get data for change "${k}"`);
       }
       this.#changes.delete(k);
-      const targetPath = path.join(destDir, k);
+      const targetUrl = new URL(k, destUrl).toString();
+      const targetPath = path.fromFileUrl(targetUrl);
       const targetDir = path.dirname(targetPath);
       await fs.ensureDir(targetDir);
       await Deno.writeFile(targetPath, data);

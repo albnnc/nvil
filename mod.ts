@@ -1,43 +1,43 @@
 import { Atom } from "./atom.ts";
 import { Bundle } from "./bundle.ts";
-import { log, path } from "./deps.ts";
+import { log } from "./deps.ts";
 import { createLogger } from "./logger.ts";
 import { createStager } from "./stager.ts";
-import { absolutisePath } from "./utils/absolutise_path.ts";
 
 export interface KoatConfig {
-  dev?: boolean;
-  rootDir: string;
-  destDir: string;
+  rootUrl: string;
+  destUrl: string;
   importMapUrl?: string;
+  dev?: boolean;
   signal?: AbortSignal;
   overrideLogger?: (scope: string) => log.Logger;
 }
 
 export function createKoat(atoms: Atom[], config: KoatConfig) {
-  const completeRootDir = absolutisePath(config.rootDir);
-  const completeDestDir = absolutisePath(config.destDir, completeRootDir);
-  const completeImportMapUrl = config.importMapUrl?.startsWith(".")
-    ? new URL(path.toFileUrl(completeRootDir), config.importMapUrl).toString()
-    : config.importMapUrl?.startsWith("/")
-    ? path.toFileUrl(completeRootDir).toString()
-    : config.importMapUrl;
+  const safeRootUrl = new URL("./", config.rootUrl).toString();
+  const safeDestUrl = new URL(
+    "./",
+    new URL(config.destUrl, safeRootUrl)
+  ).toString();
+  const safeImportMapUrl = config.importMapUrl
+    ? new URL(config.importMapUrl, safeRootUrl).toString()
+    : undefined;
   const abortController = new AbortController();
   config.signal?.addEventListener("abort", () => abortController.abort());
-  const completeConfig: KoatConfig = {
+  const safeConfig: KoatConfig = {
     ...config,
-    rootDir: completeRootDir,
-    destDir: completeDestDir,
-    importMapUrl: completeImportMapUrl,
+    rootUrl: safeRootUrl,
+    destUrl: safeDestUrl,
+    importMapUrl: safeImportMapUrl,
     signal: abortController.signal,
   };
   const bundle = new Bundle();
   const bootstrap = async () => {
     await koat.runStage("BOOTSTRAP");
-    await bundle.writeChanges(completeDestDir);
+    await bundle.writeChanges(safeDestUrl);
     const writeDeferred = async () => {
       await stager.waitStages();
-      await bundle.writeChanges(completeDestDir);
+      await bundle.writeChanges(safeDestUrl);
       writeDeferred();
     };
     if (config.dev) {
@@ -49,7 +49,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
   const stager = createStager();
   const koat = {
     atoms,
-    config: completeConfig,
+    config: safeConfig,
     bundle,
     bootstrap,
     getLogger: (scope: string) =>

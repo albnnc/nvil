@@ -27,16 +27,16 @@ export function liveReload(): Atom {
     if (!dev) {
       return;
     }
-    const key = "./live-reload.js";
+    const url = "./live-reload.js";
     onStage("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
       const data = encoder.encode(liveReloadScript);
-      logger.info(`Populating ${key}`);
-      bundle.set(key, { data });
+      logger.info(`Populating ${url}`);
+      bundle.set(url, { data });
       await runStage("LIVE_RELOAD_SCRIPT_POPULATE");
     });
     onStage("BUILD_END", () => {
-      if (!bundle.has(key)) {
+      if (!bundle.has(url)) {
         return;
       }
       logger.info("Reloading");

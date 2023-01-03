@@ -1,9 +1,8 @@
 import { path, graph } from "../deps.ts";
 
-export async function expandModule(modulePath: string) {
-  const absoluteModulePath = path.resolve(Deno.cwd(), modulePath);
+export async function expandModule(specifier: string) {
   const process = Deno.run({
-    cmd: ["deno", "info", absoluteModulePath, "--json"],
+    cmd: ["deno", "info", specifier, "--json"],
     stdout: "piped",
     stderr: "piped",
   });
@@ -27,13 +26,11 @@ export async function expandModule(modulePath: string) {
   //     };
   //   },
   // });
-  const filePaths = modules
+  const fileUrls = modules
     .map((v) => v.specifier)
-    .filter((v) => v.startsWith("file://"))
-    .map((v) => path.fromFileUrl(v));
-  if (filePaths.length < 0) {
-    filePaths.push(absoluteModulePath);
-  }
-  const commonDir = path.common(filePaths);
-  return { filePaths, commonDir };
+    .concat([specifier])
+    .filter((v) => v.startsWith("file:"));
+  const dirs = fileUrls.map(path.fromFileUrl).map(path.dirname);
+  const commonUrl = path.toFileUrl(path.common(dirs)).toString();
+  return { fileUrls, commonUrl };
 }
