@@ -1,4 +1,4 @@
 import React from "react";
-import { mount } from "./mount.ts";
+import { init } from "./init.ts";
 
-mount(<button>Button</button>);
+init(<button>Button</button>);

@@ -1,7 +1,7 @@
 import React from "react";
-import { mount } from "./mount.ts";
+import { init } from "./init.ts";
 
-mount(
+init(
   <div
     style={{
       padding: "1em",

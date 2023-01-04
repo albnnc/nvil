@@ -1,6 +1,5 @@
 import { Atom } from "../../atom.ts";
-import { cyrb53 } from "../../utils/cyrb53.ts";
-import { relativiseUrl } from "../../utils/relativise_url.ts";
+import { getStoryMeta } from "./story_meta.ts";
 
 const callbacks = new Map<string, (id: string) => void>();
 
@@ -40,11 +39,10 @@ export function storyReload(): Atom {
     onStage("BUILD_END", async (entryPoint) => {
       // TODO: Check scope.
       logger.info("Reloading");
-      const relativeEntryPoint = relativiseUrl(entryPoint as string, rootUrl);
-      const storyId = cyrb53(relativeEntryPoint).toString();
+      const { id } = getStoryMeta(entryPoint as string, rootUrl);
       await fetch(new URL("http://localhost:8000/story-reload-events"), {
         method: "POST",
-        body: storyId,
+        body: id,
       })
         .then(async (v) => {
           await v.body?.cancel();
