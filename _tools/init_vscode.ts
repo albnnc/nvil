@@ -21,7 +21,7 @@ for await (const v of fs.expandGlob(importMapGlob, { globstar: true })) {
 }
 
 log.info("Removing VSCode dir");
-await Deno.remove(vscodeDir, { recursive: true });
+await Deno.remove(vscodeDir, { recursive: true }).catch(() => undefined);
 
 log.info(`Creating VSCode dir`);
 await fs.ensureDir(vscodeDir);
