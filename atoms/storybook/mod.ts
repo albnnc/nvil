@@ -20,8 +20,8 @@ export function storybook(
     const instanceMap = new Map<
       string,
       {
-        abortController: AbortController;
         project: Project;
+        clean: () => Promise<void>;
       }
     >();
     const onFind = (entryPoint: string) => {
@@ -41,24 +41,30 @@ export function storybook(
             getLogger(`sb/${meta.id.slice(0, 4)}/${scope}`),
         }) as ProjectConfig
       );
-      bootstrapped
-        ? project.bootstrap()
-        : onStage("BOOTSTRAP", project.bootstrap);
-      instanceMap.set(entryPoint, { abortController, project });
+      const bootstrap = () => {
+        if (bootstrapped) {
+          project.bootstrap();
+          return;
+        }
+        return onStage("BOOTSTRAP", project.bootstrap);
+      };
+      const cleanStage = bootstrap();
+      const clean = async () => {
+        abortController.abort();
+        cleanStage?.();
+        await Deno.remove(path.fromFileUrl(destUrl), { recursive: true });
+      };
+      instanceMap.set(entryPoint, { project, clean });
     };
-    const onLoss = async (entryPoint: string) => {
+    const onLoss = (entryPoint: string) => {
       const meta = getStoryMeta(entryPoint, rootUrl);
       logger.info(`Lost story ${meta.entryPoint}`);
       const instance = instanceMap.get(entryPoint);
       if (!instance) {
         return;
       }
-      instance.abortController.abort();
+      instance.clean();
       instanceMap.delete(entryPoint);
-      await Deno.remove(path.fromFileUrl(instance.project.config.destUrl), {
-        recursive: true,
-      });
-      // TODO: Cleanup story bootstrap bindings.
     };
     updateStorySetSync(storySet, { rootUrl, glob, onFind, onLoss });
     onStage("BOOTSTRAP", async () => {

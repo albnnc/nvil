@@ -10,6 +10,10 @@ export function createStager() {
     } else {
       stages[stageName] = [fn];
     }
+    return () => {
+      const index = (stages[stageName] ?? []).indexOf(fn);
+      index >= 0 && stages[stageName].splice(index, 1);
+    };
   };
   let runCount = 0;
   let runCycleDeferred = async.deferred();
