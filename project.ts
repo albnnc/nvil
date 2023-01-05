@@ -4,7 +4,7 @@ import { log } from "./deps.ts";
 import { createLogger } from "./logger.ts";
 import { createStager } from "./stager.ts";
 
-export interface KoatConfig {
+export interface ProjectConfig {
   rootUrl: string;
   destUrl: string;
   importMapUrl?: string;
@@ -13,7 +13,7 @@ export interface KoatConfig {
   overrideLogger?: (scope: string) => log.Logger;
 }
 
-export function createKoat(atoms: Atom[], config: KoatConfig) {
+export function createProject(atoms: Atom[], config: ProjectConfig) {
   const safeRootUrl = new URL("./", config.rootUrl).toString();
   const safeDestUrl = new URL(
     "./",
@@ -24,7 +24,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     : undefined;
   const abortController = new AbortController();
   config.signal?.addEventListener("abort", () => abortController.abort());
-  const safeConfig: KoatConfig = {
+  const safeConfig: ProjectConfig = {
     ...config,
     rootUrl: safeRootUrl,
     destUrl: safeDestUrl,
@@ -33,7 +33,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
   };
   const bundle = new Bundle();
   const bootstrap = async () => {
-    await koat.runStage("BOOTSTRAP");
+    await project.runStage("BOOTSTRAP");
     await bundle.writeChanges(safeDestUrl);
     const writeDeferred = async () => {
       await stager.waitStages();
@@ -47,7 +47,7 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     }
   };
   const stager = createStager();
-  const koat = {
+  const project = {
     atoms,
     config: safeConfig,
     bundle,
@@ -57,9 +57,9 @@ export function createKoat(atoms: Atom[], config: KoatConfig) {
     ...stager,
   };
   for (const fn of atoms) {
-    fn(koat);
+    fn(project);
   }
-  return koat;
+  return project;
 }
 
-export type Koat = ReturnType<typeof createKoat>;
+export type Project = ReturnType<typeof createProject>;

@@ -1,6 +1,6 @@
 import { Atom } from "../../atom.ts";
 import { deepMerge, path } from "../../deps.ts";
-import { createKoat, Koat, KoatConfig } from "../../mod.ts";
+import { createProject, Project, ProjectConfig } from "../../project.ts";
 import { build } from "../build.ts";
 import { exec } from "../exec.ts";
 import { htmlTemplate } from "../html_template.ts";
@@ -21,7 +21,7 @@ export function storybook(
       string,
       {
         abortController: AbortController;
-        instance: Koat;
+        project: Project;
       }
     >();
     const onFind = (entryPoint: string) => {
@@ -32,30 +32,30 @@ export function storybook(
         config.destUrl
       ).toString();
       const abortController = new AbortController();
-      const instance = createKoat(
+      const project = createProject(
         [...getAtoms(entryPoint), storyMeta(entryPoint), storyReload()],
         deepMerge(config, {
           destUrl,
           signal: abortController.signal,
           overrideLogger: (scope: string) =>
             getLogger(`sb/${meta.id.slice(0, 4)}/${scope}`),
-        }) as KoatConfig
+        }) as ProjectConfig
       );
       bootstrapped
-        ? instance.bootstrap()
-        : onStage("BOOTSTRAP", instance.bootstrap);
-      instanceMap.set(entryPoint, { abortController, instance });
+        ? project.bootstrap()
+        : onStage("BOOTSTRAP", project.bootstrap);
+      instanceMap.set(entryPoint, { abortController, project });
     };
     const onLoss = async (entryPoint: string) => {
       const meta = getStoryMeta(entryPoint, rootUrl);
       logger.info(`Lost story ${meta.entryPoint}`);
-      const item = instanceMap.get(entryPoint);
-      if (!item) {
+      const instance = instanceMap.get(entryPoint);
+      if (!instance) {
         return;
       }
-      item.abortController.abort();
+      instance.abortController.abort();
       instanceMap.delete(entryPoint);
-      await Deno.remove(path.fromFileUrl(item.instance.config.destUrl), {
+      await Deno.remove(path.fromFileUrl(instance.project.config.destUrl), {
         recursive: true,
       });
       // TODO: Cleanup story bootstrap bindings.
@@ -64,7 +64,7 @@ export function storybook(
     onStage("BOOTSTRAP", async () => {
       bootstrapped = true;
       dev && watchStorySet(storySet, { rootUrl, glob, onFind, onLoss });
-      await createKoat(
+      await createProject(
         [
           build("./index.tsx"),
           build("./server.ts", { scope: "server" }),
@@ -75,7 +75,7 @@ export function storybook(
           rootUrl: import.meta.resolve("./ui/"),
           importMapUrl: "./import_map.json",
           overrideLogger: (scope: string) => getLogger(`sb/ui/${scope}`),
-        }) as KoatConfig
+        }) as ProjectConfig
       ).bootstrap();
     });
   };

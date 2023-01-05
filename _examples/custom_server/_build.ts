@@ -4,9 +4,9 @@ import { clean } from "../../atoms/clean.ts";
 import { exec } from "../../atoms/exec.ts";
 import { htmlTemplate } from "../../atoms/html_template.ts";
 import { liveReload } from "../../atoms/live_reload.ts";
-import { createKoat } from "../../mod.ts";
+import { createProject } from "../../project.ts";
 
-const koat = createKoat(
+const project = createProject(
   [
     clean(),
     build("./index.tsx"),
@@ -23,4 +23,4 @@ const koat = createKoat(
   }
 );
 
-await koat.bootstrap();
+await project.bootstrap();

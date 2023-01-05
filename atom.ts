@@ -1,5 +1,5 @@
-import { Koat } from "./mod.ts";
+import { Project } from "./project.ts";
 
 export interface Atom {
-  (koat: Koat): void;
+  (project: Project): void;
 }

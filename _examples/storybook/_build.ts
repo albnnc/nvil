@@ -3,9 +3,9 @@ import { build } from "../../atoms/build.ts";
 import { clean } from "../../atoms/clean.ts";
 import { htmlTemplate } from "../../atoms/html_template.ts";
 import { storybook } from "../../atoms/storybook/mod.ts";
-import { createKoat } from "../../mod.ts";
+import { createProject } from "../../project.ts";
 
-const koat = createKoat(
+const project = createProject(
   [
     clean(),
     storybook("./**/*_story.{ts,tsx}", (v) => [
@@ -21,4 +21,4 @@ const koat = createKoat(
   }
 );
 
-await koat.bootstrap();
+await project.bootstrap();

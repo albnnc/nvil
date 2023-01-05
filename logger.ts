@@ -36,7 +36,7 @@ class Handler extends log.handlers.BaseHandler {
 }
 
 export function createLogger(scope: string) {
-  return new log.Logger("KOAT_LOGGER", "DEBUG", {
+  return new log.Logger("PROJECT_LOGGER", "DEBUG", {
     handlers: [new Handler(scope)],
   });
 }

@@ -21,7 +21,7 @@ export function App() {
       <CssBaseline />
       <Layout>
         <Typography>
-          <h1>Koat MUI Example</h1>
+          <h1>MUI Example</h1>
           <h2>Basic Buttons</h2>
           <ButtonRow />
           <h2>Contained Buttons</h2>
