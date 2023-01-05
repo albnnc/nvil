@@ -14,7 +14,9 @@ export function htmlTemplate(
     const handle = async () => {
       try {
         logger.info(`Populating ./index.html`);
-        const template = await Deno.readTextFile(new URL(entryPoint, rootUrl));
+        const template = await fetch(new URL(entryPoint, rootUrl)).then((v) =>
+          v.text()
+        );
         const scripts = Array.from(bundle.entries())
           .filter(([k, v]) => k.endsWith(".js") && v.scope === scope)
           .map(([k]) => `<script type="module" src="${k}"></script>`);
