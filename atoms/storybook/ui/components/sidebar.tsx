@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
 import { useMemo, useState } from "react";
-import { IoSearchOutline, IoFileTrayOutline } from "react-icons/io5";
+import { IoFileTrayOutline, IoSearchOutline } from "react-icons/io5";
 import { Link, useSearchParams } from "react-router-dom";
 import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
