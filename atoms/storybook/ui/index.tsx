@@ -17,3 +17,6 @@ const router = createBrowserRouter([
 
 const root = document.getElementById("root");
 ReactDOM.render(<RouterProvider router={router} />, root);
+
+// @ts-ignore: compile-time defined.
+console.log(STORYBOOK_CONSTANTS);

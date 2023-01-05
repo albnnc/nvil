@@ -3,6 +3,7 @@ import { jsx } from "@theme-ui/core";
 import { useMemo, useState } from "react";
 import { IoSearchOutline, IoFileTrayOutline } from "react-icons/io5";
 import { Link, useSearchParams } from "react-router-dom";
+import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
 import { getStoryName } from "../utils/get_story_name.ts";
 
@@ -11,7 +12,7 @@ const textStyle = {
   fontSize: "0.85rem",
   letterSpacing: "0.065em",
   textTransform: "uppercase",
-  fontWeight: 300,
+  fontWeight: theme.colorScheme === "dark" ? 300 : 400,
 };
 
 export function Sidebar() {
@@ -36,8 +37,8 @@ export function Sidebar() {
       sx={{
         py: "1em",
         flex: "0 0 250px",
-        backgroundColor: "#1a1a1a",
-        color: "#ffffffaa",
+        backgroundColor: theme.colors.sidebar,
+        color: theme.colors.onSidebar,
         display: "flex",
         flexDirection: "column",
       }}
@@ -60,6 +61,7 @@ export function Sidebar() {
             background: "transparent",
             outline: "none",
             ...textStyle,
+            "&::placeholder": { ...textStyle, opacity: 0.5 },
           }}
         />
         <IoSearchOutline
@@ -68,7 +70,7 @@ export function Sidebar() {
             my: "-0.25rem",
             flex: "0 0 auto",
             transform: "scaleX(-1)",
-            opacity: 0.75,
+            opacity: 0.8,
           }}
         />
       </div>
@@ -81,7 +83,9 @@ export function Sidebar() {
               sx={{
                 px: "1rem",
                 py: "0.5rem",
-                backgroundColor: active ? "#ffffff0a" : undefined,
+                backgroundColor: active
+                  ? theme.colors.accentSidebar
+                  : undefined,
                 cursor: "default",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -92,8 +96,8 @@ export function Sidebar() {
                   textDecoration: "none",
                 },
                 "&:hover": {
-                  backgroundColor: "#ffffff11",
-                  color: "white",
+                  backgroundColor: theme.colors.accentSidebar,
+                  color: theme.colors.accentOnSidebar,
                 },
               }}
             >

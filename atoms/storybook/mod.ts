@@ -6,12 +6,20 @@ import { exec } from "../exec.ts";
 import { htmlTemplate } from "../html_template.ts";
 import { getStoryMeta, storyMeta } from "./story_meta.ts";
 import { storyReload } from "./story_reload.ts";
+import { Theme } from "./ui/theme.ts";
 import { updateStorySetSync } from "./update_story_set.ts";
 import { watchStorySet } from "./watch_story_set.ts";
 
+export interface StorybookConfig {
+  constants?: {
+    theme: Theme;
+  };
+}
+
 export function storybook(
   glob: string,
-  getAtoms: (entryPoint: string) => Atom[]
+  getAtoms: (entryPoint: string) => Atom[],
+  { constants }: StorybookConfig = {}
 ): Atom {
   return ({ config, config: { dev, rootUrl }, getLogger, onStage }) => {
     let bootstrapped = false;
@@ -72,7 +80,17 @@ export function storybook(
       dev && watchStorySet(storySet, { rootUrl, glob, onFind, onLoss });
       await createProject(
         [
-          build("./index.tsx"),
+          build("./index.tsx", {
+            overrideEsbuildConfig: (config) => {
+              config.define = {
+                ...config.define,
+                STORYBOOK_CONSTANTS: constants
+                  ? JSON.stringify(constants)
+                  : "undefined",
+              };
+              return config;
+            },
+          }),
           build("./server.ts", { scope: "server" }),
           htmlTemplate("./index.html"),
           exec("server"),

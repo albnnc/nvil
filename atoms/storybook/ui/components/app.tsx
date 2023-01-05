@@ -3,6 +3,7 @@ import { jsx } from "@theme-ui/core";
 import { Global } from "@emotion/react";
 import { Sidebar } from "./sidebar.tsx";
 import { Story } from "./story.tsx";
+import { theme } from "../constants.ts";
 
 export function App() {
   return (
@@ -17,8 +18,9 @@ export function App() {
       <Global
         styles={{
           html: {
-            backgroundColor: "#121212",
-            color: "white",
+            backgroundColor: theme.colors.background,
+            color: theme.colors.onBackground,
+            colorScheme: theme.colorScheme,
             fontFamily: "Roboto, sans-serif",
           },
           body: {
