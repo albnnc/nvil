@@ -1,5 +1,5 @@
 import { Atom } from "../atom.ts";
-import { async, esbuild, esbuildDenoPlugin } from "../deps.ts";
+import { async, esbuild, esbuildPluginDeno } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 import { watchModule } from "../utils/watch_module.ts";
 
@@ -37,38 +37,11 @@ export function build(
           platform: "browser",
           format: "esm",
           logLevel: "silent",
-          define: {
-            "import.meta.main": "false",
-          },
+          define: { "import.meta.main": "false" },
           plugins: [
-            {
-              name: "esm-sh-package-json",
-              setup(build) {
-                build.onLoad({ filter: /package\.json\.js/ }, () => {
-                  return {
-                    contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
-                    loader: "json",
-                  };
-                });
-              },
-            },
-            {
-              // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
-              name: "no-side-effects",
-              setup(build) {
-                build.onResolve({ filter: /.*/ }, async (args) => {
-                  if (args.pluginData) {
-                    return;
-                  }
-                  const { path, ...rest } = args;
-                  rest.pluginData = true;
-                  const result = await build.resolve(path, rest);
-                  result.sideEffects = false;
-                  return result;
-                });
-              },
-            },
-            esbuildDenoPlugin({
+            esbuildPluginEsmShPackageJson(),
+            esbuildPluginNoSideEffects(),
+            esbuildPluginDeno({
               importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
             }),
           ],
@@ -107,5 +80,38 @@ export function build(
       await handle();
       dev && watch();
     });
+  };
+}
+
+export function esbuildPluginEsmShPackageJson(): esbuild.Plugin {
+  return {
+    name: "esm-sh-package-json",
+    setup(build) {
+      build.onLoad({ filter: /package\.json\.js/ }, () => {
+        return {
+          contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
+          loader: "json",
+        };
+      });
+    },
+  };
+}
+
+export function esbuildPluginNoSideEffects(): esbuild.Plugin {
+  return {
+    // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
+    name: "no-side-effects",
+    setup(build) {
+      build.onResolve({ filter: /.*/ }, async (args) => {
+        if (args.pluginData) {
+          return;
+        }
+        const { path, ...rest } = args;
+        rest.pluginData = true;
+        const result = await build.resolve(path, rest);
+        result.sideEffects = false;
+        return result;
+      });
+    },
   };
 }
