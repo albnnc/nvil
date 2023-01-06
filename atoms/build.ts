@@ -63,6 +63,9 @@ export function build(
       }
     };
     const watch = async () => {
+      if (!absoluteEntryPoint.startsWith("file:")) {
+        return;
+      }
       logger.info(`Watching ${relativeEntryPoint}`);
       const watcher = watchModule(absoluteEntryPoint);
       const debounced = async.debounce(handle, 200);
