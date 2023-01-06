@@ -55,7 +55,7 @@ export function build(
         if (!indexJs) {
           return;
         }
-        const targetUrl = relativeEntryPoint.replace(/.(j|t)sx?/, ".js");
+        const targetUrl = relativeEntryPoint.replace(/\.(j|t)sx?/, ".js");
         bundle.set(targetUrl, { data: indexJs.contents, scope });
         await runStage("BUILD_END", absoluteEntryPoint);
       } catch (e) {
