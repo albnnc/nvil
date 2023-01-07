@@ -32,6 +32,7 @@ export function htmlTemplate(
         logger.error(e.message);
       }
     };
+    onStage("BOOTSTRAP", handle);
     onStage("BUILD_END", handle);
     onStage("LIVE_RELOAD_SCRIPT_POPULATE", handle);
   };
