@@ -1,7 +1,11 @@
 import { Atom } from "../atom.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
-export function exec(scope: string): Atom {
+export interface ExecConfig {
+  args?: string[];
+}
+
+export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
   return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("exec");
     if (!dev) {
@@ -12,7 +16,7 @@ export function exec(scope: string): Atom {
       logger.info(`Executing ${relativiseUrl(entryPoint, destUrl)}`);
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
-        args: ["run", "-A", entryPoint],
+        args: ["run", ...args, entryPoint],
         stdout: "piped",
         stderr: "piped",
       }).spawn();

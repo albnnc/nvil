@@ -13,7 +13,7 @@ const project = createProject(
     htmlTemplate("./index.html"),
     liveReload(),
     build("./server.ts", { scope: "server" }),
-    exec("server"),
+    exec("server", { args: ["-A"] }),
   ],
   {
     rootUrl: import.meta.resolve("./"),
