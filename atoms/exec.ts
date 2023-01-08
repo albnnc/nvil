@@ -1,4 +1,5 @@
 import { Atom } from "../atom.ts";
+import { async, path } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface ExecConfig {
@@ -6,13 +7,13 @@ export interface ExecConfig {
 }
 
 export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
-  return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
+  return ({ config: { destUrl, dev }, bundle, getLogger }) => {
     const logger = getLogger("exec");
     if (!dev) {
       return;
     }
     let childProcess: Deno.ChildProcess;
-    const handle = (entryPoint: string) => {
+    const handle = async.debounce((entryPoint: string) => {
       logger.info(`Executing ${relativiseUrl(entryPoint, destUrl)}`);
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
@@ -39,13 +40,22 @@ export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
       };
       handleOutput(childProcess.stdout);
       handleOutput(childProcess.stderr, true);
-    };
-    onStage("BUILD_END", () => {
-      for (const [k, v] of bundle.entries()) {
-        if (v.scope === scope && bundle.isChanged(k)) {
-          handle(new URL(k, destUrl).toString());
+    }, 200);
+    const watch = async () => {
+      const watcher = Deno.watchFs(path.fromFileUrl(destUrl));
+      for await (const entry of watcher) {
+        if (entry.kind === "create" || entry.kind === "modify") {
+          for (const v of entry.paths) {
+            const absoluteUrl = path.toFileUrl(v).toString();
+            const relativeUrl = relativiseUrl(absoluteUrl, destUrl);
+            const entry = bundle.get(relativeUrl);
+            if (entry && entry.scope === scope) {
+              handle(absoluteUrl);
+            }
+          }
         }
       }
-    });
+    };
+    watch();
   };
 }
