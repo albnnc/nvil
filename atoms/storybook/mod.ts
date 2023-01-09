@@ -93,7 +93,7 @@ export function storybook(
           }),
           build("./server.ts", { scope: "server" }),
           htmlTemplate("./index.html"),
-          exec("server"),
+          exec("server", { args: ["-A"] }),
         ],
         deepMerge(config, {
           rootUrl: import.meta.resolve("./ui/"),
