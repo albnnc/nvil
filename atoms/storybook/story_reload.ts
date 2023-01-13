@@ -1,5 +1,5 @@
 import { Atom } from "../../atom.ts";
-import { getStoryMeta } from "./story_meta.ts";
+import { async } from "../../deps.ts";
 
 const callbacks = new Map<string, (id: string) => void>();
 
@@ -31,15 +31,20 @@ export function handleStoryReloadRequest(request: Request) {
 }
 
 export function storyReload(): Atom {
-  return ({ config: { rootUrl, dev }, getLogger, onStage }) => {
+  return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("storyReload");
     if (!dev) {
       return;
     }
-    onStage("BUILD_END", async (entryPoint) => {
-      // TODO: Check scope.
-      logger.info("Reloading");
-      const { id } = getStoryMeta(entryPoint as string, rootUrl);
+    const handleChange = async.debounce(async (change: string) => {
+      const entry = bundle.get(change);
+      if (!entry || entry.scope !== undefined) {
+        return;
+      }
+      const storyBaseUrl = new URL("./", new URL(change, destUrl));
+      const metaUrl = new URL("./meta.json", storyBaseUrl);
+      const { id } = await fetch(metaUrl).then((v) => v.json());
+      logger.info(`Reloading story ${id}`);
       await fetch(new URL("http://localhost:8000/story-reload-events"), {
         method: "POST",
         body: id,
@@ -51,6 +56,11 @@ export function storyReload(): Atom {
           }
         })
         .catch(() => undefined);
+    }, 200);
+    onStage("WRITE_END", (changes) => {
+      for (const change of changes as string[]) {
+        handleChange(change);
+      }
     });
   };
 }

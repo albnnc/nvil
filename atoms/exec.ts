@@ -1,5 +1,4 @@
 import { Atom } from "../atom.ts";
-import { path } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface ExecConfig {

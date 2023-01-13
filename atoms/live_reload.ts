@@ -28,10 +28,11 @@ export function handleLiveReloadRequest(request: Request) {
 }
 
 export interface LiveReloadConfig {
+  scope?: string;
   url?: string;
 }
 
-export function liveReload({ url }: LiveReloadConfig = {}): Atom {
+export function liveReload({ scope, url }: LiveReloadConfig = {}): Atom {
   return ({ config: { dev }, bundle, getLogger, onStage, runStage }) => {
     const logger = getLogger("liveReload");
     if (!dev) {
@@ -45,11 +46,17 @@ export function liveReload({ url }: LiveReloadConfig = {}): Atom {
       bundle.set(scriptUrl, { data });
       await runStage("LIVE_RELOAD_SCRIPT_POPULATE");
     });
-    onStage("BUILD_END", async () => {
+    onStage("WRITE_END", async (changes) => {
       if (!bundle.has(scriptUrl)) {
         return;
       }
-      // TODO: Check scope.
+      const shouldReload = (changes as string[]).reduce<boolean>((p, v) => {
+        const entry = bundle.get(v);
+        return p || !!(entry && entry.scope === scope);
+      }, false);
+      if (!shouldReload) {
+        return;
+      }
       logger.info("Reloading");
       await fetch(
         new URL("/live-reload-events", url ?? "http://localhost:8000"),
