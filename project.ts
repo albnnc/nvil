@@ -34,10 +34,14 @@ export function createProject(atoms: Atom[], config: ProjectConfig) {
   const bundle = new Bundle();
   const bootstrap = async () => {
     await project.runStage("BOOTSTRAP");
+    const changes = bundle.getChanges();
     await bundle.writeChanges(safeDestUrl);
+    await stager.runStage("WRITE_END", changes);
     const writeDeferred = async () => {
       await stager.waitStages();
+      const changes = bundle.getChanges();
       await bundle.writeChanges(safeDestUrl);
+      await stager.runStage("WRITE_END", changes);
       writeDeferred();
     };
     if (config.dev) {
