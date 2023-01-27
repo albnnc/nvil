@@ -1,4 +1,5 @@
 import { Atom } from "../atom.ts";
+import { path } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface ExecConfig {
@@ -17,6 +18,7 @@ export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
       childProcess?.kill();
       childProcess = new Deno.Command("deno", {
         args: ["run", ...args, entryPoint],
+        cwd: path.dirname(path.fromFileUrl(entryPoint)),
         stdout: "piped",
         stderr: "piped",
       }).spawn();
