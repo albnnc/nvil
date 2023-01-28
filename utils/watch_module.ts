@@ -1,50 +1,55 @@
 import { async, path } from "../deps.ts";
-import { expandModule } from "./expand_module.ts";
+import { expandModule, ExpandedModule } from "./expand_module.ts";
 
-export function watchModule(specifier: string) {
-  let closed = false;
+interface WatchModuleOptions {
+  signal?: AbortSignal;
+}
+
+export function watchModule(
+  specifier: string,
+  { signal }: WatchModuleOptions = {}
+) {
   return {
-    close: () => {
-      closed = true;
-    },
     async *[Symbol.asyncIterator]() {
-      if (closed) {
+      if (signal?.aborted) {
         return;
       }
+      let watcherId: string | undefined;
+      let watcher: Deno.FsWatcher | undefined;
+      let expanded: ExpandedModule | undefined;
       const iterable = new async.MuxAsyncIterator<Deno.FsEvent>();
-      let expanded = await expandModule(specifier);
-      let watcher = Deno.watchFs(path.fromFileUrl(expanded.commonUrl));
-      this.close = () => {
-        closed = true;
-        watcher.close();
+      const updateIterable = async () => {
+        const updateId = watcherId;
+        const nextExpanded = await expandModule(specifier);
+        if (
+          watcherId !== updateId ||
+          (watcher && expanded && nextExpanded.commonUrl === expanded.commonUrl)
+        ) {
+          return;
+        }
+        watcherId = crypto.randomUUID();
+        const nextWatcher = Deno.watchFs(
+          path.fromFileUrl(nextExpanded.commonUrl)
+        );
+        iterable.add(nextWatcher);
+        watcher?.close();
+        watcher = nextWatcher;
+        expanded = nextExpanded;
+        signal?.addEventListener("abort", () => watcher?.close());
       };
-      iterable.add(watcher);
+      await updateIterable();
       for await (const event of iterable) {
-        if (closed) {
+        if (signal?.aborted) {
           break;
         }
-        if (
-          event.paths.every((v) =>
-            expanded.fileUrls.every((t) => t !== path.toFileUrl(v).toString())
-          )
-        ) {
+        const expandedPaths = new Set(
+          expanded?.fileUrls.map((v) => path.fromFileUrl(v))
+        );
+        if (event.paths.every((v) => !expandedPaths.has(v))) {
           continue;
         }
         yield event;
-        const nextExpanded = await expandModule(specifier);
-        if (nextExpanded.commonUrl !== expanded.commonUrl) {
-          const nextWatcher = Deno.watchFs(
-            path.fromFileUrl(nextExpanded.commonUrl)
-          );
-          iterable.add(nextWatcher);
-          watcher.close();
-          expanded = nextExpanded;
-          watcher = nextWatcher;
-          this.close = () => {
-            closed = true;
-            watcher.close();
-          };
-        }
+        updateIterable();
       }
     },
   };

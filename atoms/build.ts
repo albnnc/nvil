@@ -67,7 +67,7 @@ export function build(
         return;
       }
       logger.info(`Watching ${relativeEntryPoint}`);
-      const watcher = watchModule(absoluteEntryPoint);
+      const watcher = watchModule(absoluteEntryPoint, { signal });
       const debounced = async.debounce(handle, 200);
       for await (const event of watcher) {
         if (

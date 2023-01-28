@@ -34,3 +34,5 @@ export async function expandModule(specifier: string) {
   const commonUrl = path.toFileUrl(path.common(dirs)).toString();
   return { fileUrls, commonUrl };
 }
+
+export type ExpandedModule = Awaited<ReturnType<typeof expandModule>>;
