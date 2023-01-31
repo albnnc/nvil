@@ -22,6 +22,7 @@ export function build(
     runStage,
   }) => {
     const logger = getLogger("build");
+    const encoder = new TextEncoder();
     const absoluteEntryPoint = new URL(entryPoint, rootUrl).toString();
     const relativeEntryPoint = relativiseUrl(absoluteEntryPoint, rootUrl);
     const handle = async () => {
@@ -32,6 +33,7 @@ export function build(
           entryPoints: [absoluteEntryPoint],
           write: false,
           bundle: true,
+          metafile: true,
           minify: !dev,
           target: "esnext",
           platform: "browser",
@@ -47,7 +49,7 @@ export function build(
           ],
         };
         overrideEsbuildConfig?.(esbuildConfig);
-        const { outputFiles } = await esbuild.build(esbuildConfig);
+        const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
         signal?.addEventListener("abort", () => {
           esbuild.stop();
         });
@@ -55,8 +57,10 @@ export function build(
         if (!indexJs) {
           return;
         }
-        const targetUrl = relativeEntryPoint.replace(/\.(j|t)sx?/, ".js");
+        const targetUrl = relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
+        const metaUrl = targetUrl.replace(/\.js$/, ".meta.json");
         bundle.set(targetUrl, { data: indexJs.contents, scope });
+        bundle.set(metaUrl, { data: encoder.encode(JSON.stringify(metafile)) });
         await runStage("BUILD_END", absoluteEntryPoint);
       } catch (e) {
         logger.error(e.message);

@@ -4,9 +4,10 @@ import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface ExecConfig {
   args?: string[];
+  env?: Record<string, string>;
 }
 
-export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
+export function exec(scope: string, { args = [], env }: ExecConfig = {}): Atom {
   return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("exec");
     if (!dev) {
@@ -19,6 +20,7 @@ export function exec(scope: string, { args = [] }: ExecConfig = {}): Atom {
       childProcess = new Deno.Command("deno", {
         args: ["run", ...args, entryPoint],
         cwd: path.dirname(path.fromFileUrl(entryPoint)),
+        env,
         stdout: "piped",
         stderr: "piped",
       }).spawn();
