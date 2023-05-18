@@ -11,9 +11,7 @@ import { updateStorySetSync } from "./update_story_set.ts";
 import { watchStorySet } from "./watch_story_set.ts";
 
 export interface StorybookConfig {
-  constants?: {
-    theme: Theme;
-  };
+  constants?: { theme: Theme };
 }
 
 export function storybook(
