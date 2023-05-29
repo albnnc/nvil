@@ -1,14 +1,13 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
-import { useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useStoryId } from "../hooks/use_story_id.ts";
 
 export function Story() {
   const ref = useRef<HTMLIFrameElement>(null);
-  const [searchParams] = useSearchParams();
-  const storyId = searchParams.get("story");
+  const storyId = useStoryId();
   useEffect(() => {
-    const eventSource = new EventSource("/story-reload-events");
+    const eventSource = new EventSource("./story-reload-events");
     const fn = ({ data }: { data: string }) => {
       if (data === storyId) {
         ref.current?.contentWindow?.location.reload();
@@ -23,12 +22,12 @@ export function Story() {
   return (
     <iframe
       ref={ref}
+      src={`./stories/${storyId}/`}
       sx={{
         width: "100%",
         height: "100%",
         border: 0,
       }}
-      src={`/stories/${storyId}/`}
     />
   );
 }

@@ -1,11 +1,12 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
-import { useMemo, useState } from "react";
-import { IoFileTrayOutline, IoSearchOutline } from "react-icons/io5";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
+import { useStoryId } from "../hooks/use_story_id.ts";
 import { getStoryName } from "../utils/get_story_name.ts";
+import { IconEmpty } from "./icon_emty.tsx";
+import { IconSearch } from "./icon_search.tsx";
 
 const textStyle = {
   color: "inherit",
@@ -18,8 +19,7 @@ const textStyle = {
 export function Sidebar() {
   const { data } = useStories();
   const [query, setQuery] = useState("");
-  const [searchParams] = useSearchParams();
-  const storyId = searchParams.get("story");
+  const storyId = useStoryId();
   const items = useMemo(
     () =>
       (data ?? [])
@@ -32,6 +32,16 @@ export function Sidebar() {
         ),
     [data, query]
   );
+  useEffect(() => {
+    const firstItem = items?.[0];
+    if (!storyId && firstItem) {
+      history.pushState(
+        { storyId: firstItem.id },
+        "",
+        `?story=${firstItem.id}`
+      );
+    }
+  }, [items]);
   return (
     <div
       sx={{
@@ -64,12 +74,13 @@ export function Sidebar() {
             "&::placeholder": { ...textStyle, opacity: 0.5 },
           }}
         />
-        <IoSearchOutline
-          size="1.25rem"
+        <IconSearch
+          width="1.25rem"
+          height="1.25rem"
           sx={{
             my: "-0.25rem",
+            verticalAlign: "middle",
             flex: "0 0 auto",
-            transform: "scaleX(-1)",
             opacity: 0.8,
           }}
         />
@@ -78,8 +89,13 @@ export function Sidebar() {
         items.map((v) => {
           const active = storyId === v.id;
           return (
-            <Link
-              to={`?story=${v.id}`}
+            <a
+              href={`?story=${v.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                history.pushState({ storyId: v.id }, "", `?story=${v.id}`);
+              }}
               sx={{
                 px: "1rem",
                 py: "0.5rem",
@@ -102,11 +118,15 @@ export function Sidebar() {
               }}
             >
               {getStoryName(v)}
-            </Link>
+            </a>
           );
         })
       ) : (
-        <IoFileTrayOutline size="1.65rem" sx={{ mx: "auto", mt: "0.75rem" }} />
+        <IconEmpty
+          width="1.65rem"
+          height="1.65rem"
+          sx={{ mx: "auto", mt: "0.75rem" }}
+        />
       )}
     </div>
   );

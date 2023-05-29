@@ -5,15 +5,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { App } from "./components/app.tsx";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-  },
-]);
-
 const root = document.getElementById("root");
-ReactDOM.render(<RouterProvider router={router} />, root);
+ReactDOM.render(<App />, root);
