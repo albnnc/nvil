@@ -8,7 +8,7 @@ const indexHtmlFilePath = path.join(currentDir, "./index.html");
 server.serve(
   async (req) => {
     const { pathname } = new URL(req.url);
-    if (pathname === "/stories") {
+    if (pathname.endsWith("/stories")) {
       const metas: unknown[] = [];
       for await (const v of fs.expandGlob(metaGlob)) {
         metas.push(await Deno.readTextFile(v.path).then(JSON.parse));
