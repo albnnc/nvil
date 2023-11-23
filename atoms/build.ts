@@ -66,7 +66,7 @@ export function build(
         if (dev) {
           logger.error(e.message);
         } else {
-          throw new Error(e.message);
+          throw e;
         }
       }
     };
