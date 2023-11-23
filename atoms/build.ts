@@ -63,7 +63,11 @@ export function build(
         bundle.set(metaUrl, { data: encoder.encode(JSON.stringify(metafile)) });
         await runStage("BUILD_END", absoluteEntryPoint);
       } catch (e) {
-        throw new Error(e.message);
+        if (dev) {
+          logger.error(e.message);
+        } else {
+          throw new Error(e.message);
+        }
       }
     };
     const watch = async () => {
