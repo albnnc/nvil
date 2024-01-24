@@ -1,5 +1,5 @@
 import { Plugin } from "../plugin.ts";
-import { path } from "../deps.ts";
+import { path } from "../_deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface ExecConfig {

@@ -1,5 +1,5 @@
 import { Plugin } from "../../plugin.ts";
-import { deepMerge, path } from "../../deps.ts";
+import { deepMerge, path } from "../../_deps.ts";
 import { createProject, Project, ProjectConfig } from "../../project.ts";
 import { build } from "../build.ts";
 import { exec } from "../exec.ts";

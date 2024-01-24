@@ -1,69 +1,56 @@
-import { Plugin } from "./plugin.ts";
 import { Bundle } from "./bundle.ts";
-import { log } from "./deps.ts";
-import { createLogger } from "./logger.ts";
-import { createStager } from "./stager.ts";
+import { Stager } from "./mod.ts";
+import { Plugin } from "./plugin.ts";
 
-export interface ProjectConfig {
+export interface ProjectOptions {
+  plugins: Plugin[];
   rootUrl: string;
   destUrl: string;
   importMapUrl?: string;
   dev?: boolean;
-  signal?: AbortSignal;
-  overrideLogger?: (scope: string) => log.Logger;
 }
 
-export function createProject(plugins: Plugin[], config: ProjectConfig) {
-  const safeRootUrl = new URL("./", config.rootUrl).toString();
-  const safeDestUrl = new URL(
-    "./",
-    new URL(config.destUrl, safeRootUrl)
-  ).toString();
-  const safeImportMapUrl = config.importMapUrl
-    ? new URL(config.importMapUrl, safeRootUrl).toString()
-    : undefined;
-  const abortController = new AbortController();
-  config.signal?.addEventListener("abort", () => abortController.abort());
-  const safeConfig: ProjectConfig = {
-    ...config,
-    rootUrl: safeRootUrl,
-    destUrl: safeDestUrl,
-    importMapUrl: safeImportMapUrl,
-    signal: abortController.signal,
-  };
-  const bundle = new Bundle();
-  const bootstrap = async () => {
-    await project.runStage("BOOTSTRAP");
-    const changes = bundle.getChanges();
-    await bundle.writeChanges(safeDestUrl);
-    await stager.runStage("WRITE_END", changes);
-    const writeDeferred = async () => {
-      await stager.waitStages();
-      const changes = bundle.getChanges();
-      await bundle.writeChanges(safeDestUrl);
-      await stager.runStage("WRITE_END", changes);
-      writeDeferred();
+export class Project {
+  bundle = new Bundle();
+  stager = new Stager();
+
+  options: ProjectOptions;
+
+  constructor(options: ProjectOptions) {
+    const safeRootUrl = new URL("./", options.rootUrl).toString();
+    const safeDestUrl = new URL(
+      "./",
+      new URL(options.destUrl, safeRootUrl)
+    ).toString();
+    const safeImportMapUrl = options.importMapUrl
+      ? new URL(options.importMapUrl, safeRootUrl).toString()
+      : undefined;
+    this.options = {
+      ...options,
+      rootUrl: safeRootUrl,
+      destUrl: safeDestUrl,
+      importMapUrl: safeImportMapUrl,
     };
-    if (config.dev) {
-      writeDeferred();
-    } else {
-      abortController.abort();
-    }
-  };
-  const stager = createStager();
-  const project = {
-    plugins,
-    config: safeConfig,
-    bundle,
-    bootstrap,
-    getLogger: (scope: string) =>
-      config.overrideLogger?.(scope) ?? createLogger(scope),
-    ...stager,
-  };
-  for (const fn of plugins) {
-    fn(project);
   }
-  return project;
-}
 
-export type Project = ReturnType<typeof createProject>;
+  async bootstrap() {
+    await this.stager.run("BOOTSTRAP");
+    const changes = this.bundle.getChanges();
+    await this.bundle.writeChanges(this.options.destUrl);
+    await this.stager.run("WRITE_END", changes);
+    if (this.options.dev) {
+      this.writeDeferred();
+    } else {
+      // ?
+      // abortController.abort();
+    }
+  }
+
+  private async writeDeferred() {
+    await this.stager.wait();
+    const changes = this.bundle.getChanges();
+    await this.bundle.writeChanges(this.options.destUrl);
+    await this.stager.run("WRITE_END", changes);
+    this.writeDeferred();
+  }
+}

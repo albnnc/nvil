@@ -1,4 +1,4 @@
-import { datetime, log, colors } from "./deps.ts";
+import { datetime, log, colors } from "./_deps.ts";
 
 class Handler extends log.handlers.BaseHandler {
   constructor(scope?: string) {

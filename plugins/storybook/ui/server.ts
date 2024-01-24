@@ -1,4 +1,4 @@
-import { server, path, fileServer, fs } from "../../../deps.ts";
+import { server, path, fileServer, fs } from "../../../_deps.ts";
 import { handleStoryReloadRequest } from "../story_reload.ts";
 
 const currentDir = path.fromFileUrl(import.meta.resolve("./"));

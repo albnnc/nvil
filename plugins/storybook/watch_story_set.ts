@@ -1,4 +1,4 @@
-import { async, path } from "../../deps.ts";
+import { async, path } from "../../_deps.ts";
 import { updateStorySet, UpdateStorySetOptions } from "./update_story_set.ts";
 
 export interface WatchStorySetOptions extends UpdateStorySetOptions {

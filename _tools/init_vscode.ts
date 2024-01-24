@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno run -A
-import { fs, path, log, deepMerge } from "../deps.ts";
+import { fs, path, log, deepMerge } from "../_deps.ts";
 
 const rootDir = path.fromFileUrl(import.meta.resolve("../"));
 const vscodeDir = path.fromFileUrl(import.meta.resolve("../.vscode"));

@@ -1,4 +1,4 @@
-import { path, graph } from "../deps.ts";
+import { path, graph } from "../_deps.ts";
 
 export async function expandModule(specifier: string) {
   const process = Deno.run({

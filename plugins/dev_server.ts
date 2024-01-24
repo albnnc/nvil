@@ -1,5 +1,5 @@
 import { Plugin } from "../plugin.ts";
-import { server, path, fileServer } from "../deps.ts";
+import { server, path, fileServer } from "../_deps.ts";
 import { handleLiveReloadRequest } from "./live_reload.ts";
 
 export function devServer(): Plugin {

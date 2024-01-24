@@ -1,5 +1,5 @@
 import { Plugin } from "../plugin.ts";
-import { async, fs, path } from "../deps.ts";
+import { async, fs, path } from "../_deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface CopyConfig {

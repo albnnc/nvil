@@ -1,4 +1,4 @@
-import { fs, path } from "../../deps.ts";
+import { fs, path } from "../../_deps.ts";
 
 export interface UpdateStorySetOptions {
   rootUrl: string;

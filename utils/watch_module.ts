@@ -1,4 +1,4 @@
-import { async, path } from "../deps.ts";
+import { async, path } from "../_deps.ts";
 import { expandModule, ExpandedModule } from "./expand_module.ts";
 
 interface WatchModuleOptions {
