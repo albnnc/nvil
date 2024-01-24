@@ -1,4 +1,4 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 import { async, esbuild, esbuildPluginDeno } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 import { watchModule } from "../utils/watch_module.ts";
@@ -13,7 +13,7 @@ export interface BuildConfig {
 export function build(
   entryPoint: string,
   { scope, overrideEsbuildConfig }: BuildConfig = {}
-): Atom {
+): Plugin {
   return ({
     config: { rootUrl, importMapUrl, dev, signal },
     bundle,

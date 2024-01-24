@@ -1,5 +1,5 @@
 import { cyrb53 } from "../../utils/cyrb53.ts";
-import { Atom } from "../../atom.ts";
+import { Plugin } from "../../plugin.ts";
 import { relativiseUrl } from "../../utils/relativise_url.ts";
 
 export interface StoryMeta {
@@ -16,7 +16,7 @@ export function getStoryMeta(entryPoint: string, rootUrl: string): StoryMeta {
   };
 }
 
-export function storyMeta(entryPoint: string): Atom {
+export function storyMeta(entryPoint: string): Plugin {
   return ({ config: { rootUrl }, bundle, onStage }) => {
     onStage("BOOTSTRAP", () => {
       const meta = getStoryMeta(entryPoint, rootUrl);

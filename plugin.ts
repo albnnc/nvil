@@ -1,5 +1,5 @@
 import { Project } from "./project.ts";
 
-export interface Atom {
+export interface Plugin {
   (project: Project): void;
 }

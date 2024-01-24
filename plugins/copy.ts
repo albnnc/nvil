@@ -1,4 +1,4 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 import { async, fs, path } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
@@ -6,7 +6,7 @@ export interface CopyConfig {
   glob?: boolean;
 }
 
-export function copy(url: string, { glob }: CopyConfig = {}): Atom {
+export function copy(url: string, { glob }: CopyConfig = {}): Plugin {
   return ({
     config: { rootUrl, dev },
     bundle,

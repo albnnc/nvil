@@ -1,4 +1,4 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 import { path } from "../deps.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
@@ -7,7 +7,10 @@ export interface ExecConfig {
   env?: Record<string, string>;
 }
 
-export function exec(scope: string, { args = [], env }: ExecConfig = {}): Atom {
+export function exec(
+  scope: string,
+  { args = [], env }: ExecConfig = {}
+): Plugin {
   return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("exec");
     if (!dev) {

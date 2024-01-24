@@ -1,4 +1,4 @@
-import { Atom } from "./atom.ts";
+import { Plugin } from "./plugin.ts";
 import { Bundle } from "./bundle.ts";
 import { log } from "./deps.ts";
 import { createLogger } from "./logger.ts";
@@ -13,7 +13,7 @@ export interface ProjectConfig {
   overrideLogger?: (scope: string) => log.Logger;
 }
 
-export function createProject(atoms: Atom[], config: ProjectConfig) {
+export function createProject(plugins: Plugin[], config: ProjectConfig) {
   const safeRootUrl = new URL("./", config.rootUrl).toString();
   const safeDestUrl = new URL(
     "./",
@@ -52,7 +52,7 @@ export function createProject(atoms: Atom[], config: ProjectConfig) {
   };
   const stager = createStager();
   const project = {
-    atoms,
+    plugins,
     config: safeConfig,
     bundle,
     bootstrap,
@@ -60,7 +60,7 @@ export function createProject(atoms: Atom[], config: ProjectConfig) {
       config.overrideLogger?.(scope) ?? createLogger(scope),
     ...stager,
   };
-  for (const fn of atoms) {
+  for (const fn of plugins) {
     fn(project);
   }
   return project;

@@ -1,7 +1,7 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
-export function clean(): Atom {
+export function clean(): Plugin {
   return ({ config: { rootUrl, destUrl }, getLogger, onStage }) => {
     const logger = getLogger("clean");
     onStage("BOOTSTRAP", async () => {

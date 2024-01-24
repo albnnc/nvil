@@ -1,4 +1,4 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 
 export interface HtmlTemplateConfig {
   scope?: string;
@@ -8,7 +8,7 @@ export interface HtmlTemplateConfig {
 export function htmlTemplate(
   entryPoint: string,
   { scope }: HtmlTemplateConfig = {}
-): Atom {
+): Plugin {
   return ({ config: { rootUrl }, bundle, getLogger, onStage }) => {
     const logger = getLogger("htmlTemplate");
     const handle = async () => {

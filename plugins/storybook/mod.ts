@@ -1,4 +1,4 @@
-import { Atom } from "../../atom.ts";
+import { Plugin } from "../../plugin.ts";
 import { deepMerge, path } from "../../deps.ts";
 import { createProject, Project, ProjectConfig } from "../../project.ts";
 import { build } from "../build.ts";
@@ -16,9 +16,9 @@ export interface StorybookConfig {
 
 export function storybook(
   glob: string,
-  getAtoms: (entryPoint: string) => Atom[],
+  getPlugins: (entryPoint: string) => Plugin[],
   { constants }: StorybookConfig = {}
-): Atom {
+): Plugin {
   return ({ config, config: { dev, rootUrl }, getLogger, onStage }) => {
     let bootstrapped = false;
     const logger = getLogger("sb");
@@ -39,7 +39,7 @@ export function storybook(
       ).toString();
       const abortController = new AbortController();
       const project = createProject(
-        [...getAtoms(entryPoint), storyMeta(entryPoint), storyReload()],
+        [...getPlugins(entryPoint), storyMeta(entryPoint), storyReload()],
         deepMerge(config, {
           destUrl,
           signal: abortController.signal,

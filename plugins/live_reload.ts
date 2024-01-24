@@ -1,4 +1,4 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 
 const callbacks = new Map<string, () => void>();
 
@@ -32,7 +32,7 @@ export interface LiveReloadConfig {
   url?: string;
 }
 
-export function liveReload({ scope, url }: LiveReloadConfig = {}): Atom {
+export function liveReload({ scope, url }: LiveReloadConfig = {}): Plugin {
   return ({ config: { dev }, bundle, getLogger, onStage, runStage }) => {
     const logger = getLogger("liveReload");
     if (!dev) {

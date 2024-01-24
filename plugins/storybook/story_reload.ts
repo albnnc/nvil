@@ -1,4 +1,4 @@
-import { Atom } from "../../atom.ts";
+import { Plugin } from "../../plugin.ts";
 import { async } from "../../deps.ts";
 
 const callbacks = new Map<string, (id: string) => void>();
@@ -30,7 +30,7 @@ export function handleStoryReloadRequest(request: Request) {
   }
 }
 
-export function storyReload(): Atom {
+export function storyReload(): Plugin {
   return ({ config: { destUrl, dev }, bundle, getLogger, onStage }) => {
     const logger = getLogger("storyReload");
     if (!dev) {

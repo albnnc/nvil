@@ -1,8 +1,8 @@
 #!/usr/bin/env -S deno run --unstable -A
-import { build } from "../../atoms/build.ts";
-import { clean } from "../../atoms/clean.ts";
-import { htmlTemplate } from "../../atoms/html_template.ts";
-import { storybook } from "../../atoms/storybook/mod.ts";
+import { build } from "../../plugins/build.ts";
+import { clean } from "../../plugins/clean.ts";
+import { htmlTemplate } from "../../plugins/html_template.ts";
+import { storybook } from "../../plugins/storybook/mod.ts";
 import { createProject } from "../../project.ts";
 
 const project = createProject(

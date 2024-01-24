@@ -1,8 +1,8 @@
-import { Atom } from "../atom.ts";
+import { Plugin } from "../plugin.ts";
 import { server, path, fileServer } from "../deps.ts";
 import { handleLiveReloadRequest } from "./live_reload.ts";
 
-export function devServer(): Atom {
+export function devServer(): Plugin {
   return ({ config: { dev, destUrl }, getLogger, onStage }) => {
     const logger = getLogger("devServer");
     if (!dev) {

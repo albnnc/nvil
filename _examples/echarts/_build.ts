@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run --unstable -A
-import { build } from "../../atoms/build.ts";
-import { clean } from "../../atoms/clean.ts";
-import { devServer } from "../../atoms/dev_server.ts";
-import { htmlTemplate } from "../../atoms/html_template.ts";
-import { liveReload } from "../../atoms/live_reload.ts";
+import { build } from "../../plugins/build.ts";
+import { clean } from "../../plugins/clean.ts";
+import { devServer } from "../../plugins/dev_server.ts";
+import { htmlTemplate } from "../../plugins/html_template.ts";
+import { liveReload } from "../../plugins/live_reload.ts";
 import { createProject } from "../../project.ts";
 
 const project = createProject(
