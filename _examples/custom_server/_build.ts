@@ -8,7 +8,7 @@ import {
   Project,
 } from "../../mod.ts";
 
-const project = new Project({
+await using project = new Project({
   plugins: [
     new CleanPlugin(),
     new BuildPlugin({ entryPoint: "./index.tsx" }),

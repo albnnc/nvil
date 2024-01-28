@@ -7,7 +7,7 @@ import {
   Project,
 } from "../../mod.ts";
 
-const project = new Project({
+await using project = new Project({
   plugins: [
     new CleanPlugin(),
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
