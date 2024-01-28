@@ -1,6 +1,6 @@
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { path } from "../_deps.ts";
-import { relativiseUrl } from "../utils/relativise_url.ts";
+import { relativiseUrl } from "../_utils/relativise_url.ts";
 
 export interface ExecPluginOptions {
   scope: string;

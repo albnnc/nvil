@@ -1,7 +1,7 @@
 import { Bundle } from "./bundle.ts";
 import { Stager } from "./mod.ts";
 import { Plugin } from "./plugin.ts";
-import { ScopeLogger } from "./utils/scope_logger.ts";
+import { ScopeLogger } from "./_utils/scope_logger.ts";
 
 export interface ProjectOptions {
   plugins: Plugin[];

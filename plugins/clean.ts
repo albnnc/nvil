@@ -1,5 +1,5 @@
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
-import { relativiseUrl } from "../utils/relativise_url.ts";
+import { relativiseUrl } from "../_utils/relativise_url.ts";
 
 export class CleanPlugin extends Plugin {
   constructor() {

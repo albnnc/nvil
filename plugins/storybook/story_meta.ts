@@ -1,6 +1,6 @@
-import { cyrb53 } from "../../utils/cyrb53.ts";
+import { cyrb53 } from "../../_utils/cyrb53.ts";
 import { Plugin } from "../../plugin.ts";
-import { relativiseUrl } from "../../utils/relativise_url.ts";
+import { relativiseUrl } from "../../_utils/relativise_url.ts";
 
 export interface StoryMeta {
   id: string;

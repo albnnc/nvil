@@ -1,6 +1,6 @@
 import { async, fs, path } from "../_deps.ts";
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
-import { relativiseUrl } from "../utils/relativise_url.ts";
+import { relativiseUrl } from "../_utils/relativise_url.ts";
 
 export interface CopyPluginOptions {
   url: string;
