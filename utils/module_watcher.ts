@@ -1,5 +1,4 @@
-import { path } from "../_deps.ts";
-import { async } from "../_deps.ts";
+import { async, path } from "../_deps.ts";
 import { expandModule } from "./expand_module.ts";
 import { ExpandedModule } from "./expand_module.ts";
 

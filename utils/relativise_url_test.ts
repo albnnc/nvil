@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.170.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.213.0/assert/mod.ts";
 import { relativiseUrl } from "./relativise_url.ts";
 
 Deno.test("relativise URL", () => {

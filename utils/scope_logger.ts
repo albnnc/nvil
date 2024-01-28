@@ -11,8 +11,8 @@ class Handler extends log.handlers.BaseHandler {
             [log.LogLevels.ERROR]: colors.red,
             [log.LogLevels.INFO]: colors.blue,
             [log.LogLevels.WARNING]: colors.yellow,
-          }[level] || colors.stripColor;
-        let content = colors.stripColor(msg.trim());
+          }[level] || colors.stripAnsiCode;
+        let content = colors.stripAnsiCode(msg.trim());
         if (content.includes("\n")) {
           const prefix = "\n  " + colors.dim("|") + " ";
           content = prefix + content.replace("\n", prefix);
@@ -20,7 +20,7 @@ class Handler extends log.handlers.BaseHandler {
         return (
           colors.dim(datetime.format(new Date(), "HH:mm:ss")) +
           " " +
-          levelColor(log.LogLevels[level]) +
+          levelColor(log.getLevelName(level as log.LogLevel) || "") +
           (scope
             ? levelColor("(") + colors.dim(scope) + levelColor("):")
             : levelColor(":")) +

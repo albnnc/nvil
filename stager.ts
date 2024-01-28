@@ -1,11 +1,9 @@
-import { async } from "./_deps.ts";
-
 export type StageHandler = (context?: unknown) => void | Promise<void>;
 
 export class Stager {
   stages: Record<string, StageHandler[]> = {};
   runCount = 0;
-  runCycleDeferred = async.deferred();
+  runCyclePWR = Promise.withResolvers<void>();
 
   on(this: Stager, stageName: string, fn: StageHandler) {
     if (this.stages[stageName]) {
@@ -26,12 +24,12 @@ export class Stager {
     }
     --this.runCount;
     if (!this.runCount) {
-      this.runCycleDeferred.resolve();
-      this.runCycleDeferred = async.deferred();
+      this.runCyclePWR.resolve();
+      this.runCyclePWR = Promise.withResolvers<void>();
     }
   }
 
   async wait(this: Stager) {
-    return await this.runCycleDeferred;
+    return await this.runCyclePWR.promise;
   }
 }
