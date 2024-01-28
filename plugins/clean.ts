@@ -1,15 +1,22 @@
-import { Plugin } from "../plugin.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
-export function clean(): Plugin {
-  return ({ config: { rootUrl, destUrl }, getLogger, onStage }) => {
-    const logger = getLogger("clean");
-    onStage("BOOTSTRAP", async () => {
-      const relativeDestUrl = relativiseUrl(destUrl, rootUrl);
-      logger.info(`Deleting ${relativeDestUrl}`);
-      await Deno.remove(new URL(destUrl), {
+export class CleanPlugin extends Plugin {
+  constructor() {
+    super("CLEAN");
+  }
+
+  apply(options: PluginApplyOptions) {
+    super.apply(options);
+    this.project.stager.on("BOOTSTRAP", async () => {
+      const relativeDestUrl = relativiseUrl(
+        this.project.destUrl,
+        this.project.rootUrl
+      );
+      this.logger.info(`Deleting ${relativeDestUrl}`);
+      await Deno.remove(new URL(this.project.destUrl), {
         recursive: true,
       }).catch(() => undefined);
     });
-  };
+  }
 }

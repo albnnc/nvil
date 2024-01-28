@@ -1,22 +1,31 @@
-import { Plugin } from "../plugin.ts";
-import { server, path, fileServer } from "../_deps.ts";
-import { handleLiveReloadRequest } from "./live_reload.ts";
+import { fileServer, path } from "../_deps.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { LiveReloadPlugin } from "./live_reload.ts";
 
-export function devServer(): Plugin {
-  return ({ config: { dev, destUrl }, getLogger, onStage }) => {
-    const logger = getLogger("devServer");
-    if (!dev) {
+export class DevServerPlugin extends Plugin {
+  httpServer?: Deno.HttpServer;
+
+  constructor() {
+    super("DEV_SERVER");
+  }
+
+  apply(this: DevServerPlugin, options: PluginApplyOptions) {
+    super.apply(options);
+    if (!this.project.dev) {
       return;
     }
-    onStage("BOOTSTRAP", () => {
-      const indexHtmlUrl = new URL("./index.html", destUrl).toString();
-      server.serve(
-        (req) => {
+    this.project.stager.on("BOOTSTRAP", () => {
+      const indexHtmlUrl = new URL(
+        "./index.html",
+        this.project.destUrl
+      ).toString();
+      this.httpServer = Deno.serve({
+        handler: (req) => {
           return (
-            handleLiveReloadRequest(req) ||
+            LiveReloadPlugin.handleLiveReloadRequest(req) ||
             fileServer
               .serveDir(req, {
-                fsRoot: path.fromFileUrl(destUrl),
+                fsRoot: path.fromFileUrl(this.project.destUrl),
                 quiet: true,
               })
               .then((v) =>
@@ -26,12 +35,14 @@ export function devServer(): Plugin {
               )
           );
         },
-        {
-          onListen: ({ hostname, port }) => {
-            logger.info(`Listening ${hostname}:${port}`);
-          },
-        }
-      );
+        onListen: ({ hostname, port }) => {
+          this.logger.info(`Listening ${hostname}:${port}`);
+        },
+      });
     });
-  };
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.httpServer?.[Symbol.asyncDispose]();
+  }
 }

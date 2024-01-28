@@ -79,7 +79,7 @@ export function storybook(
       await createProject(
         [
           build("./index.tsx", {
-            overrideEsbuildConfig: (config) => {
+            overrideEsbuildOptions: (config) => {
               config.define = {
                 ...config.define,
                 STORYBOOK_CONSTANTS: constants

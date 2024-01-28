@@ -1,39 +1,49 @@
-import { Plugin } from "../plugin.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
-export interface HtmlTemplateConfig {
+export interface HtmlTemplatePluginOptions {
+  entryPoint: string;
   scope?: string;
 }
 
-// TODO: Watch entry point changes.
-export function htmlTemplate(
-  entryPoint: string,
-  { scope }: HtmlTemplateConfig = {}
-): Plugin {
-  return ({ config: { rootUrl }, bundle, getLogger, onStage }) => {
-    const logger = getLogger("htmlTemplate");
-    const handle = async () => {
-      try {
-        logger.info(`Populating ./index.html`);
-        const template = await fetch(new URL(entryPoint, rootUrl)).then((v) =>
-          v.text()
-        );
-        const scripts = Array.from(bundle.entries())
-          .filter(([k, v]) => k.endsWith(".js") && v.scope === scope)
-          .map(([k]) => `<script type="module" src="${k}"></script>`);
-        const encoder = new TextEncoder();
-        const data = encoder.encode(
-          template.replace(
-            /(\s+)<\/body>/,
-            `$1  ${scripts.join("$1  ")}$1</body>`
-          )
-        );
-        bundle.set("./index.html", { data });
-      } catch (e) {
-        logger.error(e.message);
-      }
-    };
-    onStage("BOOTSTRAP", handle);
-    onStage("BUILD_END", handle);
-    onStage("LIVE_RELOAD_SCRIPT_POPULATE", handle);
-  };
+export class HtmlTemplatePlugin extends Plugin {
+  entryPoint: string;
+  scope?: string;
+
+  constructor(options: HtmlTemplatePluginOptions) {
+    super("HTML_TEMPLATE");
+    this.entryPoint = options.entryPoint;
+    this.scope = options.scope;
+  }
+
+  apply(this: HtmlTemplatePlugin, options: PluginApplyOptions) {
+    super.apply(options);
+    this.project.stager.on("BOOTSTRAP", () => this.populate());
+    this.project.stager.on("BUILD_END", () => this.populate());
+    this.project.stager.on("LIVE_RELOAD_SCRIPT_POPULATE", () =>
+      this.populate()
+    );
+  }
+
+  // TODO: Watch entry point changes.
+  async populate(this: HtmlTemplatePlugin) {
+    try {
+      this.logger.info(`Populating ./index.html`);
+      const template = await fetch(
+        new URL(this.entryPoint, this.project.rootUrl)
+      ).then((v) => v.text());
+      const scripts = Array.from(this.project.bundle.entries())
+        .filter(([k, v]) => k.endsWith(".js") && v.scope === this.scope)
+        .map(([k]) => `<script type="module" src="${k}"></script>`);
+      const textEncoder = new TextEncoder();
+      const data = textEncoder.encode(
+        template.replace(
+          /(\s+)<\/body>/,
+          `$1  ${scripts.join("$1  ")}$1</body>`
+        )
+      );
+      this.project.bundle.set("./index.html", { data });
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+  }
 }

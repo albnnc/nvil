@@ -1,4 +1,4 @@
-import { datetime, log, colors } from "./_deps.ts";
+import { datetime, log, colors } from "../_deps.ts";
 
 class Handler extends log.handlers.BaseHandler {
   constructor(scope?: string) {
@@ -20,7 +20,7 @@ class Handler extends log.handlers.BaseHandler {
         return (
           colors.dim(datetime.format(new Date(), "HH:mm:ss")) +
           " " +
-          levelColor(log.LogLevels[level].toLocaleLowerCase()) +
+          levelColor(log.LogLevels[level]) +
           (scope
             ? levelColor("(") + colors.dim(scope) + levelColor("):")
             : levelColor(":")) +
@@ -30,13 +30,16 @@ class Handler extends log.handlers.BaseHandler {
       },
     });
   }
+
   override log(msg: string) {
     console.log(msg);
   }
 }
 
-export function createLogger(scope: string) {
-  return new log.Logger("PROJECT_LOGGER", "DEBUG", {
-    handlers: [new Handler(scope)],
-  });
+export class ScopeLogger extends log.Logger {
+  constructor(scope: string) {
+    super("PROJECT_LOGGER", "DEBUG", {
+      handlers: [new Handler(scope)],
+    });
+  }
 }

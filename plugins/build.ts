@@ -1,128 +1,161 @@
-import { Plugin } from "../plugin.ts";
-import { async, esbuild, esbuildPluginDeno } from "../_deps.ts";
+import { async, esbuild, esbuildDenoPlugins } from "../_deps.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { ModuleWatcher } from "../utils/module_watcher.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
-import { watchModule } from "../utils/watch_module.ts";
 
-export type EsbuildConfig = esbuild.BuildOptions;
+export type EsbuildPlugin = esbuild.Plugin;
+export type EsbuildOptions = esbuild.BuildOptions;
 
-export interface BuildConfig {
+export interface BuildPluginOptions {
+  entryPoint: string;
   scope?: string;
-  overrideEsbuildConfig?: (config: EsbuildConfig) => EsbuildConfig;
+  overrideEsbuildOptions?: (options: EsbuildOptions) => EsbuildOptions;
 }
 
-export function build(
-  entryPoint: string,
-  { scope, overrideEsbuildConfig }: BuildConfig = {}
-): Plugin {
-  return ({
-    config: { rootUrl, importMapUrl, dev, signal },
-    bundle,
-    getLogger,
-    onStage,
-    runStage,
-  }) => {
-    const logger = getLogger("build");
-    const encoder = new TextEncoder();
-    const absoluteEntryPoint = new URL(entryPoint, rootUrl).toString();
-    const relativeEntryPoint = relativiseUrl(absoluteEntryPoint, rootUrl);
-    const handle = async () => {
-      logger.info(`Building ${relativeEntryPoint}`);
-      await runStage("BUILD_START", absoluteEntryPoint);
-      try {
-        const esbuildConfig: EsbuildConfig = {
-          entryPoints: [absoluteEntryPoint],
-          write: false,
-          bundle: true,
-          metafile: true,
-          minify: !dev,
-          target: "esnext",
-          platform: "browser",
-          format: "esm",
-          logLevel: "silent",
-          define: { "import.meta.main": "false" },
-          plugins: [
-            esbuildPluginEsmShPackageJson(),
-            esbuildPluginNoSideEffects(),
-            esbuildPluginDeno({
-              importMapURL: importMapUrl ? new URL(importMapUrl) : undefined,
-            }),
-          ],
-        };
-        overrideEsbuildConfig?.(esbuildConfig);
-        const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
-        signal?.addEventListener("abort", () => {
-          esbuild.stop();
-        });
-        const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
-        if (!indexJs) {
-          return;
-        }
-        const targetUrl = relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
-        const metaUrl = targetUrl.replace(/\.js$/, ".meta.json");
-        bundle.set(targetUrl, { data: indexJs.contents, scope });
-        bundle.set(metaUrl, { data: encoder.encode(JSON.stringify(metafile)) });
-        await runStage("BUILD_END", absoluteEntryPoint);
-      } catch (e) {
-        if (dev) {
-          logger.error(e.message);
-        } else {
-          throw e;
-        }
+export class BuildPlugin extends Plugin {
+  encoder = new TextEncoder();
+  entryPoint: string;
+  scope?: string;
+  overrideEsbuildOptions?: (options: EsbuildOptions) => EsbuildOptions;
+
+  moduleWatcher?: ModuleWatcher;
+
+  get absoluteEntryPoint(): string {
+    return new URL(this.entryPoint, this.project.rootUrl).toString();
+  }
+
+  get relativeEntryPoint(): string {
+    return relativiseUrl(this.absoluteEntryPoint, this.project.rootUrl);
+  }
+
+  constructor(public options: BuildPluginOptions) {
+    super("BUILD");
+    this.entryPoint = options.entryPoint;
+    this.scope = options.scope;
+    this.overrideEsbuildOptions = options.overrideEsbuildOptions;
+  }
+
+  apply(this: BuildPlugin, options: PluginApplyOptions) {
+    super.apply(options);
+    this.project.stager.on("BOOTSTRAP", async () => {
+      await this.build();
+      if (this.project.dev) {
+        this.watch();
       }
-    };
-    const watch = async () => {
-      if (!absoluteEntryPoint.startsWith("file:")) {
+    });
+  }
+
+  async build(this: BuildPlugin) {
+    const { bundle, stager, importMapUrl, dev } = this.project;
+    this.logger.info(`Building ${this.relativeEntryPoint}`);
+    await stager.run("BUILD_START", this.absoluteEntryPoint);
+    try {
+      const esbuildConfig: EsbuildOptions = {
+        entryPoints: [this.absoluteEntryPoint],
+        write: false,
+        bundle: true,
+        metafile: true,
+        minify: !dev,
+        target: "esnext",
+        platform: "browser",
+        format: "esm",
+        logLevel: "silent",
+        define: { "import.meta.main": "false" },
+        plugins: [
+          EsbuildPluginFactory.esmShPackageJson(),
+          EsbuildPluginFactory.noSideEffects(),
+          ...EsbuildPluginFactory.deno(importMapUrl),
+        ],
+      };
+      this.overrideEsbuildOptions?.(esbuildConfig);
+      const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
+      const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
+      if (!indexJs) {
         return;
       }
-      logger.info(`Watching ${relativeEntryPoint}`);
-      const watcher = watchModule(absoluteEntryPoint, { signal });
-      const debounced = async.debounce(handle, 200);
-      for await (const event of watcher) {
-        if (
-          event.kind === "modify" ||
-          event.kind === "create" ||
-          event.kind === "remove"
-        ) {
-          debounced();
-        }
+      const targetUrl = this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
+      const metaUrl = targetUrl.replace(/\.js$/, ".meta.json");
+      bundle.set(targetUrl, {
+        data: indexJs.contents,
+        scope: this.scope,
+      });
+      bundle.set(metaUrl, {
+        data: this.encoder.encode(JSON.stringify(metafile)),
+      });
+      await stager.run("BUILD_END", this.absoluteEntryPoint);
+    } catch (e) {
+      if (dev) {
+        this.logger.error(e.message);
+      } else {
+        throw e;
       }
-    };
-    onStage("BOOTSTRAP", async () => {
-      await handle();
-      dev && watch();
+    }
+  }
+
+  async watch(this: BuildPlugin) {
+    if (!this.absoluteEntryPoint.startsWith("file:")) {
+      return;
+    }
+    this.logger.info(`Watching ${this.relativeEntryPoint}`);
+    this.moduleWatcher = new ModuleWatcher({
+      specifier: this.absoluteEntryPoint,
     });
-  };
+    const debounced = async.debounce(() => {
+      this.build();
+    }, 200);
+    for await (const event of this.moduleWatcher || []) {
+      if (
+        event.kind === "modify" ||
+        event.kind === "create" ||
+        event.kind === "remove"
+      ) {
+        debounced();
+      }
+    }
+  }
+
+  // deno-lint-ignore require-await
+  async [Symbol.asyncDispose](this: BuildPlugin) {
+    this.moduleWatcher?.[Symbol.dispose]();
+    esbuild.stop();
+  }
 }
 
-export function esbuildPluginEsmShPackageJson(): esbuild.Plugin {
-  return {
-    name: "esm-sh-package-json",
-    setup(build) {
-      build.onLoad({ filter: /package\.json\.js/ }, () => {
-        return {
-          contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
-          loader: "json",
-        };
-      });
-    },
-  };
-}
+export class EsbuildPluginFactory {
+  static deno(importMapUrl?: string): EsbuildPlugin[] {
+    return esbuildDenoPlugins({ importMapURL: importMapUrl });
+  }
 
-export function esbuildPluginNoSideEffects(): esbuild.Plugin {
-  return {
-    // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
-    name: "no-side-effects",
-    setup(build) {
-      build.onResolve({ filter: /.*/ }, async (args) => {
-        if (args.pluginData) {
-          return;
-        }
-        const { path, ...rest } = args;
-        rest.pluginData = true;
-        const result = await build.resolve(path, rest);
-        result.sideEffects = false;
-        return result;
-      });
-    },
-  };
+  static noSideEffects(): EsbuildPlugin {
+    return {
+      // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
+      name: "no-side-effects",
+      setup(build) {
+        build.onResolve({ filter: /.*/ }, async (args) => {
+          if (args.pluginData) {
+            return;
+          }
+          const { path, ...rest } = args;
+          rest.pluginData = true;
+          const result = await build.resolve(path, rest);
+          result.sideEffects = false;
+          return result;
+        });
+      },
+    };
+  }
+
+  static esmShPackageJson(): EsbuildPlugin {
+    return {
+      name: "esm-sh-package-json",
+      setup(build) {
+        build.onLoad({ filter: /package\.json\.js/ }, () => {
+          return {
+            contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
+            loader: "json",
+          };
+        });
+      },
+    };
+  }
 }

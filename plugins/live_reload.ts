@@ -1,81 +1,94 @@
-import { Plugin } from "../plugin.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
-const callbacks = new Map<string, () => void>();
-
-export function handleLiveReloadRequest(request: Request) {
-  const { pathname } = new URL(request.url);
-  if (pathname !== "/live-reload-events") {
-    return;
-  }
-  if (request.method === "GET") {
-    const id = crypto.randomUUID();
-    const body = new ReadableStream({
-      start(controller) {
-        callbacks.set(id, () => controller.enqueue(`data: null\n\n`));
-      },
-      cancel() {
-        callbacks.delete(id);
-      },
-    });
-    return new Response(body.pipeThrough(new TextEncoderStream()), {
-      headers: { "Content-Type": "text/event-stream" },
-    });
-  }
-  if (request.method === "POST") {
-    callbacks.forEach((fn) => fn());
-    return new Response(null, { status: 200 });
-  }
-}
-
-export interface LiveReloadConfig {
+export interface LiveReloadPluginOptions {
   scope?: string;
   url?: string;
 }
 
-export function liveReload({ scope, url }: LiveReloadConfig = {}): Plugin {
-  return ({ config: { dev }, bundle, getLogger, onStage, runStage }) => {
-    const logger = getLogger("liveReload");
-    if (!dev) {
+export class LiveReloadPlugin extends Plugin {
+  scope?: string;
+  url?: string;
+
+  constructor(options: LiveReloadPluginOptions = {}) {
+    super("LIVE_RELOAD");
+    this.scope = options.scope;
+    this.url = options.url;
+  }
+
+  apply(this: LiveReloadPlugin, options: PluginApplyOptions) {
+    super.apply(options);
+    if (!this.project.dev) {
       return;
     }
     const scriptUrl = "./live-reload.js";
-    onStage("BOOTSTRAP", async () => {
+    this.project.stager.on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
-      const data = encoder.encode(liveReloadScript);
-      logger.info(`Populating ${scriptUrl}`);
-      bundle.set(scriptUrl, { data });
-      await runStage("LIVE_RELOAD_SCRIPT_POPULATE");
+      const data = encoder.encode(LiveReloadPlugin.liveReloadScript);
+      this.logger.info(`Populating ${scriptUrl}`);
+      this.project.bundle.set(scriptUrl, { data });
+      await this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE");
     });
-    onStage("WRITE_END", async (changes) => {
-      if (!bundle.has(scriptUrl)) {
+    this.project.stager.on("WRITE_END", async (changes) => {
+      if (!this.project.bundle.has(scriptUrl)) {
         return;
       }
       const shouldReload = (changes as string[]).reduce<boolean>((p, v) => {
-        const entry = bundle.get(v);
-        return p || !!(entry && entry.scope === scope);
+        const entry = this.project.bundle.get(v);
+        return p || !!(entry && entry.scope === this.scope);
       }, false);
       if (!shouldReload) {
         return;
       }
-      logger.info("Reloading");
+      this.logger.info("Reloading");
       await fetch(
-        new URL("/live-reload-events", url ?? "http://localhost:8000"),
+        new URL("/live-reload-events", this.url ?? "http://localhost:8000"),
         { method: "POST" }
       )
         .then(async (v) => {
           await v.body?.cancel();
           if (!v.ok) {
-            logger.warning("Unable to request reload");
+            this.logger.warning("Unable to request reload");
           }
         })
         .catch(() => undefined);
     });
-  };
-}
+  }
 
-const liveReloadScript = `
-const eventSource = new EventSource("/live-reload-events");
-eventSource.addEventListener("message", () => {
-  location.reload();
-});
-`.trimStart();
+  static liveReloadScript = `
+    const eventSource = new EventSource("/live-reload-events");
+    eventSource.addEventListener("message", () => {
+      location.reload();
+    });
+  `
+    .trim()
+    .replace(/\s+/g, " ");
+
+  static callbacks = new Map<string, () => void>();
+
+  static handleLiveReloadRequest(request: Request) {
+    const { pathname } = new URL(request.url);
+    if (pathname !== "/live-reload-events") {
+      return;
+    }
+    if (request.method === "GET") {
+      const id = crypto.randomUUID();
+      const body = new ReadableStream({
+        start(controller) {
+          LiveReloadPlugin.callbacks.set(id, () =>
+            controller.enqueue(`data: null\n\n`)
+          );
+        },
+        cancel() {
+          LiveReloadPlugin.callbacks.delete(id);
+        },
+      });
+      return new Response(body.pipeThrough(new TextEncoderStream()), {
+        headers: { "Content-Type": "text/event-stream" },
+      });
+    }
+    if (request.method === "POST") {
+      LiveReloadPlugin.callbacks.forEach((fn) => fn());
+      return new Response(null, { status: 200 });
+    }
+  }
+}
