@@ -3,27 +3,27 @@ import { relativiseUrl } from "../_utils/relativise_url.ts";
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export interface CopyPluginOptions {
-  url: string;
+  entryPoint: string;
   glob?: boolean;
 }
 
 export class CopyPlugin extends Plugin {
-  url: string;
+  entryPoint: string;
   glob?: boolean;
 
   fsWatcher?: Deno.FsWatcher;
 
   get absoluteUrl(): string {
-    return new URL(this.url, this.project.rootUrl).toString();
+    return new URL(this.entryPoint, this.project.rootUrl).toString();
   }
 
   get relativeUrl(): string {
-    return relativiseUrl(this.url, this.project.rootUrl);
+    return relativiseUrl(this.entryPoint, this.project.rootUrl);
   }
 
   constructor(options: CopyPluginOptions) {
     super("COPY");
-    this.url = options.url;
+    this.entryPoint = options.entryPoint;
     this.glob = options.glob;
   }
 
@@ -50,7 +50,7 @@ export class CopyPlugin extends Plugin {
 
   async copy(this: CopyPlugin) {
     const { stager } = this.project;
-    this.logger.info(`Copying ${this.relativeUrl}`);
+    this.logger.info(`Copying ${decodeURIComponent(this.relativeUrl)}`);
     await stager.run("COPY_START");
     if (this.glob) {
       if (!this.absoluteUrl.startsWith("file:")) {
@@ -58,7 +58,7 @@ export class CopyPlugin extends Plugin {
       }
       const fileUrls: string[] = [];
       const fsWalker = fs.expandGlob(
-        path.fromFileUrl(decodeURIComponent(this.absoluteUrl)),
+        path.fromFileUrl(decodeURIComponent(this.absoluteUrl))
       );
       for await (const v of fsWalker) {
         if (v.isFile) {
@@ -75,15 +75,15 @@ export class CopyPlugin extends Plugin {
   async watch(this: CopyPlugin) {
     const targetRegExp = this.absoluteUrl.startsWith("file:")
       ? path.globToRegExp(path.fromFileUrl(this.absoluteUrl), {
-        globstar: true,
-      })
+          globstar: true,
+        })
       : undefined;
     if (!targetRegExp) {
       return;
     }
-    this.logger.info(`Watching ${this.relativeUrl}`);
+    this.logger.info(`Watching ${decodeURIComponent(this.relativeUrl)}`);
     const dirToWatch = path.dirname(
-      path.fromFileUrl(this.absoluteUrl).replace(/\*.*$/, ""),
+      path.fromFileUrl(this.absoluteUrl).replace(/\*.*$/, "")
     );
     this.fsWatcher = Deno.watchFs(dirToWatch);
     const debounced = async.debounce(() => this.copy(), 200);

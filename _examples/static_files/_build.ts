@@ -1,23 +1,26 @@
-#!/usr/bin/env -S deno run --unstable -A
-import { clean } from "../../plugins/clean.ts";
-import { copy } from "../../plugins/copy.ts";
-import { devServer } from "../../plugins/dev_server.ts";
-import { htmlTemplate } from "../../plugins/html_template.ts";
-import { createProject } from "../../project.ts";
+#!/usr/bin/env -S deno run -A
+import {
+  CleanPlugin,
+  CopyPlugin,
+  DevServerPlugin,
+  HtmlTemplatePlugin,
+  Project,
+} from "../../mod.ts";
 
-const project = createProject(
-  [
-    clean(),
-    htmlTemplate("./index.html"),
-    copy("./fonts/*.{otf,css}", { glob: true }),
-    devServer(),
+const project = new Project({
+  plugins: [
+    new CleanPlugin(),
+    new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
+    new CopyPlugin({
+      entryPoint: "./fonts/*.{otf,css}",
+      glob: true,
+    }),
+    new DevServerPlugin(),
   ],
-  {
-    rootUrl: import.meta.resolve("./"),
-    destUrl: "./dest/",
-    importMapUrl: "./import_map.json",
-    dev: Deno.args[0] === "dev",
-  },
-);
+  rootUrl: import.meta.resolve("./"),
+  destUrl: "./dest/",
+  importMapUrl: "./import_map.json",
+  dev: Deno.args[0] === "dev",
+});
 
 await project.bootstrap();
