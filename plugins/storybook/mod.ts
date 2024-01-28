@@ -1,5 +1,5 @@
-import { Plugin } from "../../plugin.ts";
 import { deepMerge, path } from "../../_deps.ts";
+import { Plugin } from "../../plugin.ts";
 import { createProject, Project, ProjectConfig } from "../../project.ts";
 import { build } from "../build.ts";
 import { exec } from "../exec.ts";
@@ -17,7 +17,7 @@ export interface StorybookConfig {
 export function storybook(
   glob: string,
   getPlugins: (entryPoint: string) => Plugin[],
-  { constants }: StorybookConfig = {}
+  { constants }: StorybookConfig = {},
 ): Plugin {
   return ({ config, config: { dev, rootUrl }, getLogger, onStage }) => {
     let bootstrapped = false;
@@ -35,7 +35,7 @@ export function storybook(
       logger.info(`Found story ${meta.entryPoint}`);
       const destUrl = new URL(
         `./stories/${meta.id}/`,
-        config.destUrl
+        config.destUrl,
       ).toString();
       const abortController = new AbortController();
       const project = createProject(
@@ -45,7 +45,7 @@ export function storybook(
           signal: abortController.signal,
           overrideLogger: (scope: string) =>
             getLogger(`sb/${meta.id.slice(0, 4)}/${scope}`),
-        }) as ProjectConfig
+        }) as ProjectConfig,
       );
       const bootstrap = () => {
         if (bootstrapped) {
@@ -97,7 +97,7 @@ export function storybook(
           rootUrl: import.meta.resolve("./ui/"),
           importMapUrl: "./import_map.json",
           overrideLogger: (scope: string) => getLogger(`sb/ui/${scope}`),
-        }) as ProjectConfig
+        }) as ProjectConfig,
       ).bootstrap();
     });
   };

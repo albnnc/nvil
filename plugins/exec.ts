@@ -1,6 +1,6 @@
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { path } from "../_deps.ts";
 import { relativiseUrl } from "../_utils/relativise_url.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export interface ExecPluginOptions {
   scope: string;
@@ -40,7 +40,7 @@ export class ExecPlugin extends Plugin {
 
   exec(entryPoint: string) {
     this.logger.info(
-      `Executing ${relativiseUrl(entryPoint, this.project.destUrl)}`
+      `Executing ${relativiseUrl(entryPoint, this.project.destUrl)}`,
     );
     this.childProcess?.[Symbol.asyncDispose]();
     this.childProcess = new Deno.Command("deno", {
@@ -52,7 +52,7 @@ export class ExecPlugin extends Plugin {
     }).spawn();
     const handleOutput = async (
       stream: ReadableStream<Uint8Array>,
-      error = false
+      error = false,
     ) => {
       const reader = stream.getReader();
       const textDecoder = new TextDecoder();

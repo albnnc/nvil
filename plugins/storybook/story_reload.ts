@@ -1,5 +1,5 @@
-import { Plugin } from "../../plugin.ts";
 import { async } from "../../_deps.ts";
+import { Plugin } from "../../plugin.ts";
 
 const callbacks = new Map<string, (id: string) => void>();
 

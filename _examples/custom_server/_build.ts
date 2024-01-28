@@ -20,7 +20,7 @@ const project = createProject(
     destUrl: "./dest/",
     importMapUrl: "./import_map.json",
     dev: Deno.args[0] === "dev",
-  }
+  },
 );
 
 await project.bootstrap();

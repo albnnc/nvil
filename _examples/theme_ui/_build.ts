@@ -1,10 +1,10 @@
 #!/usr/bin/env -S deno run -A
 import {
-  HtmlTemplatePlugin,
-  LiveReloadPlugin,
   BuildPlugin,
   CleanPlugin,
   DevServerPlugin,
+  HtmlTemplatePlugin,
+  LiveReloadPlugin,
   Project,
 } from "../../mod.ts";
 

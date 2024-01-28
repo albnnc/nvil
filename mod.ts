@@ -1,5 +1,5 @@
-export * from "./bundle.ts";
 export * from "./_utils/scope_logger.ts";
+export * from "./bundle.ts";
 export * from "./plugin.ts";
 export * from "./plugins/build.ts";
 export * from "./plugins/clean.ts";

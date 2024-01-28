@@ -9,7 +9,7 @@ export interface UpdateStorySetOptions {
 
 export async function updateStorySet(
   set: Set<string>,
-  config: UpdateStorySetOptions
+  config: UpdateStorySetOptions,
 ) {
   const { rootUrl, glob } = config;
   const nextSet = new Set<string>();
@@ -22,7 +22,7 @@ export async function updateStorySet(
 
 export function updateStorySetSync(
   set: Set<string>,
-  config: UpdateStorySetOptions
+  config: UpdateStorySetOptions,
 ) {
   const { rootUrl, glob } = config;
   const nextSet = new Set<string>();
@@ -36,7 +36,7 @@ export function updateStorySetSync(
 function update(
   set: Set<string>,
   nextSet: Set<string>,
-  { onFind, onLoss }: UpdateStorySetOptions
+  { onFind, onLoss }: UpdateStorySetOptions,
 ) {
   for (const v of nextSet) {
     if (!set.has(v)) {

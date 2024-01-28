@@ -1,7 +1,7 @@
+import { ScopeLogger } from "./_utils/scope_logger.ts";
 import { Bundle } from "./bundle.ts";
 import { Stager } from "./mod.ts";
 import { Plugin } from "./plugin.ts";
-import { ScopeLogger } from "./_utils/scope_logger.ts";
 
 export interface ProjectOptions {
   plugins: Plugin[];
@@ -26,7 +26,7 @@ export class Project implements AsyncDisposable {
     this.rootUrl = new URL("./", options.rootUrl).toString();
     this.destUrl = new URL(
       "./",
-      new URL(options.destUrl, this.rootUrl)
+      new URL(options.destUrl, this.rootUrl),
     ).toString();
     this.importMapUrl = options.importMapUrl
       ? new URL(options.importMapUrl, this.rootUrl).toString()

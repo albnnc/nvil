@@ -1,10 +1,10 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
 import { useEffect, useMemo, useState } from "react";
+import { getStoryName } from "../_utils/get_story_name.ts";
 import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
 import { useStoryId } from "../hooks/use_story_id.ts";
-import { getStoryName } from "../_utils/get_story_name.ts";
 import { IconEmpty } from "./icon_emty.tsx";
 import { IconSearch } from "./icon_search.tsx";
 
@@ -28,9 +28,9 @@ export function Sidebar() {
         .filter(
           (v) =>
             !query ||
-            v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())
+            v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
         ),
-    [data, query]
+    [data, query],
   );
   useEffect(() => {
     const firstItem = items?.[0];
@@ -38,7 +38,7 @@ export function Sidebar() {
       history.pushState(
         { storyId: firstItem.id },
         "",
-        `?story=${firstItem.id}`
+        `?story=${firstItem.id}`,
       );
     }
   }, [items]);
@@ -85,49 +85,51 @@ export function Sidebar() {
           }}
         />
       </div>
-      {items.length ? (
-        items.map((v) => {
-          const active = storyId === v.id;
-          return (
-            <a
-              href={`?story=${v.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                history.pushState({ storyId: v.id }, "", `?story=${v.id}`);
-              }}
-              sx={{
-                px: "1rem",
-                py: "0.5rem",
-                backgroundColor: active
-                  ? theme.colors.accentSidebar
-                  : undefined,
-                cursor: "default",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                ...textStyle,
-                "&, &:active, &:visited": {
-                  color: "inherit",
-                  textDecoration: "none",
-                },
-                "&:hover": {
-                  backgroundColor: theme.colors.accentSidebar,
-                  color: theme.colors.accentOnSidebar,
-                },
-              }}
-            >
-              {getStoryName(v)}
-            </a>
-          );
-        })
-      ) : (
-        <IconEmpty
-          width="1.65rem"
-          height="1.65rem"
-          sx={{ mx: "auto", mt: "0.75rem" }}
-        />
-      )}
+      {items.length
+        ? (
+          items.map((v) => {
+            const active = storyId === v.id;
+            return (
+              <a
+                href={`?story=${v.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  history.pushState({ storyId: v.id }, "", `?story=${v.id}`);
+                }}
+                sx={{
+                  px: "1rem",
+                  py: "0.5rem",
+                  backgroundColor: active
+                    ? theme.colors.accentSidebar
+                    : undefined,
+                  cursor: "default",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  ...textStyle,
+                  "&, &:active, &:visited": {
+                    color: "inherit",
+                    textDecoration: "none",
+                  },
+                  "&:hover": {
+                    backgroundColor: theme.colors.accentSidebar,
+                    color: theme.colors.accentOnSidebar,
+                  },
+                }}
+              >
+                {getStoryName(v)}
+              </a>
+            );
+          })
+        )
+        : (
+          <IconEmpty
+            width="1.65rem"
+            height="1.65rem"
+            sx={{ mx: "auto", mt: "0.75rem" }}
+          />
+        )}
     </div>
   );
 }

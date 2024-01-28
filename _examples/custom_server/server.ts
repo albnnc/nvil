@@ -20,5 +20,5 @@ serve(
     onListen: ({ hostname, port }) => {
       log.info(`Started server on ${hostname}:${port}`);
     },
-  }
+  },
 );

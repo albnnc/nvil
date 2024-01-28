@@ -1,4 +1,4 @@
-import { path, graph } from "../_deps.ts";
+import { graph, path } from "../_deps.ts";
 
 export async function expandModule(specifier: string) {
   const textDecoder = new TextDecoder();
@@ -11,7 +11,7 @@ export async function expandModule(specifier: string) {
     throw new Error(textDecoder.decode(stderr) || "Unable to expand module");
   }
   const { modules } = JSON.parse(
-    textDecoder.decode(stdout)
+    textDecoder.decode(stdout),
   ) as graph.ModuleGraphJson;
   // One should use deno_graph when it will be able to cache its WASM.
   // See: https://deno.land/x/deno_graph@0.18.0/lib/deno_graph.generated.js#L842

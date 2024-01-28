@@ -19,8 +19,9 @@ export class HtmlTemplatePlugin extends Plugin {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", () => this.populate());
     this.project.stager.on("BUILD_END", () => this.populate());
-    this.project.stager.on("LIVE_RELOAD_SCRIPT_POPULATE", () =>
-      this.populate()
+    this.project.stager.on(
+      "LIVE_RELOAD_SCRIPT_POPULATE",
+      () => this.populate(),
     );
   }
 
@@ -29,7 +30,7 @@ export class HtmlTemplatePlugin extends Plugin {
     try {
       this.logger.info(`Populating ./index.html`);
       const template = await fetch(
-        new URL(this.entryPoint, this.project.rootUrl)
+        new URL(this.entryPoint, this.project.rootUrl),
       ).then((v) => v.text());
       const scripts = Array.from(this.project.bundle.entries())
         .filter(([k, v]) => k.endsWith(".js") && v.scope === this.scope)
@@ -38,8 +39,8 @@ export class HtmlTemplatePlugin extends Plugin {
       const data = textEncoder.encode(
         template.replace(
           /(\s+)<\/body>/,
-          `$1  ${scripts.join("$1  ")}$1</body>`
-        )
+          `$1  ${scripts.join("$1  ")}$1</body>`,
+        ),
       );
       this.project.bundle.set("./index.html", { data });
     } catch (e) {

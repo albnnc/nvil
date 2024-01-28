@@ -1,7 +1,7 @@
 import { async, esbuild, esbuildDenoPlugins } from "../_deps.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { ModuleWatcher } from "../_utils/module_watcher.ts";
 import { relativiseUrl } from "../_utils/relativise_url.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export type EsbuildPlugin = esbuild.Plugin;
 export type EsbuildOptions = esbuild.BuildOptions;

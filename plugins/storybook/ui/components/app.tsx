@@ -1,9 +1,9 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
 import { Global } from "@emotion/react";
+import { jsx } from "@theme-ui/core";
+import { theme } from "../constants.ts";
 import { Sidebar } from "./sidebar.tsx";
 import { Story } from "./story.tsx";
-import { theme } from "../constants.ts";
 
 export function App() {
   return (

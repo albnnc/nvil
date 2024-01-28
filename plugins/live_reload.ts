@@ -42,7 +42,7 @@ export class LiveReloadPlugin extends Plugin {
       this.logger.info("Reloading");
       await fetch(
         new URL("/live-reload-events", this.url ?? "http://localhost:8000"),
-        { method: "POST" }
+        { method: "POST" },
       )
         .then(async (v) => {
           await v.body?.cancel();
@@ -74,8 +74,9 @@ export class LiveReloadPlugin extends Plugin {
       const id = crypto.randomUUID();
       const body = new ReadableStream({
         start(controller) {
-          LiveReloadPlugin.callbacks.set(id, () =>
-            controller.enqueue(`data: null\n\n`)
+          LiveReloadPlugin.callbacks.set(
+            id,
+            () => controller.enqueue(`data: null\n\n`),
           );
         },
         cancel() {

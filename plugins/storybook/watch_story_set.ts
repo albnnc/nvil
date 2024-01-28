@@ -7,7 +7,7 @@ export interface WatchStorySetOptions extends UpdateStorySetOptions {
 
 export function watchStorySet(
   set: Set<string>,
-  { signal, ...rest }: WatchStorySetOptions
+  { signal, ...rest }: WatchStorySetOptions,
 ) {
   const watch = async () => {
     const watcher = Deno.watchFs(path.fromFileUrl(rest.rootUrl));

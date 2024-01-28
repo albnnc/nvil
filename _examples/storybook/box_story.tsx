@@ -11,5 +11,5 @@ init(
     }}
   >
     Box
-  </div>
+  </div>,
 );

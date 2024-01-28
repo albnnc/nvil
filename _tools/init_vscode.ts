@@ -1,10 +1,10 @@
 #!/usr/bin/env -S deno run -A
-import { fs, path, log, deepMerge } from "../_deps.ts";
+import { deepMerge, fs, log, path } from "../_deps.ts";
 
 const rootDir = path.fromFileUrl(import.meta.resolve("../"));
 const vscodeDir = path.fromFileUrl(import.meta.resolve("../.vscode"));
 const importMapGlob = path.fromFileUrl(
-  import.meta.resolve("../**/import_map.json")
+  import.meta.resolve("../**/import_map.json"),
 );
 
 log.info("Searching for import maps");
@@ -16,7 +16,7 @@ for await (const v of fs.expandGlob(importMapGlob, { globstar: true })) {
   log.info(`Found import map at ${path.relative(rootDir, v.path)}`);
   importMap = deepMerge(
     importMap,
-    await Deno.readTextFile(v.path).then(JSON.parse)
+    await Deno.readTextFile(v.path).then(JSON.parse),
   );
 }
 
@@ -29,7 +29,7 @@ await fs.ensureDir(vscodeDir);
 log.info("Writing compound import map");
 await Deno.writeTextFile(
   path.join(vscodeDir, "import_map.json"),
-  JSON.stringify(importMap, null, 2)
+  JSON.stringify(importMap, null, 2),
 );
 
 log.info("Writing settings");
@@ -42,6 +42,6 @@ await Deno.writeTextFile(
       "deno.importMap": "./.vscode/import_map.json",
     },
     null,
-    2
-  )
+    2,
+  ),
 );

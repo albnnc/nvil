@@ -1,0 +1,28 @@
+{
+  "lineWidth": 80,
+  "indentWidth": 2,
+  "typescript": {
+    "deno": true,
+    "module.sortImportDeclarations": "caseInsensitive",
+    "module.sortExportDeclarations": "caseInsensitive"
+  },
+  "json": {
+    "deno": true
+  },
+  "markdown": {
+    "deno": true
+  },
+  "excludes": [
+    "**/.cache",
+    "**/.data",
+    "**/.git",
+    "**/dest",
+    "**/deno.lock",
+    "./ui/target"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.86.2.wasm",
+    "https://plugins.dprint.dev/json-0.17.4.wasm",
+    "https://plugins.dprint.dev/markdown-0.15.3.wasm"
+  ]
+}

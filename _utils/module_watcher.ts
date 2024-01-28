@@ -32,7 +32,7 @@ export class ModuleWatcher implements Disposable {
     }
     this.fsWatcherId = crypto.randomUUID();
     const nextFsWatcher = Deno.watchFs(
-      path.fromFileUrl(nextExpanded.commonUrl)
+      path.fromFileUrl(nextExpanded.commonUrl),
     );
     this.iterable.add(nextFsWatcher);
     this.fsWatcher?.[Symbol.dispose]();
@@ -50,7 +50,7 @@ export class ModuleWatcher implements Disposable {
         break;
       }
       const expandedPathSet = new Set(
-        this.expanded?.fileUrls.map((v) => path.fromFileUrl(v))
+        this.expanded?.fileUrls.map((v) => path.fromFileUrl(v)),
       );
       if (event.paths.every((v) => !expandedPathSet.has(v))) {
         continue;

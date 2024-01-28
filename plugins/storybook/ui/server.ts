@@ -1,4 +1,4 @@
-import { server, path, fileServer, fs } from "../../../_deps.ts";
+import { fileServer, fs, path, server } from "../../../_deps.ts";
 import { handleStoryReloadRequest } from "../story_reload.ts";
 
 const currentDir = path.fromFileUrl(import.meta.resolve("./"));
@@ -36,5 +36,5 @@ server.serve(
     onListen: ({ hostname, port }) => {
       console.log(`Listening ${hostname}:${port}`);
     },
-  }
+  },
 );

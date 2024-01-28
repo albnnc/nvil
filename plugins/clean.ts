@@ -1,5 +1,5 @@
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { relativiseUrl } from "../_utils/relativise_url.ts";
+import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export class CleanPlugin extends Plugin {
   constructor() {
@@ -11,7 +11,7 @@ export class CleanPlugin extends Plugin {
     this.project.stager.on("BOOTSTRAP", async () => {
       const relativeDestUrl = relativiseUrl(
         this.project.destUrl,
-        this.project.rootUrl
+        this.project.rootUrl,
       );
       this.logger.info(`Deleting ${relativeDestUrl}`);
       await Deno.remove(new URL(this.project.destUrl), {

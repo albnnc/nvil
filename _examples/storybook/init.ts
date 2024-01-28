@@ -3,8 +3,8 @@
 /// <reference lib="deno.ns" />
 /// <reference lib="deno.unstable" />
 
-import { render } from "react-dom";
 import { ReactElement } from "react";
+import { render } from "react-dom";
 
 export function init(element: ReactElement) {
   const root = document.getElementById("root");

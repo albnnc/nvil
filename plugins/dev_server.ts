@@ -17,7 +17,7 @@ export class DevServerPlugin extends Plugin {
     this.project.stager.on("BOOTSTRAP", () => {
       const indexHtmlUrl = new URL(
         "./index.html",
-        this.project.destUrl
+        this.project.destUrl,
       ).toString();
       this.httpServer = Deno.serve({
         handler: (req) => {
