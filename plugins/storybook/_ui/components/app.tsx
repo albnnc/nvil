@@ -2,6 +2,7 @@
 import { Global } from "@emotion/react";
 import { jsx } from "@theme-ui/core";
 import { theme } from "../constants.ts";
+import { Header } from "./sections/header.tsx";
 import { Sidebar } from "./sections/sidebar.tsx";
 import { Story } from "./sections/story.tsx";
 
@@ -33,7 +34,18 @@ export function App() {
         }}
       />
       <Sidebar />
-      <Story />
+      <div
+        sx={{
+          flex: "1 1 auto",
+          height: "100vh",
+          display: "flex",
+          alignItems: "stretch",
+          flexDirection: "column",
+        }}
+      >
+        <Header />
+        <Story />
+      </div>
     </div>
   );
 }

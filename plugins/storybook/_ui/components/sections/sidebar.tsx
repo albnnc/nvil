@@ -2,65 +2,43 @@
 import { jsx } from "@theme-ui/core";
 import { useEffect, useMemo, useState } from "react";
 import { theme } from "../../constants.ts";
-import { useStories } from "../../hooks/use_stories.ts";
+import { useStoryDefs } from "../../hooks/use_story_defs.ts";
+import { StoryDef } from "../../hooks/use_story_defs.ts";
+import { useStoryGroups } from "../../hooks/use_story_groups.ts";
 import { useStoryId } from "../../hooks/use_story_id.ts";
 import { ChevronRightIcon } from "../icons/chevron_right.tsx";
 import { EmptyIcon } from "../icons/emty.tsx";
 import { SearchIcon } from "../icons/search.tsx";
 
-interface SidebarItem {
-  id: string;
-  name: string;
-  group?: string | undefined;
-  entryPoint: string;
-}
-
 export const Sidebar = () => {
   const storyId = useStoryId();
-  const { data } = useStories();
   const [query, setQuery] = useState("");
-  const items = useMemo(
-    () =>
-      (data ?? [])
-        .map((v) => ({
-          ...v,
-          name: typeof v.name === "string" ? v.name : v.id,
-          group: typeof v.group === "string" ? v.group : undefined,
-        }))
-        .sort((a, b) =>
-          a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase())
-        )
-        .filter(
-          (v) =>
-            !query ||
-            v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
-        ),
-    [data, query],
-  );
-  const groups = useMemo(() => {
-    return Array
-      .from(new Set(items.map((v) => v.group)))
-      .filter((v) => v) as string[];
-  }, [items]);
+  const [storyDefs = []] = useStoryDefs();
+  const filteredStoryDefs = useMemo(() => {
+    return storyDefs.filter((v) =>
+      !query || v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())
+    );
+  }, [query, storyDefs]);
+  const storyGroups = useStoryGroups(storyDefs);
   useEffect(() => {
-    const firstItem = items?.[0];
-    if (!storyId && firstItem) {
+    const firstStoryDef = storyDefs?.[0];
+    if (!storyId && firstStoryDef) {
       history.pushState(
-        { storyId: firstItem.id },
+        { storyId: firstStoryDef.id },
         "",
-        `?story-id=${firstItem.id}`,
+        `?story-id=${firstStoryDef.id}`,
       );
     }
-  }, [items]);
+  }, [storyDefs]);
   return (
     <div
       sx={{
-        py: "1em",
+        py: "1rem",
         flex: "0 0 250px",
-        backgroundColor: theme.colors.sidebar,
-        color: theme.colors.onSidebar,
         display: "flex",
         flexDirection: "column",
+        backgroundColor: theme.colors.sidebar,
+        color: theme.colors.onSidebar,
       }}
     >
       <div
@@ -71,6 +49,18 @@ export const Sidebar = () => {
           alignItems: "center",
         }}
       >
+        <SearchIcon
+          sx={{
+            mt: "-1px",
+            mr: "5px",
+            width: "18px",
+            height: "18px",
+            verticalAlign: "middle",
+            flex: "0 0 auto",
+            opacity: 0.8,
+            transform: "scaleX(-1)",
+          }}
+        />
         <input
           placeholder="Search"
           value={query}
@@ -80,29 +70,27 @@ export const Sidebar = () => {
             border: 0,
             background: "transparent",
             outline: "none",
+            padding: 0,
             ...textStyle,
             "&::placeholder": { ...textStyle, opacity: 0.5 },
           }}
         />
-        <SearchIcon
-          width="1.25rem"
-          height="1.25rem"
-          sx={{
-            my: "-0.25rem",
-            verticalAlign: "middle",
-            flex: "0 0 auto",
-            opacity: 0.8,
-          }}
-        />
       </div>
-      {items.length
+      {filteredStoryDefs.length
         ? (
           <div>
-            {!!groups.length &&
-              groups.map((v) => (
-                <Group name={v} items={items} storyId={storyId} />
+            {!!storyGroups.length &&
+              storyGroups.map((v) => (
+                <Group
+                  name={v}
+                  storyDefs={storyDefs}
+                  activeStoryId={storyId}
+                />
               ))}
-            <Group items={items} storyId={storyId} />
+            <Group
+              storyDefs={storyDefs}
+              activeStoryId={storyId}
+            />
           </div>
         )
         : (
@@ -117,16 +105,16 @@ export const Sidebar = () => {
 };
 
 interface GroupProps {
-  items: SidebarItem[];
   name?: string;
-  storyId?: string;
+  storyDefs: StoryDef[];
+  activeStoryId?: string;
 }
 
-const Group = ({ name, items, storyId }: GroupProps) => {
-  const groupItems = items.filter((v) => v.group === name);
+const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
+  const groupStoryDefs = storyDefs.filter((v) => v.group === name);
   const alwaysOpen = useMemo(() => {
-    return !name || groupItems.some((v) => v.id === storyId);
-  }, [name, groupItems]);
+    return !name || groupStoryDefs.some((v) => v.id === activeStoryId);
+  }, [name, groupStoryDefs]);
   const [open, setOpen] = useState(() => alwaysOpen);
   useEffect(() => {
     if (alwaysOpen && !open) {
@@ -160,7 +148,7 @@ const Group = ({ name, items, storyId }: GroupProps) => {
           {name}
         </a>
       )}
-      {open && !!groupItems.length && (
+      {open && !!groupStoryDefs.length && (
         <div
           sx={{
             display: "flex",
@@ -181,8 +169,8 @@ const Group = ({ name, items, storyId }: GroupProps) => {
               }}
             />
           )}
-          {groupItems.map((v) => {
-            const groupItemActive = storyId === v.id;
+          {groupStoryDefs.map((v) => {
+            const groupItemActive = activeStoryId === v.id;
             return (
               <a
                 key={v.id}

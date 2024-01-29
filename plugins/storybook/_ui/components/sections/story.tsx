@@ -3,7 +3,7 @@ import { jsx } from "@theme-ui/core";
 import { useEffect, useRef } from "react";
 import { useStoryId } from "../../hooks/use_story_id.ts";
 
-export function Story() {
+export const Story = () => {
   const ref = useRef<HTMLIFrameElement>(null);
   const storyId = useStoryId();
   useEffect(() => {
@@ -30,4 +30,4 @@ export function Story() {
       }}
     />
   );
-}
+};
