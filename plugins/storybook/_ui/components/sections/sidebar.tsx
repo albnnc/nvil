@@ -1,41 +1,14 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { theme } from "../constants.ts";
-import { useStories } from "../hooks/use_stories.ts";
-import { useStoryId } from "../hooks/use_story_id.ts";
-import { IconChevronRight } from "./icon_chevron_right.tsx";
-import { IconEmpty } from "./icon_emty.tsx";
-import { IconSearch } from "./icon_search.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { theme } from "../../constants.ts";
+import { useStories } from "../../hooks/use_stories.ts";
+import { useStoryId } from "../../hooks/use_story_id.ts";
+import { ChevronRightIcon } from "../icons/chevron_right.tsx";
+import { EmptyIcon } from "../icons/emty.tsx";
+import { SearchIcon } from "../icons/search.tsx";
 
-const textStyle = {
-  color: "inherit",
-  fontSize: "0.85rem",
-  letterSpacing: "0.065em",
-  textTransform: "uppercase",
-  fontWeight: theme.colorScheme === "dark" ? 300 : 400,
-};
-
-const itemStyle = (active: boolean) => ({
-  px: "1rem",
-  py: "0.5rem",
-  backgroundColor: active ? theme.colors.accentSidebar : undefined,
-  cursor: "default",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  ...textStyle,
-  "&, &:active, &:visited": {
-    color: "inherit",
-    textDecoration: "none",
-  },
-  "&:hover": {
-    backgroundColor: theme.colors.accentSidebar,
-    color: theme.colors.accentOnSidebar,
-  },
-});
-
-interface Item {
+interface SidebarItem {
   id: string;
   name: string;
   group?: string | undefined;
@@ -69,54 +42,6 @@ export const Sidebar = () => {
       .from(new Set(items.map((v) => v.group)))
       .filter((v) => v) as string[];
   }, [items]);
-  const renderGroup = useCallback((group: string | undefined) => {
-    const groupItems = items.filter((v) => v.group === group);
-    const groupActive = groupItems.some((v) => v.id === storyId);
-    return (
-      <div
-        key={group}
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {group && (
-          <a sx={itemStyle(false)}>
-            <IconChevronRight
-              sx={{
-                mt: "-2px",
-                mr: "5px",
-                width: "18px",
-                height: "18px",
-                verticalAlign: "middle",
-                transform: groupActive ? "rotate(90deg)" : undefined,
-              }}
-            />
-            {group}
-          </a>
-        )}
-        {groupItems.map((v) => {
-          const groupItemActive = storyId === v.id;
-          return (
-            <a
-              key={v.id}
-              href={`?story-id=${v.id}`}
-              sx={{ ...itemStyle(groupItemActive) }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                history.pushState({ storyId: v.id }, "", `?story-id=${v.id}`);
-              }}
-            >
-              <span sx={{ pl: "23px" }}>
-                {v.name}
-              </span>
-            </a>
-          );
-        })}
-      </div>
-    );
-  }, [items, storyId]);
   useEffect(() => {
     const firstItem = items?.[0];
     if (!storyId && firstItem) {
@@ -159,7 +84,7 @@ export const Sidebar = () => {
             "&::placeholder": { ...textStyle, opacity: 0.5 },
           }}
         />
-        <IconSearch
+        <SearchIcon
           width="1.25rem"
           height="1.25rem"
           sx={{
@@ -181,7 +106,7 @@ export const Sidebar = () => {
           </div>
         )
         : (
-          <IconEmpty
+          <EmptyIcon
             width="1.65rem"
             height="1.65rem"
             sx={{ mx: "auto", mt: "0.75rem" }}
@@ -192,7 +117,7 @@ export const Sidebar = () => {
 };
 
 interface GroupProps {
-  items: Item[];
+  items: SidebarItem[];
   name?: string;
   storyId?: string;
 }
@@ -222,7 +147,7 @@ const Group = ({ name, items, storyId }: GroupProps) => {
             setOpen(alwaysOpen ? true : !open);
           }}
         >
-          <IconChevronRight
+          <ChevronRightIcon
             sx={{
               mt: "-2px",
               mr: "5px",
@@ -280,3 +205,30 @@ const Group = ({ name, items, storyId }: GroupProps) => {
     </div>
   );
 };
+
+const textStyle = {
+  color: "inherit",
+  fontSize: "0.85rem",
+  letterSpacing: "0.065em",
+  textTransform: "uppercase",
+  fontWeight: theme.colorScheme === "dark" ? 300 : 400,
+};
+
+const itemStyle = (active: boolean) => ({
+  px: "1rem",
+  py: "0.5rem",
+  backgroundColor: active ? theme.colors.accentSidebar : undefined,
+  cursor: "default",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  ...textStyle,
+  "&, &:active, &:visited": {
+    color: "inherit",
+    textDecoration: "none",
+  },
+  "&:hover": {
+    backgroundColor: theme.colors.accentSidebar,
+    color: theme.colors.accentOnSidebar,
+  },
+});

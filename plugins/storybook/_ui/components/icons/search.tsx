@@ -2,7 +2,7 @@
 import { jsx } from "@theme-ui/core";
 import { SVGAttributes } from "react";
 
-export const IconSearch = (props: SVGAttributes<SVGSVGElement>) => (
+export const SearchIcon = (props: SVGAttributes<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 512"

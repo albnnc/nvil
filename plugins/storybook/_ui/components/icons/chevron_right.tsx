@@ -2,7 +2,7 @@
 import { jsx } from "@theme-ui/core";
 import { SVGAttributes } from "react";
 
-export const IconChevronRight = (props: SVGAttributes<SVGSVGElement>) => (
+export const ChevronRightIcon = (props: SVGAttributes<SVGSVGElement>) => (
   <svg
     stroke="currentColor"
     fill="currentColor"

@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
 import { useEffect, useRef } from "react";
-import { useStoryId } from "../hooks/use_story_id.ts";
+import { useStoryId } from "../../hooks/use_story_id.ts";
 
 export function Story() {
   const ref = useRef<HTMLIFrameElement>(null);

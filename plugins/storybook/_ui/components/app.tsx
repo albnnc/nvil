@@ -2,8 +2,8 @@
 import { Global } from "@emotion/react";
 import { jsx } from "@theme-ui/core";
 import { theme } from "../constants.ts";
-import { Sidebar } from "./sidebar.tsx";
-import { Story } from "./story.tsx";
+import { Sidebar } from "./sections/sidebar.tsx";
+import { Story } from "./sections/story.tsx";
 
 export function App() {
   return (
