@@ -1,13 +1,13 @@
-import { fileServer, fs, path, server } from "../../../_deps.ts";
-import { handleStoryReloadRequest } from "../story_reload.ts";
+import { fileServer, fs, path } from "../../../_deps.ts";
+import { StoryLiveReloadPlugin } from "../_plugins/story_live_reload.ts";
 
 const currentDir = path.fromFileUrl(import.meta.resolve("./"));
 const metaGlob = path.join(currentDir, "./stories/*/meta.json");
 const indexHtmlFilePath = path.join(currentDir, "./index.html");
 const urlRoot = Deno.env.get("URL_ROOT") || undefined;
 
-server.serve(
-  async (req) => {
+Deno.serve({
+  handler: async (req) => {
     const url = new URL(req.url);
     const pathname = urlRoot
       ? url.pathname.replace(urlRoot, "").replace(/\/+/, "/")
@@ -20,7 +20,7 @@ server.serve(
       return new Response(JSON.stringify(metas));
     }
     return (
-      handleStoryReloadRequest(req) ||
+      StoryLiveReloadPlugin.handleStoryLiveReloadRequest(req) ||
       fileServer
         .serveDir(req, {
           fsRoot: currentDir,
@@ -32,9 +32,7 @@ server.serve(
         )
     );
   },
-  {
-    onListen: ({ hostname, port }) => {
-      console.log(`Listening ${hostname}:${port}`);
-    },
+  onListen: ({ hostname, port }) => {
+    console.log(`Listening ${hostname}:${port}`);
   },
-);
+});

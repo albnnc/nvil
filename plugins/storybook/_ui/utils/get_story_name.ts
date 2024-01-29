@@ -1,5 +1,5 @@
 import { titleCase } from "case";
-import { StoryMeta } from "../../story_meta.ts";
+import { StoryMeta } from "../../_utils/story_meta.ts";
 
 export function getStoryName({ entryPoint }: StoryMeta) {
   const segments = entryPoint

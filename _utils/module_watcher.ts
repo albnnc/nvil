@@ -6,7 +6,7 @@ export interface ModuleWatcherOptions {
   specifier: string;
 }
 
-export class ModuleWatcher implements Disposable {
+export class ModuleWatcher implements Disposable, AsyncIterable<Deno.FsEvent> {
   specifier: string;
   disposed = false;
 

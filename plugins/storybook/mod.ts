@@ -1,104 +1,130 @@
-import { deepMerge, path } from "../../_deps.ts";
-import { Plugin } from "../../plugin.ts";
-import { createProject, Project, ProjectConfig } from "../../project.ts";
-import { build } from "../build.ts";
-import { exec } from "../exec.ts";
-import { htmlTemplate } from "../html_template.ts";
-import { getStoryMeta, storyMeta } from "./story_meta.ts";
-import { storyReload } from "./story_reload.ts";
-import { Theme } from "./ui/theme.ts";
-import { updateStorySetSync } from "./update_story_set.ts";
-import { watchStorySet } from "./watch_story_set.ts";
+import { path } from "../../_deps.ts";
+import { Plugin, PluginApplyOptions } from "../../plugin.ts";
+import { Project } from "../../project.ts";
+import { BuildPlugin } from "../build.ts";
+import { ExecPlugin } from "../exec.ts";
+import { HtmlTemplatePlugin } from "../html_template.ts";
+import { StoryLiveReloadPlugin } from "./_plugins/story_live_reload.ts";
+import { StoryMetaPlugin } from "./_plugins/story_meta.ts";
+import { Theme } from "./_ui/theme.ts";
+import { StoryMeta } from "./_utils/story_meta.ts";
+import { StorySetWatcher } from "./_utils/story_set_watcher.ts";
 
-export interface StorybookConfig {
+export interface StorybookPluginOptions {
+  globUrl: string;
   constants?: { theme: Theme };
+  getPlugins?: (entryPoint: string) => Plugin[];
 }
 
-export function storybook(
-  glob: string,
-  getPlugins: (entryPoint: string) => Plugin[],
-  { constants }: StorybookConfig = {},
-): Plugin {
-  return ({ config, config: { dev, rootUrl }, getLogger, onStage }) => {
-    let bootstrapped = false;
-    const logger = getLogger("sb");
-    const storySet = new Set<string>();
-    const instanceMap = new Map<
-      string,
-      {
-        project: Project;
-        clean: () => Promise<void>;
+export class StorybookPlugin extends Plugin {
+  globUrl: string;
+  constants?: { theme: Theme };
+  getPlugins?: (entryPoint: string) => Plugin[];
+
+  storySetWatcher?: StorySetWatcher;
+  storyInstanceMap = new Map<
+    string,
+    {
+      project: Project;
+      clean: () => Promise<void>;
+    }
+  >();
+  uiProject?: Project;
+
+  constructor(options: StorybookPluginOptions) {
+    super("STORYBOOK");
+    this.globUrl = options.globUrl;
+    this.constants = options.constants;
+    this.getPlugins = options.getPlugins;
+  }
+
+  async apply(this: StorybookPlugin, options: PluginApplyOptions) {
+    super.apply(options);
+    this.storySetWatcher = new StorySetWatcher({
+      rootUrl: this.project.rootUrl,
+      globUrl: this.globUrl,
+    });
+    await this.storySetWatcher.walk();
+    this.project.stager.on("BOOTSTRAP", () => {
+      if (this.project.dev) {
+        this.storySetWatcher?.watch();
       }
-    >();
-    const onFind = (entryPoint: string) => {
-      const meta = getStoryMeta(entryPoint, rootUrl);
-      logger.info(`Found story ${meta.entryPoint}`);
-      const destUrl = new URL(
-        `./stories/${meta.id}/`,
-        config.destUrl,
-      ).toString();
-      const abortController = new AbortController();
-      const project = createProject(
-        [...getPlugins(entryPoint), storyMeta(entryPoint), storyReload()],
-        deepMerge(config, {
-          destUrl,
-          signal: abortController.signal,
-          overrideLogger: (scope: string) =>
-            getLogger(`sb/${meta.id.slice(0, 4)}/${scope}`),
-        }) as ProjectConfig,
-      );
-      const bootstrap = () => {
-        if (bootstrapped) {
-          project.bootstrap();
-          return;
-        }
-        return onStage("BOOTSTRAP", project.bootstrap);
-      };
-      const cleanStage = bootstrap();
-      const clean = async () => {
-        abortController.abort();
-        cleanStage?.();
-        await Deno.remove(path.fromFileUrl(destUrl), { recursive: true });
-      };
-      instanceMap.set(entryPoint, { project, clean });
-    };
-    const onLoss = (entryPoint: string) => {
-      const meta = getStoryMeta(entryPoint, rootUrl);
-      logger.info(`Lost story ${meta.entryPoint}`);
-      const instance = instanceMap.get(entryPoint);
-      if (!instance) {
-        return;
-      }
-      instance.clean();
-      instanceMap.delete(entryPoint);
-    };
-    updateStorySetSync(storySet, { rootUrl, glob, onFind, onLoss });
-    onStage("BOOTSTRAP", async () => {
-      bootstrapped = true;
-      dev && watchStorySet(storySet, { rootUrl, glob, onFind, onLoss });
-      await createProject(
-        [
-          build("./index.tsx", {
-            overrideEsbuildOptions: (config) => {
-              config.define = {
-                ...config.define,
-                STORYBOOK_CONSTANTS: constants
-                  ? JSON.stringify(constants)
+      this.uiProject = new Project({
+        plugins: [
+          new BuildPlugin({
+            entryPoint: "./index.tsx",
+            overrideEsbuildOptions: (options) => {
+              options.define = {
+                ...options.define,
+                STORYBOOK_CONSTANTS: this.constants
+                  ? JSON.stringify(this.constants)
                   : "undefined",
               };
-              return config;
+              return options;
             },
           }),
-          build("./server.ts", { scope: "server" }),
-          htmlTemplate("./index.html"),
-          exec("server", { args: ["-A"] }),
+          new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
+          new BuildPlugin({ entryPoint: "./server.ts", scope: "SERVER" }),
+          new ExecPlugin({ scope: "SERVER", args: ["-A"] }),
         ],
-        deepMerge(config, {
-          rootUrl: import.meta.resolve("./ui/"),
-          importMapUrl: "./import_map.json",
-          overrideLogger: (scope: string) => getLogger(`sb/ui/${scope}`),
-        }) as ProjectConfig,
-      ).bootstrap();
+        rootUrl: import.meta.resolve("./_ui/"),
+        destUrl: this.project.destUrl,
+        importMapUrl: "./import_map.json",
+        dev: this.project.dev,
+      });
+      this.uiProject.bootstrap();
     });
-  };
+  }
+
+  onStoryFind(this: StorybookPlugin, entryPoint: string) {
+    const storyMeta = StoryMeta.fromEntryPoint(
+      entryPoint,
+      this.project.rootUrl,
+    );
+    this.logger.info(`Found story ${storyMeta.entryPoint}`);
+    const storyDestUrl = new URL(
+      `./stories/${storyMeta.id}/`,
+      this.project.destUrl,
+    ).toString();
+    const storyProject = new Project({
+      plugins: [
+        ...(this.getPlugins?.(entryPoint) ?? []),
+        new StoryMetaPlugin({ entryPoint }),
+        new StoryLiveReloadPlugin(),
+      ],
+      rootUrl: this.project.rootUrl,
+      destUrl: storyDestUrl,
+      importMapUrl: this.project.importMapUrl,
+      dev: this.project.dev,
+    });
+    this.project.stager.on("BOOTSTRAP", () => storyProject.bootstrap());
+    const cleanStory = async () => {
+      await Deno.remove(path.fromFileUrl(storyDestUrl), { recursive: true });
+    };
+    this.storyInstanceMap.set(entryPoint, {
+      project: storyProject,
+      clean: cleanStory,
+    });
+  }
+
+  onStoryLoss(this: StorybookPlugin, entryPoint: string) {
+    const storyMeta = StoryMeta.fromEntryPoint(
+      entryPoint,
+      this.project.rootUrl,
+    );
+    this.logger.info(`Lost story ${storyMeta.entryPoint}`);
+    const storyInstance = this.storyInstanceMap.get(entryPoint);
+    if (!storyInstance) {
+      return;
+    }
+    storyInstance.clean();
+    this.storyInstanceMap.delete(entryPoint);
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.uiProject?.[Symbol.asyncDispose]();
+    for (const { project } of this.storyInstanceMap.values()) {
+      await project[Symbol.asyncDispose]();
+    }
+  }
 }

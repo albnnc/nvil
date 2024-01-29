@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getStoryId } from "../_utils/get_story_id.ts";
+import { getStoryId } from "../utils/get_story_id.ts";
 
 export function useStoryId() {
   const [storyId, setStoryId] = useState<string | undefined>(getStoryId);

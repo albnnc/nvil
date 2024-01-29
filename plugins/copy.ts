@@ -58,7 +58,7 @@ export class CopyPlugin extends Plugin {
       }
       const fileUrls: string[] = [];
       const fsWalker = fs.expandGlob(
-        path.fromFileUrl(decodeURIComponent(this.absoluteUrl))
+        path.fromFileUrl(decodeURIComponent(this.absoluteUrl)),
       );
       for await (const v of fsWalker) {
         if (v.isFile) {
@@ -75,15 +75,15 @@ export class CopyPlugin extends Plugin {
   async watch(this: CopyPlugin) {
     const targetRegExp = this.absoluteUrl.startsWith("file:")
       ? path.globToRegExp(path.fromFileUrl(this.absoluteUrl), {
-          globstar: true,
-        })
+        globstar: true,
+      })
       : undefined;
     if (!targetRegExp) {
       return;
     }
     this.logger.info(`Watching ${decodeURIComponent(this.relativeUrl)}`);
     const dirToWatch = path.dirname(
-      path.fromFileUrl(this.absoluteUrl).replace(/\*.*$/, "")
+      path.fromFileUrl(this.absoluteUrl).replace(/\*.*$/, ""),
     );
     this.fsWatcher = Deno.watchFs(dirToWatch);
     const debounced = async.debounce(() => this.copy(), 200);

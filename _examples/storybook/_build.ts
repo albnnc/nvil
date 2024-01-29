@@ -1,19 +1,26 @@
-#!/usr/bin/env -S deno run --unstable -A
-import { build } from "../../plugins/build.ts";
-import { clean } from "../../plugins/clean.ts";
-import { htmlTemplate } from "../../plugins/html_template.ts";
-import { storybook } from "../../plugins/storybook/mod.ts";
-import { createProject } from "../../project.ts";
+#!/usr/bin/env -S deno run -A
+import {
+  BuildPlugin,
+  CleanPlugin,
+  HtmlTemplatePlugin,
+  Project,
+  StorybookPlugin,
+} from "../../mod.ts";
 
-const project = createProject(
-  [
-    clean(),
-    storybook("./**/*_story.{ts,tsx}", (v) => [
-      build(v),
-      htmlTemplate(import.meta.resolve("./index.html")),
-    ]),
-  ],
+await using project = new Project(
   {
+    plugins: [
+      new CleanPlugin(),
+      new StorybookPlugin({
+        globUrl: "./**/*_story.{ts,tsx}",
+        getPlugins: (entryPoint) => [
+          new BuildPlugin({ entryPoint }),
+          new HtmlTemplatePlugin({
+            entryPoint: import.meta.resolve("./index.html"),
+          }),
+        ],
+      }),
+    ],
     rootUrl: import.meta.resolve("./"),
     destUrl: "./dest/",
     importMapUrl: "./import_map.json",

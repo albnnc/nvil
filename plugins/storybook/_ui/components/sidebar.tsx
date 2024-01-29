@@ -1,10 +1,10 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
 import { useEffect, useMemo, useState } from "react";
-import { getStoryName } from "../_utils/get_story_name.ts";
 import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
 import { useStoryId } from "../hooks/use_story_id.ts";
+import { getStoryName } from "../utils/get_story_name.ts";
 import { IconEmpty } from "./icon_emty.tsx";
 import { IconSearch } from "./icon_search.tsx";
 
