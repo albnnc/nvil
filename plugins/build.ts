@@ -9,14 +9,14 @@ export type EsbuildOptions = esbuild.BuildOptions;
 export interface BuildPluginOptions {
   entryPoint: string;
   scope?: string;
-  overrideEsbuildOptions?: (options: EsbuildOptions) => EsbuildOptions;
+  overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 }
 
 export class BuildPlugin extends Plugin {
   encoder = new TextEncoder();
   entryPoint: string;
   scope?: string;
-  overrideEsbuildOptions?: (options: EsbuildOptions) => EsbuildOptions;
+  overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 
   private moduleWatcher?: ModuleWatcher;
 
@@ -69,20 +69,24 @@ export class BuildPlugin extends Plugin {
       };
       this.overrideEsbuildOptions?.(esbuildConfig);
       const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
-      const indexJs = outputFiles?.find((v) => v.path === "<stdout>");
-      if (!indexJs) {
+      const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
+      if (!mainOutputFile) {
         return;
       }
       const targetUrl = this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
       const metaUrl = targetUrl.replace(/\.js$/, ".meta.json");
       bundle.set(targetUrl, {
-        data: indexJs.contents,
+        data: mainOutputFile.contents,
         scope: this.scope,
       });
       bundle.set(metaUrl, {
         data: this.encoder.encode(JSON.stringify(metafile)),
       });
-      await stager.run("BUILD_END", this.absoluteEntryPoint);
+      await stager.run("BUILD_END", {
+        entryPoint: this.absoluteEntryPoint,
+        targetUrl,
+        metaUrl,
+      });
     } catch (e) {
       if (dev) {
         this.logger.error(e.message);

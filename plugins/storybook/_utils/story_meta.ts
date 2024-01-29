@@ -9,6 +9,7 @@ export interface StoryMetaOptions {
 export class StoryMeta {
   id: string;
   entryPoint: string;
+  [key: string]: unknown;
 
   constructor(options: StoryMetaOptions) {
     this.id = options.id;

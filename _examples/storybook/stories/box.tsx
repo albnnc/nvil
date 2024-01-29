@@ -1,7 +1,12 @@
 import React from "react";
-import { init } from "./init.ts";
+import { createReactElementLoader } from "../common.ts";
 
-init(
+export const meta = {
+  name: "Box",
+  group: "Containers",
+};
+
+export const load = createReactElementLoader(
   <div
     style={{
       padding: "1em",

@@ -66,7 +66,6 @@ export class StorybookPlugin extends Plugin {
                   ? JSON.stringify(this.constants)
                   : "undefined",
               };
-              return options;
             },
           }),
           new HtmlTemplatePlugin({ entryPoint: "./index.html" }),

@@ -12,7 +12,7 @@ await using project = new Project(
     plugins: [
       new CleanPlugin(),
       new StorybookPlugin({
-        globUrl: "./**/*_story.{ts,tsx}",
+        globUrl: "./stories/**/*.{ts,tsx}",
         getPlugins: (entryPoint) => [
           new BuildPlugin({ entryPoint }),
           new HtmlTemplatePlugin({

@@ -6,7 +6,9 @@
 import { ReactElement } from "react";
 import { render } from "react-dom";
 
-export function init(element: ReactElement) {
-  const root = document.getElementById("root");
-  render(element, root);
+export function createReactElementLoader(element: ReactElement) {
+  return () => {
+    const root = document.getElementById("root");
+    render(element, root);
+  };
 }
