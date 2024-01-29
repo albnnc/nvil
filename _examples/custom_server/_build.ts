@@ -2,10 +2,10 @@
 import {
   BuildPlugin,
   CleanPlugin,
-  ExecPlugin,
   HtmlTemplatePlugin,
   LiveReloadPlugin,
   Project,
+  RunPlugin,
 } from "../../mod.ts";
 
 await using project = new Project({
@@ -15,7 +15,7 @@ await using project = new Project({
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
     new LiveReloadPlugin(),
     new BuildPlugin({ entryPoint: "./server.ts", scope: "SERVER" }),
-    new ExecPlugin({ scope: "SERVER", args: ["-A"] }),
+    new RunPlugin({ scope: "SERVER", args: ["-A"] }),
   ],
   rootUrl: import.meta.resolve("./"),
   destUrl: "./dest/",

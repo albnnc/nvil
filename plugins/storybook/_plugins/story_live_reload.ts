@@ -39,8 +39,6 @@ export class StoryLiveReloadPlugin extends Plugin {
     });
   }
 
-  static callbacks = new Map<string, (id: string) => void>();
-
   static handleStoryLiveReloadRequest(request: Request) {
     const { pathname } = new URL(request.url);
     if (pathname !== "/story-reload-events") {
@@ -69,4 +67,6 @@ export class StoryLiveReloadPlugin extends Plugin {
       return new Response(null, { status: 200 });
     }
   }
+
+  private static callbacks = new Map<string, (id: string) => void>();
 }

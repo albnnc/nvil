@@ -2,21 +2,21 @@ import { path } from "../_deps.ts";
 import { relativiseUrl } from "../_utils/relativise_url.ts";
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
-export interface ExecPluginOptions {
+export interface RunPluginOptions {
   scope: string;
   args?: string[];
   env?: Record<string, string>;
 }
 
-export class ExecPlugin extends Plugin {
+export class RunPlugin extends Plugin {
   scope: string;
   args?: string[];
   env?: Record<string, string>;
 
-  childProcess?: Deno.ChildProcess;
+  private childProcess?: Deno.ChildProcess;
 
-  constructor(options: ExecPluginOptions) {
-    super("EXEC");
+  constructor(options: RunPluginOptions) {
+    super("RUN");
     this.scope = options.scope;
     this.args = options.args;
     this.env = options.env;
@@ -32,15 +32,19 @@ export class ExecPlugin extends Plugin {
         const entry = this.project.bundle.get(v);
         if (entry && entry.scope === this.scope) {
           const absoluteUrl = new URL(v, this.project.destUrl).toString();
-          this.exec(absoluteUrl);
+          this.run(absoluteUrl);
         }
       }
     });
   }
 
-  exec(entryPoint: string) {
+  async [Symbol.asyncDispose]() {
+    await this.childProcess?.[Symbol.asyncDispose]();
+  }
+
+  private run(entryPoint: string) {
     this.logger.info(
-      `Executing ${relativiseUrl(entryPoint, this.project.destUrl)}`,
+      `Running ${relativiseUrl(entryPoint, this.project.destUrl)}`,
     );
     this.childProcess?.[Symbol.asyncDispose]();
     this.childProcess = new Deno.Command("deno", {
@@ -69,9 +73,5 @@ export class ExecPlugin extends Plugin {
     };
     handleOutput(this.childProcess.stdout);
     handleOutput(this.childProcess.stderr, true);
-  }
-
-  async [Symbol.asyncDispose]() {
-    await this.childProcess?.[Symbol.asyncDispose]();
   }
 }

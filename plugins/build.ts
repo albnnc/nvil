@@ -18,7 +18,7 @@ export class BuildPlugin extends Plugin {
   scope?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => EsbuildOptions;
 
-  moduleWatcher?: ModuleWatcher;
+  private moduleWatcher?: ModuleWatcher;
 
   get absoluteEntryPoint(): string {
     return new URL(this.entryPoint, this.project.rootUrl).toString();

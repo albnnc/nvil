@@ -3,8 +3,8 @@ import { ScopeLogger } from "../../mod.ts";
 import { Plugin, PluginApplyOptions } from "../../plugin.ts";
 import { Project } from "../../project.ts";
 import { BuildPlugin } from "../build.ts";
-import { ExecPlugin } from "../exec.ts";
 import { HtmlTemplatePlugin } from "../html_template.ts";
+import { RunPlugin } from "../run.ts";
 import { StoryLiveReloadPlugin } from "./_plugins/story_live_reload.ts";
 import { StoryMetaPlugin } from "./_plugins/story_meta.ts";
 import { Theme } from "./_ui/theme.ts";
@@ -22,9 +22,9 @@ export class StorybookPlugin extends Plugin {
   constants?: { theme: Theme };
   getPlugins?: (entryPoint: string) => Plugin[];
 
-  storySetWatcher?: StorySetWatcher;
-  uiProject?: Project;
-  storyProjects = new Map<string, Project>();
+  private storySetWatcher?: StorySetWatcher;
+  private uiProject?: Project;
+  private storyProjects = new Map<string, Project>();
 
   constructor(options: StorybookPluginOptions) {
     super("STORYBOOK");
@@ -71,7 +71,7 @@ export class StorybookPlugin extends Plugin {
           }),
           new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
           new BuildPlugin({ entryPoint: "./server.ts", scope: "SERVER" }),
-          new ExecPlugin({ scope: "SERVER", args: ["-A"] }),
+          new RunPlugin({ scope: "SERVER", args: ["-A"] }),
         ],
         rootUrl: import.meta.resolve("./_ui/"),
         destUrl: this.project.destUrl,
@@ -83,7 +83,14 @@ export class StorybookPlugin extends Plugin {
     });
   }
 
-  onStoryFind(this: StorybookPlugin, entryPoint: string) {
+  async [Symbol.asyncDispose]() {
+    await this.uiProject?.[Symbol.asyncDispose]();
+    for (const project of this.storyProjects.values()) {
+      await project[Symbol.asyncDispose]();
+    }
+  }
+
+  private onStoryFind(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
       this.project.rootUrl,
@@ -106,7 +113,7 @@ export class StorybookPlugin extends Plugin {
     storyProject.bootstrap();
   }
 
-  async onStoryLoss(this: StorybookPlugin, entryPoint: string) {
+  private async onStoryLoss(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
       this.project.rootUrl,
@@ -122,14 +129,14 @@ export class StorybookPlugin extends Plugin {
     await Deno.remove(path.fromFileUrl(storyDestUrl), { recursive: true });
   }
 
-  getStoryDestUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
+  private getStoryDestUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
     return new URL(
       `./stories/${storyMeta.id}/`,
       this.project.destUrl,
     ).toString();
   }
 
-  nestScopeLogger(scopeLogger: ScopeLogger, segments: string[] = []) {
+  private nestScopeLogger(scopeLogger: ScopeLogger, segments: string[] = []) {
     scopeLogger.scope = [
       this.logger.scope,
       ...segments,
@@ -137,17 +144,10 @@ export class StorybookPlugin extends Plugin {
     ].join(" > ");
   }
 
-  nestProjectLoggers(project: Project, segments: string[] = []) {
+  private nestProjectLoggers(project: Project, segments: string[] = []) {
     this.nestScopeLogger(project.logger, segments);
     project.plugins.forEach((v) => {
       this.nestScopeLogger(v.logger, segments);
     });
-  }
-
-  async [Symbol.asyncDispose]() {
-    await this.uiProject?.[Symbol.asyncDispose]();
-    for (const project of this.storyProjects.values()) {
-      await project[Symbol.asyncDispose]();
-    }
   }
 }

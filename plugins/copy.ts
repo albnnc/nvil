@@ -11,7 +11,7 @@ export class CopyPlugin extends Plugin {
   entryPoint: string;
   glob?: boolean;
 
-  fsWatcher?: Deno.FsWatcher;
+  private fsWatcher?: Deno.FsWatcher;
 
   get absoluteUrl(): string {
     return new URL(this.entryPoint, this.project.rootUrl).toString();

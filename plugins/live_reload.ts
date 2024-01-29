@@ -63,8 +63,6 @@ export class LiveReloadPlugin extends Plugin {
     .trim()
     .replace(/\s+/g, " ");
 
-  static callbacks = new Map<string, () => void>();
-
   static handleLiveReloadRequest(request: Request) {
     const { pathname } = new URL(request.url);
     if (pathname !== "/live-reload-events") {
@@ -92,4 +90,6 @@ export class LiveReloadPlugin extends Plugin {
       return new Response(null, { status: 200 });
     }
   }
+
+  private static callbacks = new Map<string, () => void>();
 }

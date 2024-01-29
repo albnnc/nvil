@@ -26,7 +26,7 @@ export class HtmlTemplatePlugin extends Plugin {
   }
 
   // TODO: Watch entry point changes.
-  async populate(this: HtmlTemplatePlugin) {
+  private async populate(this: HtmlTemplatePlugin) {
     try {
       this.logger.info(`Populating ./index.html`);
       const template = await fetch(
