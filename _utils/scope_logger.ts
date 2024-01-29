@@ -1,9 +1,10 @@
 import { colors, datetime, log } from "../_deps.ts";
 
 class Handler extends log.handlers.BaseHandler {
-  constructor(scope?: string) {
+  constructor(getScope: () => string) {
     super("DEBUG", {
       formatter: ({ level, msg }) => {
+        const scope = getScope();
         const levelColor = {
           [log.LogLevels.CRITICAL]: colors.red,
           [log.LogLevels.DEBUG]: colors.magenta,
@@ -36,9 +37,9 @@ class Handler extends log.handlers.BaseHandler {
 }
 
 export class ScopeLogger extends log.Logger {
-  constructor(scope: string) {
+  constructor(public scope: string) {
     super("PROJECT_LOGGER", "DEBUG", {
-      handlers: [new Handler(scope)],
+      handlers: [new Handler(() => this.scope)],
     });
   }
 }

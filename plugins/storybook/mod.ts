@@ -1,4 +1,5 @@
 import { path } from "../../_deps.ts";
+import { ScopeLogger } from "../../mod.ts";
 import { Plugin, PluginApplyOptions } from "../../plugin.ts";
 import { Project } from "../../project.ts";
 import { BuildPlugin } from "../build.ts";
@@ -77,6 +78,7 @@ export class StorybookPlugin extends Plugin {
         importMapUrl: "./import_map.json",
         dev: this.project.dev,
       });
+      this.nestProjectLoggers(this.uiProject, ["UI"]);
       this.uiProject.bootstrap();
     });
   }
@@ -99,6 +101,7 @@ export class StorybookPlugin extends Plugin {
       importMapUrl: this.project.importMapUrl,
       dev: this.project.dev,
     });
+    this.nestProjectLoggers(storyProject, [storyMeta.id]);
     this.storyProjects.set(entryPoint, storyProject);
     storyProject.bootstrap();
   }
@@ -124,6 +127,21 @@ export class StorybookPlugin extends Plugin {
       `./stories/${storyMeta.id}/`,
       this.project.destUrl,
     ).toString();
+  }
+
+  nestScopeLogger(scopeLogger: ScopeLogger, segments: string[] = []) {
+    scopeLogger.scope = [
+      this.logger.scope,
+      ...segments,
+      scopeLogger.scope,
+    ].join(" > ");
+  }
+
+  nestProjectLoggers(project: Project, segments: string[] = []) {
+    this.nestScopeLogger(project.logger, segments);
+    project.plugins.forEach((v) => {
+      this.nestScopeLogger(v.logger, segments);
+    });
   }
 
   async [Symbol.asyncDispose]() {

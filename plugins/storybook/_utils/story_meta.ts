@@ -17,7 +17,7 @@ export class StoryMeta {
 
   static fromEntryPoint(entryPoint: string, rootUrl: string): StoryMeta {
     const relativeEntryPoint = relativiseUrl(entryPoint as string, rootUrl);
-    const id = cyrb53(relativeEntryPoint).toString();
+    const id = cyrb53(relativeEntryPoint).toString().slice(0, 6);
     return new StoryMeta({
       id,
       entryPoint: relativeEntryPoint,

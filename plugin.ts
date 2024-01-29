@@ -1,4 +1,3 @@
-import { log } from "./_deps.ts";
 import { ScopeLogger } from "./mod.ts";
 import { Project } from "./project.ts";
 
@@ -8,7 +7,7 @@ export interface PluginApplyOptions {
 
 export abstract class Plugin implements AsyncDisposable {
   name: string;
-  logger: log.Logger;
+  logger: ScopeLogger;
   applyOptions?: PluginApplyOptions;
 
   constructor(name: string) {

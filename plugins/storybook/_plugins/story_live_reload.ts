@@ -19,7 +19,7 @@ export class StoryLiveReloadPlugin extends Plugin {
       const storyBaseUrl = new URL("./", new URL(change, this.project.destUrl));
       const storyMetaUrl = new URL("./meta.json", storyBaseUrl);
       const { id } = await fetch(storyMetaUrl).then((v) => v.json());
-      this.logger.info(`Reloading story ${id}`);
+      this.logger.info(`Reloading`);
       await fetch(new URL("http://localhost:8000/story-reload-events"), {
         method: "POST",
         body: id,
