@@ -24,6 +24,9 @@ export abstract class Plugin implements AsyncDisposable {
   }
 
   apply(this: Plugin, options: PluginApplyOptions): void | Promise<void> {
+    if (this.applyOptions) {
+      throw new Error("Already applied");
+    }
     this.applyOptions = options;
   }
 

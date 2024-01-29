@@ -22,14 +22,8 @@ export class StorybookPlugin extends Plugin {
   getPlugins?: (entryPoint: string) => Plugin[];
 
   storySetWatcher?: StorySetWatcher;
-  storyInstanceMap = new Map<
-    string,
-    {
-      project: Project;
-      clean: () => Promise<void>;
-    }
-  >();
   uiProject?: Project;
+  storyProjects = new Map<string, Project>();
 
   constructor(options: StorybookPluginOptions) {
     super("STORYBOOK");
@@ -38,16 +32,27 @@ export class StorybookPlugin extends Plugin {
     this.getPlugins = options.getPlugins;
   }
 
-  async apply(this: StorybookPlugin, options: PluginApplyOptions) {
+  apply(this: StorybookPlugin, options: PluginApplyOptions) {
     super.apply(options);
-    this.storySetWatcher = new StorySetWatcher({
-      rootUrl: this.project.rootUrl,
-      globUrl: this.globUrl,
-    });
-    await this.storySetWatcher.walk();
-    this.project.stager.on("BOOTSTRAP", () => {
+    this.project.stager.on("BOOTSTRAP", async () => {
+      this.storySetWatcher = new StorySetWatcher({
+        rootUrl: this.project.rootUrl,
+        globUrl: this.globUrl,
+      });
+      await this.storySetWatcher.walk();
+      this.storySetWatcher.data.forEach((v) => this.onStoryFind(v));
       if (this.project.dev) {
         this.storySetWatcher?.watch();
+        (async () => {
+          for await (const event of this.storySetWatcher ?? []) {
+            if (event.type === "FIND") {
+              this.onStoryFind(event.entryPoint);
+            }
+            if (event.type === "LOSS") {
+              this.onStoryLoss(event.entryPoint);
+            }
+          }
+        })();
       }
       this.uiProject = new Project({
         plugins: [
@@ -82,10 +87,7 @@ export class StorybookPlugin extends Plugin {
       this.project.rootUrl,
     );
     this.logger.info(`Found story ${storyMeta.entryPoint}`);
-    const storyDestUrl = new URL(
-      `./stories/${storyMeta.id}/`,
-      this.project.destUrl,
-    ).toString();
+    const storyDestUrl = this.getStoryDestUrl(storyMeta);
     const storyProject = new Project({
       plugins: [
         ...(this.getPlugins?.(entryPoint) ?? []),
@@ -97,33 +99,36 @@ export class StorybookPlugin extends Plugin {
       importMapUrl: this.project.importMapUrl,
       dev: this.project.dev,
     });
-    this.project.stager.on("BOOTSTRAP", () => storyProject.bootstrap());
-    const cleanStory = async () => {
-      await Deno.remove(path.fromFileUrl(storyDestUrl), { recursive: true });
-    };
-    this.storyInstanceMap.set(entryPoint, {
-      project: storyProject,
-      clean: cleanStory,
-    });
+    this.storyProjects.set(entryPoint, storyProject);
+    storyProject.bootstrap();
   }
 
-  onStoryLoss(this: StorybookPlugin, entryPoint: string) {
+  async onStoryLoss(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
       this.project.rootUrl,
     );
     this.logger.info(`Lost story ${storyMeta.entryPoint}`);
-    const storyInstance = this.storyInstanceMap.get(entryPoint);
-    if (!storyInstance) {
+    const storyProject = this.storyProjects.get(entryPoint);
+    if (!storyProject) {
       return;
     }
-    storyInstance.clean();
-    this.storyInstanceMap.delete(entryPoint);
+    await storyProject[Symbol.asyncDispose]();
+    const storyDestUrl = this.getStoryDestUrl(storyMeta);
+    this.storyProjects.delete(entryPoint);
+    await Deno.remove(path.fromFileUrl(storyDestUrl), { recursive: true });
+  }
+
+  getStoryDestUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
+    return new URL(
+      `./stories/${storyMeta.id}/`,
+      this.project.destUrl,
+    ).toString();
   }
 
   async [Symbol.asyncDispose]() {
     await this.uiProject?.[Symbol.asyncDispose]();
-    for (const { project } of this.storyInstanceMap.values()) {
+    for (const project of this.storyProjects.values()) {
       await project[Symbol.asyncDispose]();
     }
   }

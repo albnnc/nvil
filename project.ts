@@ -21,6 +21,8 @@ export class Project implements AsyncDisposable {
   importMapUrl?: string;
   dev?: boolean;
 
+  bootstrapped = false;
+
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
     this.rootUrl = new URL("./", options.rootUrl).toString();
@@ -39,6 +41,10 @@ export class Project implements AsyncDisposable {
       this.logger.info("No plugins found");
       return;
     }
+    if (this.bootstrapped) {
+      throw new Error("Already bootstrapped");
+    }
+    this.bootstrapped = true;
     for (const plugin of this.plugins) {
       await plugin.apply({ project: this });
     }
