@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx } from "@theme-ui/core";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { theme } from "../constants.ts";
 import { useStories } from "../hooks/use_stories.ts";
 import { useStoryId } from "../hooks/use_story_id.ts";
@@ -235,25 +235,48 @@ const Group = ({ name, items, storyId }: GroupProps) => {
           {name}
         </a>
       )}
-      {open && !!groupItems.length && groupItems.map((v) => {
-        const groupItemActive = storyId === v.id;
-        return (
-          <a
-            key={v.id}
-            href={`?story-id=${v.id}`}
-            sx={{ ...itemStyle(groupItemActive) }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              history.pushState({ storyId: v.id }, "", `?story-id=${v.id}`);
-            }}
-          >
-            <span sx={{ pl: name ? "23px" : undefined }}>
-              {v.name}
-            </span>
-          </a>
-        );
-      })}
+      {open && !!groupItems.length && (
+        <div
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+          }}
+        >
+          {name && (
+            <div
+              sx={{
+                position: "absolute",
+                top: "3px",
+                left: "calc(1rem + 8px)",
+                height: "calc(100% - 6px)",
+                width: "1px",
+                backgroundColor: theme.colors.accentSidebar,
+                pointerEvents: "none",
+              }}
+            />
+          )}
+          {groupItems.map((v) => {
+            const groupItemActive = storyId === v.id;
+            return (
+              <a
+                key={v.id}
+                href={`?story-id=${v.id}`}
+                sx={{ ...itemStyle(groupItemActive) }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  history.pushState({ storyId: v.id }, "", `?story-id=${v.id}`);
+                }}
+              >
+                <span sx={{ pl: name ? "23px" : undefined }}>
+                  {v.name}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
