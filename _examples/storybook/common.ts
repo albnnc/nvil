@@ -12,3 +12,12 @@ export function createReactElementLoader(element: ReactElement) {
     render(element, root);
   };
 }
+
+export function getStoryInput() {
+  try {
+    const searchParams = new URLSearchParams(location.search);
+    return JSON.parse(searchParams.get("story-input") || "");
+  } catch {
+    return undefined;
+  }
+}

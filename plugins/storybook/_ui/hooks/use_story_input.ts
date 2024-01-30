@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { getStoryId } from "../utils/get_story_id.ts";
+import { getStoryInput } from "../utils/get_story_input.ts";
 
-export function useStoryId() {
-  const [storyId, setStoryId] = useState<string | undefined>(getStoryId);
+export function useStoryInput() {
+  const [storyId, setStoryInput] = useState<unknown>(getStoryInput);
   useEffect(() => {
     const listen = () => {
-      setStoryId(getStoryId());
+      setStoryInput(getStoryInput());
     };
     addEventListener("pushSearchParams", listen);
     return () => {

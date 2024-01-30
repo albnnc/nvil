@@ -6,6 +6,7 @@ export interface StoryDef {
   entryPoint: string;
   name: string;
   group?: string;
+  inputSchema?: unknown;
 }
 
 export function useStoryDefs(): [

@@ -18,7 +18,6 @@ export const Header = () => {
       sx={{
         pt: "1.3rem",
         pb: "1rem",
-        // px: "2rem",
         display: "flex",
         alignItems: "center",
         background: theme.colors.sidebar,

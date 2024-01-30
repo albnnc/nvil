@@ -3,7 +3,8 @@ import { Global } from "@emotion/react";
 import { jsx } from "@theme-ui/core";
 import { theme } from "../constants.ts";
 import { Header } from "./sections/header.tsx";
-import { Sidebar } from "./sections/sidebar.tsx";
+import { InputPanel } from "./sections/input_panel.tsx";
+import { Navigation } from "./sections/navigation.tsx";
 import { Story } from "./sections/story.tsx";
 
 export function App() {
@@ -33,7 +34,7 @@ export function App() {
           },
         }}
       />
-      <Sidebar />
+      <Navigation />
       <div
         sx={{
           flex: "1 1 auto",
@@ -46,6 +47,7 @@ export function App() {
         <Header />
         <Story />
       </div>
+      <InputPanel />
     </div>
   );
 }

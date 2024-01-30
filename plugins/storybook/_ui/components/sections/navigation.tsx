@@ -6,11 +6,12 @@ import { useStoryDefs } from "../../hooks/use_story_defs.ts";
 import { StoryDef } from "../../hooks/use_story_defs.ts";
 import { useStoryGroups } from "../../hooks/use_story_groups.ts";
 import { useStoryId } from "../../hooks/use_story_id.ts";
+import { pushSearchParams } from "../../utils/push_search_params.ts";
 import { ChevronRightIcon } from "../icons/chevron_right.tsx";
 import { EmptyIcon } from "../icons/emty.tsx";
 import { SearchIcon } from "../icons/search.tsx";
 
-export const Sidebar = () => {
+export const Navigation = () => {
   const storyId = useStoryId();
   const [query, setQuery] = useState("");
   const [storyDefs = []] = useStoryDefs();
@@ -23,10 +24,9 @@ export const Sidebar = () => {
   useEffect(() => {
     const firstStoryDef = storyDefs?.[0];
     if (!storyId && firstStoryDef) {
-      history.pushState(
-        { storyId: firstStoryDef.id },
-        "",
-        `?story-id=${firstStoryDef.id}`,
+      pushSearchParams(
+        ["story-id", firstStoryDef.id],
+        ["story-input", undefined],
       );
     }
   }, [storyDefs]);
@@ -184,7 +184,10 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  history.pushState({ storyId: v.id }, "", `?story-id=${v.id}`);
+                  pushSearchParams(
+                    ["story-id", v.id],
+                    ["story-input", undefined],
+                  );
                 }}
               >
                 <span sx={{ pl: name ? "23px" : undefined }}>
