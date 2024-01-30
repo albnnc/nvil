@@ -1,25 +1,23 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import { useEffect, useRef, useState } from "react";
-import { useStoryId } from "../../hooks/use_story_id.ts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "../../hooks/use_search_params.ts";
+import { useStorySummary } from "../../hooks/use_story_summary.ts";
+import { getSchemaDefaults } from "../../utils/get_schema_defaults.ts";
 
 export const Story = () => {
   const ref = useRef<HTMLIFrameElement>(null);
-  const storyId = useStoryId();
-  const [locationSearch, setLocationSearch] = useState<string | undefined>();
-  useEffect(() => {
-    const listen = () => {
-      setLocationSearch(location.search);
-    };
-    addEventListener("pushSearchParams", listen);
-    return () => {
-      removeEventListener("pushSearchParams", listen);
-    };
-  }, []);
+  const {
+    storyDefs,
+    activeStoryId,
+    activeStoryInput,
+    activeStoryDefaultInput,
+  } = useStorySummary() ?? {};
+  const activeStorySafeInput = activeStoryInput ?? activeStoryDefaultInput;
   useEffect(() => {
     const eventSource = new EventSource("./story-reload-events");
     const fn = ({ data }: { data: string }) => {
-      if (data === storyId) {
+      if (data === activeStoryId) {
         ref.current?.contentWindow?.location.reload();
       }
     };
@@ -28,11 +26,19 @@ export const Story = () => {
       eventSource.removeEventListener("message", fn);
       eventSource.close();
     };
-  }, [storyId]);
+  }, [activeStoryId]);
+  if (!storyDefs) {
+    return;
+  }
   return (
     <iframe
       ref={ref}
-      src={`./stories/${storyId}/` + locationSearch}
+      src={`./stories/${activeStoryId}/` +
+        (activeStorySafeInput
+          ? `?story-input=${
+            encodeURIComponent(JSON.stringify(activeStorySafeInput))
+          }`
+          : "")}
       css={{
         width: "100%",
         height: "100%",

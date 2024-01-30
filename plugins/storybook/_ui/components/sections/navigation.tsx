@@ -2,28 +2,31 @@
 import { jsx } from "@emotion/react";
 import { useEffect, useMemo, useState } from "react";
 import { theme } from "../../constants.ts";
-import { useStoryDefs } from "../../hooks/use_story_defs.ts";
-import { StoryDef } from "../../hooks/use_story_defs.ts";
-import { useStoryGroups } from "../../hooks/use_story_groups.ts";
-import { useStoryId } from "../../hooks/use_story_id.ts";
+import { StoryDef, useStorySummary } from "../../hooks/use_story_summary.ts";
 import { pushSearchParams } from "../../utils/push_search_params.ts";
 import { ChevronRightIcon } from "../icons/chevron_right.tsx";
 import { EmptyIcon } from "../icons/emty.tsx";
 import { SearchIcon } from "../icons/search.tsx";
 
 export const Navigation = () => {
-  const storyId = useStoryId();
+  const {
+    storyDefs,
+    activeStoryId,
+  } = useStorySummary() ?? {};
   const [query, setQuery] = useState("");
-  const [storyDefs = []] = useStoryDefs();
   const filteredStoryDefs = useMemo(() => {
-    return storyDefs.filter((v) =>
+    return (storyDefs ?? []).filter((v) =>
       !query || v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())
     );
   }, [query, storyDefs]);
-  const storyGroups = useStoryGroups(filteredStoryDefs);
+  const filteredStoryGroups = useMemo(() => {
+    return Array
+      .from(new Set((filteredStoryDefs ?? []).map((v) => v.group)))
+      .filter((v) => v) as string[];
+  }, [filteredStoryDefs]);
   useEffect(() => {
     const firstStoryDef = storyDefs?.[0];
-    if (!storyId && firstStoryDef) {
+    if (!activeStoryId && firstStoryDef) {
       pushSearchParams(
         ["story-id", firstStoryDef.id],
         ["story-input", undefined],
@@ -85,17 +88,17 @@ export const Navigation = () => {
       {filteredStoryDefs.length
         ? (
           <div css={{ paddingTop: "0.5rem" }}>
-            {!!storyGroups.length &&
-              storyGroups.map((v) => (
+            {!!filteredStoryGroups.length &&
+              filteredStoryGroups.map((v) => (
                 <Group
                   name={v}
                   storyDefs={filteredStoryDefs}
-                  activeStoryId={storyId}
+                  activeStoryId={activeStoryId}
                 />
               ))}
             <Group
               storyDefs={filteredStoryDefs}
-              activeStoryId={storyId}
+              activeStoryId={activeStoryId}
             />
           </div>
         )

@@ -1,18 +1,12 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import { useMemo } from "react";
 import { theme } from "../../constants.ts";
-import { useStoryDefs } from "../../hooks/use_story_defs.ts";
-import { useStoryId } from "../../hooks/use_story_id.ts";
+import { useStorySummary } from "../../hooks/use_story_summary.ts";
 import { ChevronRightIcon } from "../icons/chevron_right.tsx";
 
 export const Header = () => {
-  const storyId = useStoryId();
-  const [storyDefs = []] = useStoryDefs();
-  const story = useMemo(() => {
-    return storyDefs.find((v) => v.id === storyId);
-  }, [storyId, storyDefs]);
-  const { name = "Unknown", group } = story ?? {};
+  const { activeStoryDef } = useStorySummary() ?? {};
+  const { name = "Unknown", group } = activeStoryDef ?? {};
   return (
     <div
       css={{
