@@ -34,7 +34,7 @@ export class HtmlTemplatePlugin extends Plugin {
       this.logger.info(`Populating ./index.html`);
       const scriptUrl = Array.from(this.project.bundle.entries())
         .filter(([k, v]) => k.endsWith(".js") && v.scope === this.scope)
-        ?.[0][0];
+        ?.[0]?.[0];
       const view = {
         ...this.constants,
         SCRIPT_URL: scriptUrl,
