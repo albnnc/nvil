@@ -48,10 +48,10 @@ export const Select = ({
         fontWeight: theme.colorScheme === "dark" ? 300 : 400,
         letterSpacing: "0.065em",
         borderRadius: "4px",
-        border: `1px solid ${theme.colors.accentSidebar}`,
+        border: `1px solid ${theme.colors.accentForeground}`,
         "&:focus-visible": {
           outline: "none",
-          borderColor: theme.colors.onSidebar,
+          borderColor: theme.colors.onForeground,
         },
         "&::placeholder": {
           color: "inherit",

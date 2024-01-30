@@ -37,8 +37,8 @@ export const Navigation = () => {
         flex: "0 0 250px",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: theme.colors.sidebar,
-        color: theme.colors.onSidebar,
+        backgroundColor: theme.colors.foreground,
+        color: theme.colors.onForeground,
       }}
     >
       <div
@@ -49,7 +49,7 @@ export const Navigation = () => {
           paddingRight: "1rem",
           display: "flex",
           alignItems: "center",
-          borderBottom: `1px solid ${theme.colors.accentSidebar}`,
+          borderBottom: `1px solid ${theme.colors.accentForeground}`,
         }}
       >
         <SearchIcon
@@ -170,7 +170,7 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
                 left: "calc(1rem + 8px)",
                 height: "calc(100% - 6px)",
                 width: "1px",
-                backgroundColor: theme.colors.accentSidebar,
+                backgroundColor: theme.colors.accentForeground,
                 pointerEvents: "none",
               }}
             />
@@ -213,7 +213,7 @@ const textStyle = {
 
 const itemStyle = (active: boolean) => ({
   padding: "0.5rem 1rem",
-  backgroundColor: active ? theme.colors.accentSidebar : undefined,
+  backgroundColor: active ? theme.colors.accentForeground : undefined,
   cursor: "default",
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -224,7 +224,7 @@ const itemStyle = (active: boolean) => ({
     textDecoration: "none",
   },
   "&:hover": {
-    backgroundColor: theme.colors.accentSidebar,
-    color: theme.colors.accentOnSidebar,
+    backgroundColor: theme.colors.accentForeground,
+    color: theme.colors.accentOnForeground,
   },
 } as const);

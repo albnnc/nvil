@@ -57,8 +57,8 @@ export const InputPanel = () => {
         flex: "0 0 400px",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: theme.colors.sidebar,
-        color: theme.colors.onSidebar,
+        backgroundColor: theme.colors.foreground,
+        color: theme.colors.onForeground,
       }}
     >
       <div
@@ -72,7 +72,7 @@ export const InputPanel = () => {
           letterSpacing: "0.065em",
           textTransform: "uppercase",
           fontWeight: theme.colorScheme === "dark" ? 300 : 400,
-          borderBottom: `1px solid ${theme.colors.accentSidebar}`,
+          borderBottom: `1px solid ${theme.colors.accentForeground}`,
         }}
       >
         Input

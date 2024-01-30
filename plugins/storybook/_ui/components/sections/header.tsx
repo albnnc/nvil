@@ -20,7 +20,7 @@ export const Header = () => {
         paddingTop: "1.3rem",
         display: "flex",
         alignItems: "center",
-        background: theme.colors.sidebar,
+        background: theme.colors.foreground,
         fontSize: "1rem",
         letterSpacing: "0.065em",
         textTransform: "uppercase",

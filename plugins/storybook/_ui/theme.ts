@@ -1,10 +1,10 @@
 export const defaultTheme = {
   colorScheme: "dark",
   colors: {
-    sidebar: "#1a1a1a",
-    onSidebar: "#ffffffaa",
-    accentSidebar: "#ffffff11",
-    accentOnSidebar: "#ffffff",
+    foreground: "#1a1a1a",
+    onForeground: "#ffffffaa",
+    accentForeground: "#ffffff15",
+    accentOnForeground: "#ffffff",
     background: "#121212",
     onBackground: "#ffffffaa",
   },
