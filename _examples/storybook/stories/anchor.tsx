@@ -3,7 +3,7 @@ import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
   name: "Anchor",
-  group: "Interactive",
+  group: "Actions",
 };
 
 export const load = createReactElementLoader(<a href="#">Anchor</a>);

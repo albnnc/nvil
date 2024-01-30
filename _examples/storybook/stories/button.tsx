@@ -3,7 +3,7 @@ import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
   name: "Button",
-  group: "Interactive",
+  group: "Actions",
 };
 
 export const load = createReactElementLoader(<button>Button</button>);

@@ -144,8 +144,8 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
             sx={{
               mt: "-2px",
               mr: "5px",
-              width: "18px",
-              height: "18px",
+              width: "16px",
+              height: "16px",
               verticalAlign: "middle",
               transform: open ? "rotate(90deg)" : undefined,
             }}

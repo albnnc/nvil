@@ -65,6 +65,7 @@ export const InputPanel = () => {
         sx={{
           pt: "1.3rem",
           pb: "1rem",
+          px: "1rem",
           color: "inherit",
           fontSize: "1rem",
           letterSpacing: "0.065em",
