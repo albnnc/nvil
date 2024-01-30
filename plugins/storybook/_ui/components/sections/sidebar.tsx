@@ -44,14 +44,15 @@ export const Sidebar = () => {
       <div
         sx={{
           px: "1rem",
-          py: "0.5rem",
+          pt: "0.5rem",
+          pb: "0.85rem",
           display: "flex",
           alignItems: "center",
+          borderBottom: `1px solid ${theme.colors.accentSidebar}`,
         }}
       >
         <SearchIcon
           sx={{
-            mt: "-1px",
             mr: "5px",
             width: "18px",
             height: "18px",
@@ -71,14 +72,18 @@ export const Sidebar = () => {
             background: "transparent",
             outline: "none",
             padding: 0,
+            fontFamily: "inherit",
             ...textStyle,
-            "&::placeholder": { ...textStyle, opacity: 0.5 },
+            "&::placeholder": {
+              ...textStyle,
+              opacity: 0.5,
+            },
           }}
         />
       </div>
       {filteredStoryDefs.length
         ? (
-          <div>
+          <div sx={{ pt: "0.5rem" }}>
             {!!storyGroups.length &&
               storyGroups.map((v) => (
                 <Group
