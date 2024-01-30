@@ -4,7 +4,7 @@ import { HTMLAttributes } from "react";
 
 export const Grid = (props: HTMLAttributes<HTMLDivElement>) => (
   <div
-    css={{ display: "flex", flexDirection: "column", gap: "var(--space-l)" }}
+    css={{ display: "flex", flexDirection: "column", gap: "1rem" }}
     {...props}
   />
 );
