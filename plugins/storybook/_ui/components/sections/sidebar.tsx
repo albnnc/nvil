@@ -19,7 +19,7 @@ export const Sidebar = () => {
       !query || v.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())
     );
   }, [query, storyDefs]);
-  const storyGroups = useStoryGroups(storyDefs);
+  const storyGroups = useStoryGroups(filteredStoryDefs);
   useEffect(() => {
     const firstStoryDef = storyDefs?.[0];
     if (!storyId && firstStoryDef) {
@@ -83,12 +83,12 @@ export const Sidebar = () => {
               storyGroups.map((v) => (
                 <Group
                   name={v}
-                  storyDefs={storyDefs}
+                  storyDefs={filteredStoryDefs}
                   activeStoryId={storyId}
                 />
               ))}
             <Group
-              storyDefs={storyDefs}
+              storyDefs={filteredStoryDefs}
               activeStoryId={storyId}
             />
           </div>
