@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import {
   cloneElement,
   HTMLAttributes,
@@ -71,7 +71,7 @@ export const Field = ({
   }, []);
   return (
     <FieldContainer
-      sx={{
+      css={{
         display: "flex",
         flexDirection: "column",
         alignItems: "start",
@@ -103,14 +103,14 @@ export const Field = ({
           />
         )}
       {description && (
-        <FieldDescription sx={{ marginTop: "var(--space-xs)" }}>
+        <FieldDescription css={{ marginTop: "0.5rem" }}>
           {description instanceof Function
             ? description({ value })
             : description}
         </FieldDescription>
       )}
       {!!error && (
-        <FieldError sx={{ marginTop: "var(--space-xs)" }}>
+        <FieldError css={{ marginTop: "0.5rem" }}>
           {get(error, "message")}
         </FieldError>
       )}
@@ -120,7 +120,7 @@ export const Field = ({
 
 export const FieldDescription = (props: HTMLAttributes<HTMLDivElement>) => (
   <div
-    sx={{
+    css={{
       fontSize: "0.85rem",
       letterSpacing: "0.065em",
       opacity: 0.65,
@@ -137,7 +137,7 @@ export interface FieldTitleProps extends LabelHTMLAttributes<HTMLLabelElement> {
 export const FieldTitle = ({ required, ...rest }: FieldTitleProps) => {
   return (
     <label
-      sx={{
+      css={{
         width: "fit-content",
         fontSize: "0.85rem",
         letterSpacing: "0.065em",
@@ -148,7 +148,7 @@ export const FieldTitle = ({ required, ...rest }: FieldTitleProps) => {
           "&::after": {
             content: '"*"',
             paddingLeft: "4px",
-            color: "var(--color-danger-fg)",
+            color: "red",
           },
         }),
       }}
@@ -159,7 +159,7 @@ export const FieldTitle = ({ required, ...rest }: FieldTitleProps) => {
 
 export const FieldError = (props: HTMLAttributes<HTMLDivElement>) => (
   <div
-    sx={{
+    css={{
       fontSize: "0.85rem",
       letterSpacing: "0.065em",
       color: "red",
@@ -171,7 +171,7 @@ export const FieldError = (props: HTMLAttributes<HTMLDivElement>) => (
 export const FieldContainer = (props: HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
-      sx={{
+      css={{
         display: "flex",
         flexDirection: "column",
         alignItems: "start",

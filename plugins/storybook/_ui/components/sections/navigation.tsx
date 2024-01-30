@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { useEffect, useMemo, useState } from "react";
 import { theme } from "../../constants.ts";
 import { useStoryDefs } from "../../hooks/use_story_defs.ts";
@@ -32,8 +32,8 @@ export const Navigation = () => {
   }, [storyDefs]);
   return (
     <div
-      sx={{
-        py: "1rem",
+      css={{
+        padding: "1rem 0",
         flex: "0 0 250px",
         display: "flex",
         flexDirection: "column",
@@ -42,18 +42,19 @@ export const Navigation = () => {
       }}
     >
       <div
-        sx={{
-          px: "1rem",
-          pt: "0.5rem",
-          pb: "0.85rem",
+        css={{
+          paddingTop: "0.5rem",
+          paddingBottom: "0.85rem",
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
           display: "flex",
           alignItems: "center",
           borderBottom: `1px solid ${theme.colors.accentSidebar}`,
         }}
       >
         <SearchIcon
-          sx={{
-            mr: "5px",
+          css={{
+            marginRight: "5px",
             width: "18px",
             height: "18px",
             verticalAlign: "middle",
@@ -66,7 +67,7 @@ export const Navigation = () => {
           placeholder="Search"
           value={query}
           onChange={(ev) => setQuery((ev.target as HTMLInputElement).value)}
-          sx={{
+          css={{
             flex: "1 1 auto",
             border: 0,
             background: "transparent",
@@ -83,7 +84,7 @@ export const Navigation = () => {
       </div>
       {filteredStoryDefs.length
         ? (
-          <div sx={{ pt: "0.5rem" }}>
+          <div css={{ paddingTop: "0.5rem" }}>
             {!!storyGroups.length &&
               storyGroups.map((v) => (
                 <Group
@@ -102,7 +103,7 @@ export const Navigation = () => {
           <EmptyIcon
             width="1.65rem"
             height="1.65rem"
-            sx={{ mx: "auto", mt: "0.75rem" }}
+            css={{ margin: "0 auto", marginTop: "0.75rem" }}
           />
         )}
     </div>
@@ -128,22 +129,22 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
   }, [alwaysOpen, open]);
   return (
     <div
-      sx={{
+      css={{
         display: "flex",
         flexDirection: "column",
       }}
     >
       {name && (
         <a
-          sx={itemStyle(false)}
+          css={itemStyle(false)}
           onClick={() => {
             setOpen(alwaysOpen ? true : !open);
           }}
         >
           <ChevronRightIcon
-            sx={{
-              mt: "-2px",
-              mr: "5px",
+            css={{
+              marginTop: "-2px",
+              marginRight: "5px",
               width: "16px",
               height: "16px",
               verticalAlign: "middle",
@@ -155,7 +156,7 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
       )}
       {open && !!groupStoryDefs.length && (
         <div
-          sx={{
+          css={{
             display: "flex",
             flexDirection: "column",
             position: "relative",
@@ -163,7 +164,7 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
         >
           {name && (
             <div
-              sx={{
+              css={{
                 position: "absolute",
                 top: "3px",
                 left: "calc(1rem + 8px)",
@@ -180,7 +181,7 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
               <a
                 key={v.id}
                 href={`?story-id=${v.id}`}
-                sx={{ ...itemStyle(groupItemActive) }}
+                css={itemStyle(groupItemActive)}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -190,7 +191,7 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
                   );
                 }}
               >
-                <span sx={{ pl: name ? "23px" : undefined }}>
+                <span css={{ paddingLeft: name ? "23px" : undefined }}>
                   {v.name}
                 </span>
               </a>
@@ -208,11 +209,10 @@ const textStyle = {
   letterSpacing: "0.065em",
   textTransform: "uppercase",
   fontWeight: theme.colorScheme === "dark" ? 300 : 400,
-};
+} as const;
 
 const itemStyle = (active: boolean) => ({
-  px: "1rem",
-  py: "0.5rem",
+  padding: "0.5rem 1rem",
   backgroundColor: active ? theme.colors.accentSidebar : undefined,
   cursor: "default",
   overflow: "hidden",
@@ -227,4 +227,4 @@ const itemStyle = (active: boolean) => ({
     backgroundColor: theme.colors.accentSidebar,
     color: theme.colors.accentOnSidebar,
   },
-});
+} as const);

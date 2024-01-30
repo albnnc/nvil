@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { HTMLAttributes } from "react";
 
 export const Grid = (props: HTMLAttributes<HTMLDivElement>) => (

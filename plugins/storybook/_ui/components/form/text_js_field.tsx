@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { memo } from "react";
 import { useFormContext } from "react-hook-form";
 import { get } from "../../../../../_utils/get.ts";

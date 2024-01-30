@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { SVGAttributes } from "react";
 
 export const SearchIcon = (props: SVGAttributes<SVGSVGElement>) => (

@@ -1,8 +1,7 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { useEffect, useRef, useState } from "react";
 import { useStoryId } from "../../hooks/use_story_id.ts";
-import { useStoryInput } from "../../hooks/use_story_input.ts";
 
 export const Story = () => {
   const ref = useRef<HTMLIFrameElement>(null);
@@ -34,7 +33,7 @@ export const Story = () => {
     <iframe
       ref={ref}
       src={`./stories/${storyId}/` + locationSearch}
-      sx={{
+      css={{
         width: "100%",
         height: "100%",
         border: 0,

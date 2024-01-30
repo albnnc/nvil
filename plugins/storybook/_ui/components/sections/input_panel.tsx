@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { jsx } from "@theme-ui/core";
+import { jsx } from "@emotion/react";
 import { useEffect, useMemo } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { set } from "../../../../../_utils/set.ts";
@@ -53,7 +53,7 @@ export const InputPanel = () => {
   }
   return (
     <div
-      sx={{
+      css={{
         flex: "0 0 400px",
         display: "flex",
         flexDirection: "column",
@@ -62,10 +62,11 @@ export const InputPanel = () => {
       }}
     >
       <div
-        sx={{
-          pt: "1.3rem",
-          pb: "1rem",
-          px: "1rem",
+        css={{
+          paddingTop: "1.3rem",
+          paddingBottom: "1rem",
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
           color: "inherit",
           fontSize: "1rem",
           letterSpacing: "0.065em",
@@ -76,7 +77,13 @@ export const InputPanel = () => {
       >
         Input
       </div>
-      <div sx={{ pt: "1rem", px: "1rem" }}>
+      <div
+        css={{
+          paddingTop: "1rem",
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
+        }}
+      >
         <Form form={form} onSubmit={() => {}}>
           <Grid>
             <JsField name="input" schema={inputSchema} />

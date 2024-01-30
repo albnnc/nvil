@@ -1,6 +1,5 @@
 /** @jsx jsx */
-import { Global } from "@emotion/react";
-import { jsx } from "@theme-ui/core";
+import { Global, jsx } from "@emotion/react";
 import { theme } from "../constants.ts";
 import { Header } from "./sections/header.tsx";
 import { InputPanel } from "./sections/input_panel.tsx";
@@ -10,7 +9,7 @@ import { Story } from "./sections/story.tsx";
 export function App() {
   return (
     <div
-      sx={{
+      css={{
         width: "100vw",
         height: "100vh",
         display: "flex",
@@ -36,7 +35,7 @@ export function App() {
       />
       <Navigation />
       <div
-        sx={{
+        css={{
           flex: "1 1 auto",
           height: "100vh",
           display: "flex",
