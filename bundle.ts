@@ -10,7 +10,7 @@ export class Bundle extends Map<string, BundleChunk> {
 
   constructor(entries?: readonly (readonly [string, BundleChunk])[] | null) {
     if (entries?.some(([k]) => !k.startsWith("."))) {
-      throw new Error("Only realative paths are allowed");
+      throw new Error("Only relative paths are allowed");
     }
     entries?.forEach(([k]) => this.#changes.add(k));
     super(entries);
@@ -18,7 +18,7 @@ export class Bundle extends Map<string, BundleChunk> {
 
   set(url: string, chunk: BundleChunk) {
     if (!url.startsWith(".")) {
-      throw new Error("Only realative paths are allowed");
+      throw new Error("Only relative paths are allowed");
     }
     super.set(url, chunk);
     this.#changes.add(url);

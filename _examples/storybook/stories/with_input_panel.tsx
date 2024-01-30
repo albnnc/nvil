@@ -11,6 +11,11 @@ export const meta = {
         title: "Text",
         default: "Lorem ipsum dolor sit amet.",
       },
+      boolean: {
+        type: "boolean",
+        title: "Boolean",
+        default: true,
+      },
       select: {
         type: "string",
         title: "Select",
