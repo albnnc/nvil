@@ -12,7 +12,13 @@ await using project = new Project({
     new CleanPlugin(),
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
     new CopyPlugin({
-      entryPoint: "./fonts/*.{otf,css}",
+      entryPoint: "./assets/*.otf",
+      bundleUrl: "./fonts/",
+      glob: true,
+    }),
+    new CopyPlugin({
+      entryPoint: "./assets/*.css",
+      bundleUrl: "./styles/",
       glob: true,
     }),
     new DevServerPlugin(),

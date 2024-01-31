@@ -3,12 +3,26 @@ import { relativiseUrl } from "../_utils/relativise_url.ts";
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export interface CopyPluginOptions {
+  /**
+   * A file URL or glob URL.
+   */
   entryPoint: string;
+  /**
+   * Must be a relative URL. If set, all found files will be copied
+   * to the `targetUrl` directory under the `bundleUrl` subdirectory.
+   * For example, a file `.../file.txt` will be copied to
+   * `targetUrl > bundleUrl > file.txt` location.
+   */
+  bundleUrl?: string;
+  /**
+   * Treat `entryPoint` as a glob.
+   */
   glob?: boolean;
 }
 
 export class CopyPlugin extends Plugin {
   entryPoint: string;
+  bundleUrl?: string;
   glob?: boolean;
 
   private fsWatcher?: Deno.FsWatcher;
@@ -24,6 +38,7 @@ export class CopyPlugin extends Plugin {
   constructor(options: CopyPluginOptions) {
     super("COPY");
     this.entryPoint = options.entryPoint;
+    this.bundleUrl = options.bundleUrl;
     this.glob = options.glob;
   }
 
@@ -39,13 +54,27 @@ export class CopyPlugin extends Plugin {
 
   async copyFile(this: CopyPlugin, fileUrl: string) {
     const { bundle } = this.project;
-    const relativeUrl = relativiseUrl(fileUrl, this.project.rootUrl);
-    bundle.set(relativeUrl, {
-      data: await fetch(fileUrl).then(async (v) => {
-        const arrayBuffer = await v.arrayBuffer();
-        return new Uint8Array(arrayBuffer);
-      }),
+    const data = await fetch(fileUrl).then(async (v) => {
+      const arrayBuffer = await v.arrayBuffer();
+      return new Uint8Array(arrayBuffer);
     });
+    if (this.bundleUrl) {
+      const fileUrlSegments = fileUrl.split("/");
+      const absoluteBundleUrl = new URL(this.bundleUrl, this.project.targetUrl)
+        .toString();
+      const absoluteFileBundleUrl = new URL(
+        fileUrlSegments[fileUrlSegments.length - 1],
+        absoluteBundleUrl,
+      ).toString();
+      const fileBundleUrl = relativiseUrl(
+        absoluteFileBundleUrl,
+        this.project.targetUrl,
+      ).toString();
+      bundle.set(fileBundleUrl, { data });
+    } else {
+      const fileBundleUrl = relativiseUrl(fileUrl, this.project.rootUrl);
+      bundle.set(fileBundleUrl, { data });
+    }
   }
 
   async copy(this: CopyPlugin) {
@@ -54,7 +83,7 @@ export class CopyPlugin extends Plugin {
     await stager.run("COPY_START");
     if (this.glob) {
       if (!this.absoluteUrl.startsWith("file:")) {
-        throw new Error("Glob to copy must be a local URL");
+        throw new Error("Glob to copy must be a file: URL");
       }
       const fileUrls: string[] = [];
       const fsWalker = fs.expandGlob(
