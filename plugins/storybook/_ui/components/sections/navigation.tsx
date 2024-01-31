@@ -121,15 +121,10 @@ interface GroupProps {
 
 const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
   const groupStoryDefs = storyDefs.filter((v) => v.group === name);
-  const alwaysOpen = useMemo(() => {
-    return !name || groupStoryDefs.some((v) => v.id === activeStoryId);
+  const hasActiveInside = useMemo(() => {
+    return groupStoryDefs.some((v) => v.id === activeStoryId);
   }, [name, groupStoryDefs]);
-  const [open, setOpen] = useState(() => alwaysOpen);
-  useEffect(() => {
-    if (alwaysOpen && !open) {
-      setOpen(true);
-    }
-  }, [alwaysOpen, open]);
+  const [open, setOpen] = useState(() => !name || hasActiveInside);
   return (
     <div
       css={{
@@ -139,9 +134,10 @@ const Group = ({ name, storyDefs, activeStoryId }: GroupProps) => {
     >
       {name && (
         <a
-          css={itemStyle(false)}
+          css={itemStyle(hasActiveInside && !!name && !open)}
           onClick={() => {
-            setOpen(alwaysOpen ? true : !open);
+            // Unnamed groups can't be closed.
+            setOpen(name ? !open : true);
           }}
         >
           <ChevronRightIcon
