@@ -21,11 +21,11 @@ export class StoryMetaPlugin extends Plugin {
   apply(this: StoryMetaPlugin, options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BUILD_END", async (context) => {
-      const targetUrl = get(context, "targetUrl");
-      if (typeof targetUrl !== "string") {
+      const bundleUrl = get(context, "bundleUrl");
+      if (typeof bundleUrl !== "string") {
         return;
       }
-      const exportedMeta = await this.getExportedMeta(targetUrl);
+      const exportedMeta = await this.getExportedMeta(bundleUrl);
       const meta = StoryMeta.fromEntryPoint(
         this.entryPoint,
         this.project.rootUrl,
@@ -38,12 +38,12 @@ export class StoryMetaPlugin extends Plugin {
   }
 
   private async getExportedMeta(
-    targetUrl?: string,
+    bundleUrl?: string,
   ): Promise<Record<string, string>> {
-    if (!targetUrl) {
+    if (!bundleUrl) {
       return {};
     }
-    const contentBytes = this.project.bundle.get(targetUrl)?.data;
+    const contentBytes = this.project.bundle.get(bundleUrl)?.data;
     if (!contentBytes) {
       return {};
     }

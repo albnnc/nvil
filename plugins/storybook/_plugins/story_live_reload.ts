@@ -16,7 +16,10 @@ export class StoryLiveReloadPlugin extends Plugin {
       if (!entry || entry.scope !== undefined) {
         return;
       }
-      const storyBaseUrl = new URL("./", new URL(change, this.project.destUrl));
+      const storyBaseUrl = new URL(
+        "./",
+        new URL(change, this.project.targetUrl),
+      );
       const storyMetaUrl = new URL("./meta.json", storyBaseUrl);
       const { id } = await fetch(storyMetaUrl).then((v) => v.json());
       this.logger.info(`Reloading`);

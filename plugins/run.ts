@@ -31,7 +31,7 @@ export class RunPlugin extends Plugin {
       for (const v of changes as string[]) {
         const entry = this.project.bundle.get(v);
         if (entry && entry.scope === this.scope) {
-          const absoluteUrl = new URL(v, this.project.destUrl).toString();
+          const absoluteUrl = new URL(v, this.project.targetUrl).toString();
           this.run(absoluteUrl);
         }
       }
@@ -44,7 +44,7 @@ export class RunPlugin extends Plugin {
 
   private run(entryPoint: string) {
     this.logger.info(
-      `Running ${relativiseUrl(entryPoint, this.project.destUrl)}`,
+      `Running ${relativiseUrl(entryPoint, this.project.targetUrl)}`,
     );
     this.childProcess?.[Symbol.asyncDispose]();
     this.childProcess = new Deno.Command("deno", {

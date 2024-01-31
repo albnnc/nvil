@@ -73,7 +73,7 @@ export class StorybookPlugin extends Plugin {
           new RunPlugin({ scope: "SERVER", args: ["-A"] }),
         ],
         rootUrl: import.meta.resolve("./_ui/"),
-        destUrl: this.project.destUrl,
+        targetUrl: this.project.targetUrl,
         importMapUrl: "./import_map.json",
         dev: this.project.dev,
       });
@@ -95,7 +95,7 @@ export class StorybookPlugin extends Plugin {
       this.project.rootUrl,
     );
     this.logger.info(`Found story ${storyMeta.entryPoint}`);
-    const storyDestUrl = this.getStoryDestUrl(storyMeta);
+    const storyTargetUrl = this.getStoryTargetUrl(storyMeta);
     const storyProject = new Project({
       plugins: [
         ...(this.getPlugins?.(entryPoint) ?? []),
@@ -103,7 +103,7 @@ export class StorybookPlugin extends Plugin {
         new StoryLiveReloadPlugin(),
       ],
       rootUrl: this.project.rootUrl,
-      destUrl: storyDestUrl,
+      targetUrl: storyTargetUrl,
       importMapUrl: this.project.importMapUrl,
       dev: this.project.dev,
     });
@@ -123,15 +123,15 @@ export class StorybookPlugin extends Plugin {
       return;
     }
     await storyProject[Symbol.asyncDispose]();
-    const storyDestUrl = this.getStoryDestUrl(storyMeta);
+    const storyTargetUrl = this.getStoryTargetUrl(storyMeta);
     this.storyProjects.delete(entryPoint);
-    await Deno.remove(path.fromFileUrl(storyDestUrl), { recursive: true });
+    await Deno.remove(path.fromFileUrl(storyTargetUrl), { recursive: true });
   }
 
-  private getStoryDestUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
+  private getStoryTargetUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
     return new URL(
       `./stories/${storyMeta.id}/`,
-      this.project.destUrl,
+      this.project.targetUrl,
     ).toString();
   }
 

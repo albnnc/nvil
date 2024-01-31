@@ -9,14 +9,17 @@ export class CleanPlugin extends Plugin {
   apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
-      const relativeDestUrl = relativiseUrl(
-        this.project.destUrl,
+      const relativeTargetUrl = relativiseUrl(
+        this.project.targetUrl,
         this.project.rootUrl,
       );
-      this.logger.info(`Deleting ${relativeDestUrl}`);
-      await Deno.remove(new URL(this.project.destUrl), {
-        recursive: true,
-      }).catch(() => undefined);
+      this.logger.info(`Deleting ${relativeTargetUrl}`);
+      await Deno
+        .remove(
+          new URL(this.project.targetUrl),
+          { recursive: true },
+        )
+        .catch(() => undefined);
     });
   }
 }

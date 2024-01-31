@@ -17,7 +17,7 @@ await using project = new Project({
     new DevServerPlugin(),
   ],
   rootUrl: import.meta.resolve("./"),
-  destUrl: "./dest/",
+  targetUrl: "./target/",
   importMapUrl: "./import_map.json",
   dev: Deno.args[0] === "dev",
 });

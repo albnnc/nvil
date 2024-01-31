@@ -5,5 +5,5 @@
     "lint:check": "deno lint"
   },
   "lock": false,
-  "exclude": ["**/.git", "**/dest"]
+  "exclude": ["**/.git", "**/target"]
 }

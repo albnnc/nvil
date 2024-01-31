@@ -12,7 +12,7 @@
   "markdown": {
     "deno": true
   },
-  "excludes": ["**/.git", "**/dest"],
+  "excludes": ["**/.git", "**/target"],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.86.2.wasm",
     "https://plugins.dprint.dev/json-0.17.4.wasm",

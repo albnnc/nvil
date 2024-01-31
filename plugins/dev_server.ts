@@ -17,7 +17,7 @@ export class DevServerPlugin extends Plugin {
     this.project.stager.on("BOOTSTRAP", () => {
       const indexHtmlUrl = new URL(
         "./index.html",
-        this.project.destUrl,
+        this.project.targetUrl,
       ).toString();
       this.httpServer = Deno.serve({
         handler: (req) => {
@@ -25,7 +25,7 @@ export class DevServerPlugin extends Plugin {
             LiveReloadPlugin.handleLiveReloadRequest(req) ||
             fileServer
               .serveDir(req, {
-                fsRoot: path.fromFileUrl(this.project.destUrl),
+                fsRoot: path.fromFileUrl(this.project.targetUrl),
                 quiet: true,
               })
               .then((v) =>

@@ -73,19 +73,22 @@ export class BuildPlugin extends Plugin {
       if (!mainOutputFile) {
         return;
       }
-      const targetUrl = this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
-      const metaUrl = targetUrl.replace(/\.js$/, ".meta.json");
-      bundle.set(targetUrl, {
+      const bundleUrl = this.relativeEntryPoint.replace(
+        /\.(j|t)sx?$/,
+        ".js",
+      );
+      const metaBundleUrl = bundleUrl.replace(/\.js$/, ".meta.json");
+      bundle.set(bundleUrl, {
         data: mainOutputFile.contents,
         scope: this.scope,
       });
-      bundle.set(metaUrl, {
+      bundle.set(metaBundleUrl, {
         data: this.encoder.encode(JSON.stringify(metafile)),
       });
       await stager.run("BUILD_END", {
         entryPoint: this.absoluteEntryPoint,
-        targetUrl,
-        metaUrl,
+        bundleUrl,
+        metaBundleUrl,
       });
     } catch (e) {
       if (dev) {

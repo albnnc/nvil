@@ -6,7 +6,7 @@ import { Plugin } from "./plugin.ts";
 export interface ProjectOptions {
   plugins: Plugin[];
   rootUrl: string;
-  destUrl: string;
+  targetUrl: string;
   importMapUrl?: string;
   dev?: boolean;
 }
@@ -17,7 +17,7 @@ export class Project implements AsyncDisposable {
   bundle = new Bundle();
   plugins: Plugin[];
   rootUrl: string;
-  destUrl: string;
+  targetUrl: string;
   importMapUrl?: string;
   dev?: boolean;
 
@@ -26,9 +26,9 @@ export class Project implements AsyncDisposable {
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
     this.rootUrl = new URL("./", options.rootUrl).toString();
-    this.destUrl = new URL(
+    this.targetUrl = new URL(
       "./",
-      new URL(options.destUrl, this.rootUrl),
+      new URL(options.targetUrl, this.rootUrl),
     ).toString();
     this.importMapUrl = options.importMapUrl
       ? new URL(options.importMapUrl, this.rootUrl).toString()
@@ -50,13 +50,13 @@ export class Project implements AsyncDisposable {
     }
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
-    await this.bundle.writeChanges(this.destUrl);
+    await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
     if (this.dev) {
       while (true) {
         await this.stager.waitCycle();
         const changes = this.bundle.getChanges();
-        await this.bundle.writeChanges(this.destUrl);
+        await this.bundle.writeChanges(this.targetUrl);
         await this.stager.run("WRITE_END", changes);
       }
     }

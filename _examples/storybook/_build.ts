@@ -22,7 +22,7 @@ await using project = new Project(
       }),
     ],
     rootUrl: import.meta.resolve("./"),
-    destUrl: "./dest/",
+    targetUrl: "./target/",
     importMapUrl: "./import_map.json",
     dev: Deno.args[0] === "dev",
   },
