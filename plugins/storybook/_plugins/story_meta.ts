@@ -48,17 +48,25 @@ export class StoryMetaPlugin extends Plugin {
       return {};
     }
     const contentString = this.textDecoder.decode(contentBytes);
-    const contentToEval = `
+    const contentToRun = `
       ${contentString}
       console.log("${this.boundaryString}");
       console.log(JSON.stringify(meta))
     `;
-    const output = await new Deno.Command("deno", {
-      args: ["eval", contentToEval],
-      stdout: "piped",
-      stderr: "piped",
-    }).output();
-    const stdout = this.textDecoder.decode(output.stdout);
+    const stdout = await (async () => {
+      const tempFile = await Deno.makeTempFile();
+      try {
+        await Deno.writeTextFile(tempFile, contentToRun);
+        const output = await new Deno.Command("deno", {
+          args: ["run", "-A", tempFile],
+          stdout: "piped",
+          stderr: "piped",
+        }).output();
+        return this.textDecoder.decode(output.stdout);
+      } finally {
+        await Deno.remove(tempFile);
+      }
+    })();
     const metaJson = stdout.split(this.boundaryString + "\n")[1];
     try {
       const meta = JSON.parse(metaJson);
