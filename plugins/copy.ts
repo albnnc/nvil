@@ -13,11 +13,11 @@ export class CopyPlugin extends Plugin {
 
   private fsWatcher?: Deno.FsWatcher;
 
-  get absoluteUrl(): string {
+  private get absoluteUrl(): string {
     return new URL(this.entryPoint, this.project.rootUrl).toString();
   }
 
-  get relativeUrl(): string {
+  private get relativeUrl(): string {
     return relativiseUrl(this.entryPoint, this.project.rootUrl);
   }
 

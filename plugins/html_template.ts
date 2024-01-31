@@ -39,14 +39,14 @@ export class HtmlTemplatePlugin extends Plugin {
         ...this.constants,
         SCRIPT_URL: scriptUrl,
       };
-      const templateSource = await fetch(
+      const indexHtmlTemplate = await fetch(
         new URL(this.entryPoint, this.project.rootUrl),
       ).then((v) => v.text());
-      const templateTarget = Object
+      const indexHtmlString = Object
         .entries(view)
-        .reduce((p, [k, v]) => p.replace(`{{${k}}}`, v), templateSource);
+        .reduce((p, [k, v]) => p.replace(`{{${k}}}`, v), indexHtmlTemplate);
       const textEncoder = new TextEncoder();
-      const data = textEncoder.encode(templateTarget);
+      const data = textEncoder.encode(indexHtmlString);
       this.project.bundle.set("./index.html", { data });
     } catch (e) {
       this.logger.error(e.message);

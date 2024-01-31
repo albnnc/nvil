@@ -20,11 +20,11 @@ export class BuildPlugin extends Plugin {
 
   private moduleWatcher?: ModuleWatcher;
 
-  get absoluteEntryPoint(): string {
+  private get absoluteEntryPoint(): string {
     return new URL(this.entryPoint, this.project.rootUrl).toString();
   }
 
-  get relativeEntryPoint(): string {
+  private get relativeEntryPoint(): string {
     return relativiseUrl(this.absoluteEntryPoint, this.project.rootUrl);
   }
 
