@@ -12,6 +12,12 @@ export interface BuildPluginOptions {
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 }
 
+export interface BuildStageHandlerOptions {
+  entryPoint: string;
+  bundleUrl: string;
+  metaBundleUrl: string;
+}
+
 export class BuildPlugin extends Plugin {
   encoder = new TextEncoder();
   entryPoint: string;
@@ -26,6 +32,22 @@ export class BuildPlugin extends Plugin {
 
   private get relativeEntryPoint(): string {
     return relativiseUrl(this.absoluteEntryPoint, this.project.rootUrl);
+  }
+
+  private get bundleUrl(): string {
+    return this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
+  }
+
+  private get metaBundleUrl(): string {
+    return this.bundleUrl.replace(/\.js$/, ".meta.json");
+  }
+
+  private get buildStageHandlerOptions(): BuildStageHandlerOptions {
+    return {
+      entryPoint: this.absoluteEntryPoint,
+      bundleUrl: this.bundleUrl,
+      metaBundleUrl: this.metaBundleUrl,
+    };
   }
 
   constructor(public options: BuildPluginOptions) {
@@ -48,7 +70,7 @@ export class BuildPlugin extends Plugin {
   async build(this: BuildPlugin) {
     const { bundle, stager, importMapUrl, dev } = this.project;
     this.logger.info(`Building ${this.relativeEntryPoint}`);
-    await stager.run("BUILD_START", this.absoluteEntryPoint);
+    await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
       const esbuildConfig: EsbuildOptions = {
         entryPoints: [this.absoluteEntryPoint],
@@ -73,23 +95,14 @@ export class BuildPlugin extends Plugin {
       if (!mainOutputFile) {
         return;
       }
-      const bundleUrl = this.relativeEntryPoint.replace(
-        /\.(j|t)sx?$/,
-        ".js",
-      );
-      const metaBundleUrl = bundleUrl.replace(/\.js$/, ".meta.json");
-      bundle.set(bundleUrl, {
+      bundle.set(this.bundleUrl, {
         data: mainOutputFile.contents,
         scope: this.scope,
       });
-      bundle.set(metaBundleUrl, {
+      bundle.set(this.metaBundleUrl, {
         data: this.encoder.encode(JSON.stringify(metafile)),
       });
-      await stager.run("BUILD_END", {
-        entryPoint: this.absoluteEntryPoint,
-        bundleUrl,
-        metaBundleUrl,
-      });
+      await stager.run("BUILD_END", this.buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
         this.logger.error(e.message);
