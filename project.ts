@@ -54,7 +54,7 @@ export class Project implements AsyncDisposable {
     await this.stager.run("WRITE_END", changes);
     if (this.dev) {
       while (true) {
-        await this.stager.wait();
+        await this.stager.waitCycle();
         const changes = this.bundle.getChanges();
         await this.bundle.writeChanges(this.destUrl);
         await this.stager.run("WRITE_END", changes);

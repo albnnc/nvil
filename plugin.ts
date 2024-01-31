@@ -8,7 +8,8 @@ export interface PluginApplyOptions {
 export abstract class Plugin implements AsyncDisposable {
   name: string;
   logger: ScopeLogger;
-  applyOptions?: PluginApplyOptions;
+
+  private applyOptions?: PluginApplyOptions;
 
   constructor(name: string) {
     this.name = name;

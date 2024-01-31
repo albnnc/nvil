@@ -1,9 +1,9 @@
 export type StageHandler = (context?: unknown) => void | Promise<void>;
 
 export class Stager {
-  stages: Record<string, StageHandler[]> = {};
-  runCount = 0;
-  runCyclePWR = Promise.withResolvers<void>();
+  private stages: Record<string, StageHandler[]> = {};
+  private runCount = 0;
+  private runCyclePWR = Promise.withResolvers<void>();
 
   on(this: Stager, stageName: string, fn: StageHandler) {
     if (this.stages[stageName]) {
@@ -29,7 +29,7 @@ export class Stager {
     }
   }
 
-  async wait(this: Stager) {
+  async waitCycle(this: Stager) {
     return await this.runCyclePWR.promise;
   }
 }

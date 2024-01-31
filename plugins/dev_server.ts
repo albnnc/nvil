@@ -3,7 +3,7 @@ import { Plugin, PluginApplyOptions } from "../plugin.ts";
 import { LiveReloadPlugin } from "./live_reload.ts";
 
 export class DevServerPlugin extends Plugin {
-  httpServer?: Deno.HttpServer;
+  private httpServer?: Deno.HttpServer;
 
   constructor() {
     super("DEV_SERVER");
