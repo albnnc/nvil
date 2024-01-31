@@ -1,69 +1,68 @@
-import { Atom } from "./atom.ts";
+import { ScopeLogger } from "./_utils/scope_logger.ts";
 import { Bundle } from "./bundle.ts";
-import { log } from "./deps.ts";
-import { createLogger } from "./logger.ts";
-import { createStager } from "./stager.ts";
+import { Stager } from "./mod.ts";
+import { Plugin } from "./plugin.ts";
 
-export interface ProjectConfig {
+export interface ProjectOptions {
+  plugins: Plugin[];
   rootUrl: string;
-  destUrl: string;
+  targetUrl: string;
   importMapUrl?: string;
   dev?: boolean;
-  signal?: AbortSignal;
-  overrideLogger?: (scope: string) => log.Logger;
 }
 
-export function createProject(atoms: Atom[], config: ProjectConfig) {
-  const safeRootUrl = new URL("./", config.rootUrl).toString();
-  const safeDestUrl = new URL(
-    "./",
-    new URL(config.destUrl, safeRootUrl)
-  ).toString();
-  const safeImportMapUrl = config.importMapUrl
-    ? new URL(config.importMapUrl, safeRootUrl).toString()
-    : undefined;
-  const abortController = new AbortController();
-  config.signal?.addEventListener("abort", () => abortController.abort());
-  const safeConfig: ProjectConfig = {
-    ...config,
-    rootUrl: safeRootUrl,
-    destUrl: safeDestUrl,
-    importMapUrl: safeImportMapUrl,
-    signal: abortController.signal,
-  };
-  const bundle = new Bundle();
-  const bootstrap = async () => {
-    await project.runStage("BOOTSTRAP");
-    const changes = bundle.getChanges();
-    await bundle.writeChanges(safeDestUrl);
-    await stager.runStage("WRITE_END", changes);
-    const writeDeferred = async () => {
-      await stager.waitStages();
-      const changes = bundle.getChanges();
-      await bundle.writeChanges(safeDestUrl);
-      await stager.runStage("WRITE_END", changes);
-      writeDeferred();
-    };
-    if (config.dev) {
-      writeDeferred();
-    } else {
-      abortController.abort();
-    }
-  };
-  const stager = createStager();
-  const project = {
-    atoms,
-    config: safeConfig,
-    bundle,
-    bootstrap,
-    getLogger: (scope: string) =>
-      config.overrideLogger?.(scope) ?? createLogger(scope),
-    ...stager,
-  };
-  for (const fn of atoms) {
-    fn(project);
+export class Project implements AsyncDisposable {
+  logger = new ScopeLogger("Project");
+  stager = new Stager();
+  bundle = new Bundle();
+  plugins: Plugin[];
+  rootUrl: string;
+  targetUrl: string;
+  importMapUrl?: string;
+  dev?: boolean;
+
+  bootstrapped = false;
+
+  constructor(options: ProjectOptions) {
+    this.plugins = options.plugins;
+    this.rootUrl = new URL("./", options.rootUrl).toString();
+    this.targetUrl = new URL(
+      "./",
+      new URL(options.targetUrl, this.rootUrl),
+    ).toString();
+    this.importMapUrl = options.importMapUrl
+      ? new URL(options.importMapUrl, this.rootUrl).toString()
+      : undefined;
+    this.dev = options.dev;
   }
-  return project;
-}
 
-export type Project = ReturnType<typeof createProject>;
+  async bootstrap() {
+    if (!this.plugins.length) {
+      this.logger.info("No plugins found");
+      return;
+    }
+    if (this.bootstrapped) {
+      throw new Error("Already bootstrapped");
+    }
+    this.bootstrapped = true;
+    for (const plugin of this.plugins) {
+      await plugin.apply({ project: this });
+    }
+    await this.stager.run("BOOTSTRAP");
+    const changes = this.bundle.getChanges();
+    await this.bundle.writeChanges(this.targetUrl);
+    await this.stager.run("WRITE_END", changes);
+    if (this.dev) {
+      while (true) {
+        await this.stager.waitCycle();
+        const changes = this.bundle.getChanges();
+        await this.bundle.writeChanges(this.targetUrl);
+        await this.stager.run("WRITE_END", changes);
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await Promise.all(this.plugins.map((v) => v[Symbol.asyncDispose]()));
+  }
+}

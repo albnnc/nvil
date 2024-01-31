@@ -1,37 +1,35 @@
-import { async } from "./deps.ts";
-
 export type StageHandler = (context?: unknown) => void | Promise<void>;
 
-export function createStager() {
-  const stages: Record<string, StageHandler[]> = {};
-  const onStage = (stageName: string, fn: StageHandler) => {
-    if (stages[stageName]) {
-      stages[stageName].push(fn);
+export class Stager {
+  private stages: Record<string, StageHandler[]> = {};
+  private runCount = 0;
+  private runCyclePWR = Promise.withResolvers<void>();
+
+  on(this: Stager, stageName: string, fn: StageHandler) {
+    if (this.stages[stageName]) {
+      this.stages[stageName].push(fn);
     } else {
-      stages[stageName] = [fn];
+      this.stages[stageName] = [fn];
     }
     return () => {
-      const index = (stages[stageName] ?? []).indexOf(fn);
-      index >= 0 && stages[stageName].splice(index, 1);
+      const index = (this.stages[stageName] ?? []).indexOf(fn);
+      index >= 0 && this.stages[stageName].splice(index, 1);
     };
-  };
-  let runCount = 0;
-  let runCycleDeferred = async.deferred();
-  const runStage = async (stageName: string, context?: unknown) => {
-    ++runCount;
-    for (const fn of stages[stageName] || []) {
+  }
+
+  async run(this: Stager, stageName: string, context?: unknown) {
+    ++this.runCount;
+    for (const fn of this.stages[stageName] || []) {
       await fn(context);
     }
-    --runCount;
-    if (!runCount) {
-      runCycleDeferred.resolve();
-      runCycleDeferred = async.deferred();
+    --this.runCount;
+    if (!this.runCount) {
+      this.runCyclePWR.resolve();
+      this.runCyclePWR = Promise.withResolvers<void>();
     }
-  };
-  const waitStages = () => {
-    return runCycleDeferred;
-  };
-  return { stages, onStage, runStage, waitStages };
-}
+  }
 
-export type Stager = ReturnType<typeof createStager>;
+  async waitCycle(this: Stager) {
+    return await this.runCyclePWR.promise;
+  }
+}

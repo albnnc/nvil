@@ -1,4 +1,4 @@
-import { fs, path } from "./deps.ts";
+import { fs, path } from "./_deps.ts";
 
 export interface BundleChunk {
   data: Uint8Array;
@@ -6,49 +6,49 @@ export interface BundleChunk {
 }
 
 export class Bundle extends Map<string, BundleChunk> {
-  #changes = new Set<string>();
+  private changes = new Set<string>();
 
   constructor(entries?: readonly (readonly [string, BundleChunk])[] | null) {
     if (entries?.some(([k]) => !k.startsWith("."))) {
-      throw new Error("Only realative paths are allowed");
+      throw new Error("Only relative paths are allowed");
     }
-    entries?.forEach(([k]) => this.#changes.add(k));
+    entries?.forEach(([k]) => this.changes.add(k));
     super(entries);
   }
 
   set(url: string, chunk: BundleChunk) {
     if (!url.startsWith(".")) {
-      throw new Error("Only realative paths are allowed");
+      throw new Error("Only relative paths are allowed");
     }
     super.set(url, chunk);
-    this.#changes.add(url);
+    this.changes.add(url);
     return this;
   }
 
   isChanged(url: string) {
-    return this.#changes.has(url);
+    return this.changes.has(url);
   }
 
   clearChanges() {
-    this.#changes.clear();
+    this.changes.clear();
   }
 
   getChanges() {
-    return Array.from(this.#changes.values());
+    return Array.from(this.changes.values());
   }
 
-  async writeChanges(destUrl: string) {
-    for (const k of this.getChanges()) {
-      const { data } = this.get(k) ?? {};
+  async writeChanges(targetUrl: string) {
+    for (const change of this.getChanges()) {
+      const { data } = this.get(change) ?? {};
       if (!data) {
-        throw new Error(`Unable to get data for change "${k}"`);
+        throw new Error(`Unable to get data for change "${change}"`);
       }
-      this.#changes.delete(k);
-      const targetUrl = new URL(k, destUrl).toString();
-      const targetPath = path.fromFileUrl(targetUrl);
-      const targetDir = path.dirname(targetPath);
-      await fs.ensureDir(targetDir);
-      await Deno.writeFile(targetPath, data);
+      this.changes.delete(change);
+      const changeTargetUrl = new URL(change, targetUrl).toString();
+      const changeTargetPath = path.fromFileUrl(changeTargetUrl);
+      const changeTargetDir = path.dirname(changeTargetPath);
+      await fs.ensureDir(changeTargetDir);
+      await Deno.writeFile(changeTargetPath, data);
     }
   }
 }

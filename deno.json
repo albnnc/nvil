@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "fmt": "dprint fmt",
+    "fmt:check": "dprint check",
+    "lint:check": "deno lint"
+  },
+  "lock": false,
+  "exclude": ["**/.git", "**/target"]
+}

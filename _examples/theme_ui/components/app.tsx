@@ -1,6 +1,6 @@
 /** @jsx jsx */
-import { jsx, Theme, ThemeProvider } from "@theme-ui/core";
 import { Global } from "@emotion/react";
+import { jsx, Theme, ThemeProvider } from "@theme-ui/core";
 
 const theme: Theme = {
   fonts: {
