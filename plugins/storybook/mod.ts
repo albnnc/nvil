@@ -41,7 +41,11 @@ export class StorybookPlugin extends Plugin {
         globUrl: this.globUrl,
       });
       await this.storySetWatcher.walk();
-      this.storySetWatcher.data.forEach((v) => this.onStoryFind(v));
+      await Promise.all(
+        Array
+          .from(this.storySetWatcher.data.values())
+          .map((v) => this.onStoryFind(v)),
+      );
       if (this.project.dev) {
         this.storySetWatcher?.watch();
         (async () => {
@@ -78,7 +82,7 @@ export class StorybookPlugin extends Plugin {
         dev: this.project.dev,
       });
       this.nestProjectLoggers(this.uiProject, ["UI"]);
-      this.uiProject.bootstrap();
+      await this.uiProject.bootstrap();
     });
   }
 
@@ -89,7 +93,7 @@ export class StorybookPlugin extends Plugin {
     }
   }
 
-  private onStoryFind(this: StorybookPlugin, entryPoint: string) {
+  private async onStoryFind(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
       this.project.rootUrl,
@@ -109,7 +113,7 @@ export class StorybookPlugin extends Plugin {
     });
     this.nestProjectLoggers(storyProject, [storyMeta.id]);
     this.storyProjects.set(entryPoint, storyProject);
-    storyProject.bootstrap();
+    await storyProject.bootstrap();
   }
 
   private async onStoryLoss(this: StorybookPlugin, entryPoint: string) {

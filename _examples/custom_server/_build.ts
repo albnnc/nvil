@@ -24,3 +24,4 @@ await using project = new Project({
 });
 
 await project.bootstrap();
+await project.done();

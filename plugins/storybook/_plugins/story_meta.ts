@@ -1,3 +1,4 @@
+import { path } from "../../../_deps.ts";
 import { get } from "../../../_utils/get.ts";
 import { PluginApplyOptions } from "../../../mod.ts";
 import { Plugin } from "../../../plugin.ts";
@@ -43,22 +44,25 @@ export class StoryMetaPlugin extends Plugin {
     if (!bundleUrl) {
       return {};
     }
-    const contentBytes = this.project.bundle.get(bundleUrl)?.data;
+    const { data: contentBytes } = this.project.bundle.get(bundleUrl) ?? {};
     if (!contentBytes) {
       return {};
     }
     const contentString = this.textDecoder.decode(contentBytes);
-    const contentToRun = `
-      ${contentString}
-      console.log("${this.boundaryString}");
-      console.log(JSON.stringify(meta))
-    `;
     const stdout = await (async () => {
-      const tempFile = await Deno.makeTempFile();
+      const tempFile = await Deno.makeTempFile({ suffix: ".js" });
       try {
-        await Deno.writeTextFile(tempFile, contentToRun);
+        await Deno.writeTextFile(tempFile, contentString);
         const output = await new Deno.Command("deno", {
-          args: ["run", "-A", tempFile],
+          args: [
+            "eval",
+            `
+              import { meta } from "${path.toFileUrl(tempFile).toString()}"
+              console.log("${this.boundaryString}");
+              console.log(JSON.stringify(meta))
+              console.log("${this.boundaryString}");
+            `,
+          ],
           stdout: "piped",
           stderr: "piped",
         }).output();
@@ -67,8 +71,8 @@ export class StoryMetaPlugin extends Plugin {
         await Deno.remove(tempFile);
       }
     })();
-    const metaJson = stdout.split(this.boundaryString + "\n")[1];
     try {
+      const metaJson = stdout.split(this.boundaryString + "\n")[1];
       const meta = JSON.parse(metaJson);
       return meta;
     } catch {

@@ -137,7 +137,6 @@ export class BuildPlugin extends Plugin {
   // deno-lint-ignore require-await
   async [Symbol.asyncDispose](this: BuildPlugin) {
     this.moduleWatcher?.[Symbol.dispose]();
-    esbuild.stop();
   }
 }
 
