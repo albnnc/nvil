@@ -37,6 +37,8 @@ export const Navigation = () => {
     <div
       css={{
         padding: "1rem 0",
+        maxHeight: "100%",
+        overflow: "auto",
         flex: "0 0 250px",
         display: "flex",
         flexDirection: "column",

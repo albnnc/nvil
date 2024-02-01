@@ -17,6 +17,7 @@ export const SelectJsField = memo(({
   const title = String(get(schema, "title") || "");
   const description = String(get(schema, "description") || "");
   const placeholder = String(get(schema, "layout.placeholder") || "");
+  const showEmpty = !!get(schema, "layout.showEmpty");
   const oneOf = get(schema, "oneOf");
   const toPickFrom = Array.isArray(oneOf) ? oneOf : [];
   const { required, validate } = useFieldValidation({
@@ -31,7 +32,10 @@ export const SelectJsField = memo(({
       description={description}
       {...form.register(name, { validate })}
     >
-      <Select placeholder={placeholder ? String(placeholder) : undefined}>
+      <Select
+        showEmpty={showEmpty}
+        placeholder={placeholder ? String(placeholder) : undefined}
+      >
         {toPickFrom.reduce((p, v, i) => {
           if (
             typeof v === "object" &&

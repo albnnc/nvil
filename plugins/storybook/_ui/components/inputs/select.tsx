@@ -25,7 +25,7 @@ export const Select = ({
   invalid,
   onFocus,
   onBlur,
-  showEmpty = true,
+  showEmpty,
   ...rest
 }: SelectProps) => {
   const handleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {

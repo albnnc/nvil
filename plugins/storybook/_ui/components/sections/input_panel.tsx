@@ -24,6 +24,7 @@ export const InputPanel = () => {
   }, [
     // Updating on initial load only.
     storyDefs,
+    activeStoryDefaultInput,
   ]);
   if (!storyDefs || !inputSchema) {
     return null;
