@@ -86,10 +86,9 @@ const InputForm = ({ inputSchema, inputInitialValue }: InputFormProps) => {
   });
   const input = form.watch("input");
   const inputString = JSON.stringify(input);
-  const debouncedInputString = useDebounce(inputString, 300);
   useUpdateEffect(() => {
-    pushSearchParams(["story-input", debouncedInputString]);
-  }, [debouncedInputString]);
+    pushSearchParams(["story-input", inputString]);
+  }, [inputString]);
   useUpdateEffect(() => {
     form.reset(defaultValues);
   }, [JSON.stringify(defaultValues)]);

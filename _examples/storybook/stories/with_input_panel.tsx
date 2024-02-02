@@ -1,5 +1,5 @@
 import React from "react";
-import { createReactElementLoader, getStoryInput } from "../common.ts";
+import { createReactElementLoader, useStoryInput } from "../common.ts";
 
 export const meta = {
   name: "With Input Panel",
@@ -34,7 +34,7 @@ export const meta = {
 };
 
 const Story = () => {
-  const input = getStoryInput();
+  const input = useStoryInput();
   return <pre><code>{JSON.stringify(input, null, 2)}</code></pre>;
 };
 

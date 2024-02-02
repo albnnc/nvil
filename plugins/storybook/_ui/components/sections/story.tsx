@@ -14,11 +14,22 @@ export const Story = () => {
     activeStoryDefaultInput,
   } = useStorySummary() ?? {};
   const activeStorySafeInput = activeStoryInput ?? activeStoryDefaultInput;
+  const activeStorySafeInputString = "?story-input=" +
+    encodeURIComponent(JSON.stringify(activeStorySafeInput));
+  const activeStoryInitialSrc = useMemo(() => {
+    if (!activeStoryId) {
+      return undefined;
+    }
+    return `./stories/${activeStoryId}/` + activeStorySafeInputString;
+  }, [activeStoryId]);
   useEffect(() => {
     const eventSource = new EventSource("./story-reload-events");
     const fn = ({ data }: { data: string }) => {
+      if (!ref.current) {
+        return;
+      }
       if (data === activeStoryId) {
-        ref.current?.contentWindow?.location.reload();
+        ref.current.contentWindow?.location.reload();
       }
     };
     eventSource.addEventListener("message", fn);
@@ -27,18 +38,25 @@ export const Story = () => {
       eventSource.close();
     };
   }, [activeStoryId]);
+  useEffect(() => {
+    const storyWindow = ref.current?.contentWindow;
+    if (
+      !activeStorySafeInput ||
+      !storyWindow ||
+      storyWindow.location.origin !== location.origin
+    ) {
+      return;
+    }
+    storyWindow.history.replaceState({}, "", activeStorySafeInputString);
+    storyWindow.dispatchEvent(new CustomEvent("story-input"));
+  }, [activeStorySafeInput]);
   if (!storyDefs) {
     return;
   }
   return (
     <iframe
       ref={ref}
-      src={`./stories/${activeStoryId}/` +
-        (activeStorySafeInput
-          ? `?story-input=${
-            encodeURIComponent(JSON.stringify(activeStorySafeInput))
-          }`
-          : "")}
+      src={activeStoryInitialSrc}
       css={{
         width: "100%",
         height: "100%",
