@@ -1,9 +1,8 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "../../hooks/use_search_params.ts";
+import { useEffect, useMemo, useRef } from "react";
+import { get } from "../../../../../_utils/get.ts";
 import { useStorySummary } from "../../hooks/use_story_summary.ts";
-import { getSchemaDefaults } from "../../utils/get_schema_defaults.ts";
 
 export const Story = () => {
   const ref = useRef<HTMLIFrameElement>(null);
@@ -23,20 +22,13 @@ export const Story = () => {
     return `./stories/${activeStoryId}/` + activeStorySafeInputString;
   }, [activeStoryId]);
   useEffect(() => {
-    const eventSource = new EventSource("./story-reload-events");
-    const fn = ({ data }: { data: string }) => {
-      if (!ref.current) {
-        return;
-      }
-      if (data === activeStoryId) {
-        ref.current.contentWindow?.location.reload();
+    const listen = (event: Event) => {
+      if (get(event, "detail") === activeStoryId) {
+        ref.current?.contentWindow?.location.reload();
       }
     };
-    eventSource.addEventListener("message", fn);
-    return () => {
-      eventSource.removeEventListener("message", fn);
-      eventSource.close();
-    };
+    addEventListener("story-update", listen);
+    return () => removeEventListener("story-update", listen);
   }, [activeStoryId]);
   useEffect(() => {
     const storyWindow = ref.current?.contentWindow;

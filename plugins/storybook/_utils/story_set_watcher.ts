@@ -28,14 +28,16 @@ export class StorySetWatcher
     if (!this.fsWatcher) {
       throw new Error("Not watching");
     }
-    const queue = await this.queuePWR.promise;
-    if (!queue.length) {
-      return;
+    while (true) {
+      const queue = await this.queuePWR.promise;
+      if (!queue.length) {
+        return;
+      }
+      for (const v of queue) {
+        yield v;
+      }
+      this.queuePWR = Promise.withResolvers();
     }
-    for (const v of queue) {
-      yield v;
-    }
-    this.queuePWR = Promise.withResolvers();
   }
 
   [Symbol.dispose](this: StorySetWatcher) {
@@ -62,7 +64,9 @@ export class StorySetWatcher
         this.data.delete(v);
       }
     }
-    this.queuePWR.resolve(nextQueue);
+    if (nextQueue.length) {
+      this.queuePWR.resolve(nextQueue);
+    }
   }
 
   async watch(this: StorySetWatcher) {

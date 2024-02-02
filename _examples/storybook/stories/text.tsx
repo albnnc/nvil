@@ -1,5 +1,5 @@
 import React from "react";
-import { createReactElementLoader, getStoryInput } from "../common.ts";
+import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
   name: "Text",

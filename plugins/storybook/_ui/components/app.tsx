@@ -1,5 +1,7 @@
 /** @jsx jsx */
 import { Global, jsx } from "@emotion/react";
+import { useEffect } from "react";
+import useSWR from "swr";
 import { theme } from "../constants.ts";
 import { Header } from "./sections/header.tsx";
 import { InputPanel } from "./sections/input_panel.tsx";
@@ -7,6 +9,19 @@ import { Navigation } from "./sections/navigation.tsx";
 import { Story } from "./sections/story.tsx";
 
 export function App() {
+  const { mutate } = useSWR("./stories");
+  useEffect(() => {
+    const eventSource = new EventSource("./story-reload-events");
+    const fn = ({ data }: { data: string }) => {
+      dispatchEvent(new CustomEvent("story-update", { detail: data }));
+      mutate();
+    };
+    eventSource.addEventListener("message", fn);
+    return () => {
+      eventSource.removeEventListener("message", fn);
+      eventSource.close();
+    };
+  }, []);
   return (
     <div
       css={{
