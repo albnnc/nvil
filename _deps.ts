@@ -1,3 +1,8 @@
+import mustache from "https://esm.sh/mustache@4.2.0?pin=v135&target=esnext";
+
+mustache.escape = (v: string) => v;
+
+export { mustache };
 export * as async from "https://deno.land/std@0.213.0/async/mod.ts";
 export { deepMerge } from "https://deno.land/std@0.213.0/collections/deep_merge.ts";
 export * as datetime from "https://deno.land/std@0.213.0/datetime/mod.ts";

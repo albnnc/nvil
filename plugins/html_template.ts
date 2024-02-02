@@ -1,3 +1,4 @@
+import { mustache } from "../_deps.ts";
 import { Plugin, PluginApplyOptions } from "../plugin.ts";
 
 export interface HtmlTemplatePluginOptions {
@@ -38,13 +39,12 @@ export class HtmlTemplatePlugin extends Plugin {
       const view = {
         ...this.constants,
         SCRIPT_URL: scriptUrl,
+        DEV: !!this.project.dev,
       };
       const indexHtmlTemplate = await fetch(
         new URL(this.entryPoint, this.project.rootUrl),
       ).then((v) => v.text());
-      const indexHtmlString = Object
-        .entries(view)
-        .reduce((p, [k, v]) => p.replace(`{{${k}}}`, v), indexHtmlTemplate);
+      const indexHtmlString = mustache.render(indexHtmlTemplate, view);
       const textEncoder = new TextEncoder();
       const data = textEncoder.encode(indexHtmlString);
       this.project.bundle.set("./index.html", { data });
