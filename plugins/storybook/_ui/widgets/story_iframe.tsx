@@ -1,35 +1,35 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
 import { useEffect, useMemo, useRef } from "react";
-import { get } from "../../../../../_utils/get.ts";
-import { useStorySummary } from "../../hooks/use_story_summary.ts";
+import { get } from "../../../../_utils/get.ts";
+import { useStorySummary } from "../hooks/use_story_summary.ts";
+import { useParams } from "react-router-dom";
 
-export const Story = () => {
+export const StoryIframe = () => {
   const ref = useRef<HTMLIFrameElement>(null);
-  const {
-    storyDefs,
-    activeStoryId,
-    activeStoryInput,
-    activeStoryDefaultInput,
-  } = useStorySummary() ?? {};
+  const { id } = useParams();
+  const { storyDefs, activeStoryInput, activeStoryDefaultInput } =
+    useStorySummary() ?? {};
   const activeStorySafeInput = activeStoryInput ?? activeStoryDefaultInput;
-  const activeStorySafeInputString = "?story-input=" +
-    encodeURIComponent(JSON.stringify(activeStorySafeInput));
+  const activeStorySafeInputString =
+    "?story-input=" + encodeURIComponent(JSON.stringify(activeStorySafeInput));
+
   const activeStoryInitialSrc = useMemo(() => {
-    if (!activeStoryId) {
+    if (!id) {
       return undefined;
     }
-    return `./stories/${activeStoryId}/` + activeStorySafeInputString;
-  }, [activeStoryId]);
+    return `./stories/${id}`;
+  }, [id]);
+
   useEffect(() => {
     const listen = (event: Event) => {
-      if (get(event, "detail") === activeStoryId) {
+      if (get(event, "detail") === id) {
         ref.current?.contentWindow?.location.reload();
       }
     };
     addEventListener("story-update", listen);
     return () => removeEventListener("story-update", listen);
-  }, [activeStoryId]);
+  }, [id]);
   useEffect(() => {
     const storyWindow = ref.current?.contentWindow;
     if (
@@ -42,7 +42,8 @@ export const Story = () => {
     storyWindow.history.replaceState({}, "", activeStorySafeInputString);
     storyWindow.dispatchEvent(new CustomEvent("story-input"));
   }, [activeStorySafeInput]);
-  if (!storyDefs) {
+
+  if (!storyDefs || !activeStoryInitialSrc) {
     return;
   }
   return (

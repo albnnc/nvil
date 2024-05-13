@@ -12,7 +12,7 @@ Deno.serve({
     const pathname = urlRoot
       ? url.pathname.replace(urlRoot, "").replace(/\/+/, "/")
       : url.pathname;
-    if (pathname === "/stories") {
+    if (pathname === "/api/stories") {
       const metas: unknown[] = [];
       for await (const v of fs.expandGlob(metaGlob)) {
         metas.push(await Deno.readTextFile(v.path).then(JSON.parse));

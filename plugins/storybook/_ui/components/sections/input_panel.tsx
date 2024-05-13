@@ -30,44 +30,10 @@ export const InputPanel = () => {
     return null;
   }
   return (
-    <div
-      css={{
-        flex: "0 0 400px",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: theme.colors.foreground,
-        color: theme.colors.onForeground,
-      }}
-    >
-      <div
-        css={{
-          paddingTop: "1.3rem",
-          paddingBottom: "1rem",
-          paddingLeft: "1rem",
-          paddingRight: "1rem",
-          color: "inherit",
-          fontSize: "1rem",
-          letterSpacing: "0.065em",
-          textTransform: "uppercase",
-          fontWeight: theme.colorScheme === "dark" ? 300 : 400,
-          borderBottom: `1px solid ${theme.colors.accentForeground}`,
-        }}
-      >
-        Input
-      </div>
-      <div
-        css={{
-          paddingTop: "1rem",
-          paddingLeft: "1rem",
-          paddingRight: "1rem",
-        }}
-      >
-        <InputForm
-          inputSchema={inputSchema}
-          inputInitialValue={inputInitialValue}
-        />
-      </div>
-    </div>
+    <InputForm
+      inputSchema={inputSchema}
+      inputInitialValue={inputInitialValue}
+    />
   );
 };
 

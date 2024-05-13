@@ -1,42 +1,21 @@
 /** @jsx jsx */
 import { Global, jsx } from "@emotion/react";
-import { useEffect } from "react";
+import { useEffect, Fragment } from "react";
 import useSWR from "swr";
 import { theme } from "../constants.ts";
 import { Header } from "./sections/header.tsx";
 import { InputPanel } from "./sections/input_panel.tsx";
 import { Navigation } from "./sections/navigation.tsx";
-import { Story } from "./sections/story.tsx";
+import { StoryIframe } from "../widgets/story_iframe.tsx";
+import { RouterProvider } from "react-router-dom";
+import { router } from "../pages/mod.tsx";
 
 export function App() {
-  const { mutate } = useSWR("./stories");
-  useEffect(() => {
-    const eventSource = new EventSource("./story-reload-events");
-    const fn = ({ data }: { data: string }) => {
-      dispatchEvent(new CustomEvent("story-update", { detail: data }));
-      mutate();
-    };
-    eventSource.addEventListener("message", fn);
-    return () => {
-      eventSource.removeEventListener("message", fn);
-      eventSource.close();
-    };
-  }, []);
   return (
-    <div
-      css={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        alignItems: "stretch",
-      }}
-    >
+    <Fragment>
       <Global
         styles={{
           html: {
-            backgroundColor: theme.colors.background,
-            color: theme.colors.onBackground,
-            colorScheme: theme.colorScheme,
             fontFamily: "Roboto, sans-serif",
           },
           body: {
@@ -48,20 +27,23 @@ export function App() {
           },
         }}
       />
-      <Navigation />
-      <div
+      <RouterProvider router={router} />
+      {/* <div
         css={{
-          flex: "1 1 auto",
+          width: "100vw",
           height: "100vh",
           display: "flex",
-          alignItems: "stretch",
           flexDirection: "column",
+          alignItems: "stretch",
         }}
       >
-        <Header />
-        <Story />
-      </div>
-      <InputPanel />
-    </div>
+        <Header css={{ position: "sticky", top: 0 }} />
+        <div css={{ display: "flex" }}>
+          <Navigation />
+          <Story />
+          <InputPanel />
+        </div>
+      </div> */}
+    </Fragment>
   );
 }

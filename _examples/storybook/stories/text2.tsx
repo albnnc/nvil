@@ -2,8 +2,10 @@ import React from "react";
 import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
-  name: "Anchor",
+  name: "Text2",
   group: "Components",
 };
 
-export const load = createReactElementLoader(<a href="#">Anchor</a>);
+export const load = createReactElementLoader(
+  <p>Lorem ipsum dolor sit amet.</p>
+);

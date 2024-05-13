@@ -11,8 +11,7 @@ import { theme } from "../../constants.ts";
 import { FormWidgetProps } from "../../types/form_widget_props.ts";
 
 export interface SelectProps
-  extends
-    Omit<InputHTMLAttributes<HTMLSelectElement>, keyof FormWidgetProps>,
+  extends Omit<InputHTMLAttributes<HTMLSelectElement>, keyof FormWidgetProps>,
     FormWidgetProps<string> {
   showEmpty?: boolean;
   children: ReactElement<OptionHTMLAttributes<HTMLOptionElement>>[];
@@ -28,62 +27,29 @@ export const Select = ({
   showEmpty,
   ...rest
 }: SelectProps) => {
-  const handleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    onChange?.(value);
-  }, [onChange]);
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      onChange?.(value);
+    },
+    [onChange]
+  );
   return (
     <select
       onBlur={() => onBlur?.()}
       onFocus={() => onFocus?.()}
       onChange={handleChange}
       value={value}
-      css={{
-        width: "100%",
-        verticalAlign: "middle",
-        fontSize: "0.85rem",
-        padding: "0.35rem 0.65rem",
-        lineHeight: "100%",
-        backgroundColor: "transparent",
-        fontWeight: theme.colorScheme === "dark" ? 300 : 400,
-        letterSpacing: "0.065em",
-        borderRadius: "4px",
-        border: `1px solid ${theme.colors.accentForeground}`,
-        "&:focus-visible": {
-          outline: "none",
-          borderColor: theme.colors.onForeground,
-        },
-        "&::placeholder": {
-          color: "inherit",
-          opacity: 0.5,
-        },
-        "&:disabled": {
-          opacity: 0.5,
-        },
-        ...(invalid && {
-          "&:not(:focus-visible)": {
-            borderColor: "red",
-          },
-        }),
-
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 8px center",
-        backgroundImage,
-        backgroundSize: "16px",
-        WebkitAppearance: "none",
-        appearance: "none",
-      }}
       {...rest}
     >
-      {showEmpty &&
-        <option value="">-</option>}
+      {showEmpty && <option value="">-</option>}
       {children}
     </select>
   );
 };
 
 export const SelectOption = (
-  props: OptionHTMLAttributes<HTMLOptionElement>,
+  props: OptionHTMLAttributes<HTMLOptionElement>
 ) => {
   return <option {...props} />;
 };

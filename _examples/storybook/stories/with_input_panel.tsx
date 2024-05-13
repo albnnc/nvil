@@ -3,6 +3,7 @@ import { createReactElementLoader, useStoryInput } from "../common.ts";
 
 export const meta = {
   name: "With Input Panel",
+  group: "Components",
   inputSchema: {
     type: "object",
     properties: {
@@ -35,7 +36,11 @@ export const meta = {
 
 const Story = () => {
   const input = useStoryInput();
-  return <pre><code>{JSON.stringify(input, null, 2)}</code></pre>;
+  return (
+    <pre>
+      <code>{JSON.stringify(input, null, 2)}</code>
+    </pre>
+  );
 };
 
 export const load = createReactElementLoader(<Story />);

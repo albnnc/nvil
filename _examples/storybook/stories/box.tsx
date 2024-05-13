@@ -3,7 +3,7 @@ import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
   name: "Box",
-  group: "Containers",
+  group: "Components",
 };
 
 export const load = createReactElementLoader(
@@ -16,5 +16,5 @@ export const load = createReactElementLoader(
     }}
   >
     Box
-  </div>,
+  </div>
 );

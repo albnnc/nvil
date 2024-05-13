@@ -15,12 +15,12 @@ import { theme } from "../../constants.ts";
 import { FormWidgetProps } from "../../types/form_widget_props.ts";
 import { TextInput } from "../inputs/text.tsx";
 
-export interface FieldProps extends
-  Omit<
-    HTMLAttributes<HTMLDivElement>,
-    "children" | keyof UseFormRegisterReturn
-  >,
-  UseFormRegisterReturn {
+export interface FieldProps
+  extends Omit<
+      HTMLAttributes<HTMLDivElement>,
+      "children" | keyof UseFormRegisterReturn
+    >,
+    UseFormRegisterReturn {
   title?: string;
   description?: ReactNode | ((props: { value: unknown }) => ReactNode);
   shouldUnregister?: boolean;
@@ -84,24 +84,22 @@ export const Field = ({
           {title}
         </FieldTitle>
       )}
-      {children
-        ? (
-          cloneElement(children, { ...widgetProps })
-        )
-        : (
-          <TextInput
-            id={name}
-            min={min}
-            max={max}
-            maxLength={maxLength}
-            minLength={minLength}
-            pattern={pattern}
-            {
-              // deno-lint-ignore no-explicit-any
-              ...(widgetProps as any)
-            }
-          />
-        )}
+      {children ? (
+        cloneElement(children, { ...widgetProps })
+      ) : (
+        <TextInput
+          id={name}
+          min={min}
+          max={max}
+          maxLength={maxLength}
+          minLength={minLength}
+          pattern={pattern}
+          {
+            // deno-lint-ignore no-explicit-any
+            ...(widgetProps as any)
+          }
+        />
+      )}
       {description && (
         <FieldDescription css={{ marginTop: "0.5rem" }}>
           {description instanceof Function
@@ -141,8 +139,6 @@ export const FieldTitle = ({ required, ...rest }: FieldTitleProps) => {
         width: "fit-content",
         fontSize: "0.85rem",
         letterSpacing: "0.065em",
-        textTransform: "uppercase",
-        fontWeight: theme.colorScheme === "dark" ? 300 : 400,
         marginBottom: "0.5rem",
         ...(required && {
           "&::after": {

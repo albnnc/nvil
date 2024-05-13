@@ -4,6 +4,7 @@ import { isWalkable } from "../../../../_utils/is_walkable.ts";
 import { StoryMeta } from "../../_utils/story_meta.ts";
 import { getSchemaDefaults } from "../utils/get_schema_defaults.ts";
 import { useSearchParams } from "./use_search_params.ts";
+import { useParams } from "react-router-dom";
 
 export interface StoryDef {
   id: string;
@@ -22,12 +23,13 @@ export interface StorySummary {
 }
 
 export function useStorySummary(): StorySummary | undefined {
-  const [activeStoryId, activeStoryInputString] = useSearchParams([
+  const { id } = useParams();
+  const [_, activeStoryInputString] = useSearchParams([
     "story-id",
     "story-input",
   ]);
   const { data: storyDefs } = useSWR<StoryDef[]>(
-    "./stories",
+    "/api/stories",
     async (key: string) => {
       const resp = await fetch(key);
       if (!resp.ok) {
@@ -44,7 +46,7 @@ export function useStorySummary(): StorySummary | undefined {
         .sort((a, b) =>
           a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase())
         );
-    },
+    }
   );
   const activeStoryInput = useMemo(() => {
     try {
@@ -57,17 +59,17 @@ export function useStorySummary(): StorySummary | undefined {
     if (!storyDefs) {
       return {};
     }
-    const activeStoryDef = storyDefs.find((v) => v.id === activeStoryId);
+    const activeStoryDef = storyDefs.find((v) => v.id === id);
     const activeStoryDefaultInput = activeStoryDef?.inputSchema
       ? getSchemaDefaults(activeStoryDef?.inputSchema)
       : undefined;
     return {
-      activeStoryId,
+      id,
       storyDefs,
       activeStoryInput,
       activeStoryDef,
       activeStoryDefaultInput,
     };
-  }, [activeStoryId, activeStoryInput, storyDefs]);
+  }, [id, activeStoryInput, storyDefs]);
   return storySummary;
 }
