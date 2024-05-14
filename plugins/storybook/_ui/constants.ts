@@ -1,8 +1,6 @@
-import { defaultTheme, Theme } from "./theme.ts";
-
 // @ts-ignore: compile-time constants
 const constants = STORYBOOK_CONSTANTS || {
-  theme: defaultTheme,
+  groupOrder: [],
 };
 
-export const { theme } = constants as { theme: Theme };
+export const { groupOrder } = constants as { groupOrder: string[] };

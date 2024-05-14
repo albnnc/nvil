@@ -2,23 +2,26 @@ import { useCallback, useEffect, useState } from "react";
 
 export function useStories() {
   const [stories, setStories] = useState<StoryDef[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   const fetchStories = useCallback(() => {
     fetch("/api/stories")
       .then((resp) => resp.json())
-      .then(setStories);
+      .then(setStories)
+      .finally(() => setLoaded(true));
   }, []);
 
   useEffect(() => {
     fetchStories();
   }, []);
 
-  return { stories };
+  return { stories, loaded };
 }
 
 export interface StoryDef {
   id: string;
   description?: string;
+  hideControls?: boolean;
   entryPoint: string;
   name: string;
   group?: string;

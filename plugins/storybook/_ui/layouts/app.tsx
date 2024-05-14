@@ -1,12 +1,21 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import { Fragment } from "react";
+import { Fragment, useEffect, useMemo, useRef } from "react";
 import { Link, Outlet, useParams } from "react-router-dom";
-import { useStories } from "../utils/use_stories.ts";
+import { StoryDef, useStories } from "../utils/use_stories.ts";
+import { groupOrder } from "../constants.ts";
+import { Loader } from "../shared/ui/loader.tsx";
 
 export const AppLayout = () => {
   return (
-    <div css={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      css={{
+        height: "100vh",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <header
         css={{
           position: "sticky",
@@ -41,17 +50,7 @@ export const AppLayout = () => {
           flexDirection: "row",
         }}
       >
-        <nav
-          css={{
-            flex: "0 0 260px",
-            alignSelf: "stretch",
-            overflowY: "auto",
-            maxHeight: "calc(100vh - 56px)",
-            borderRight: "1px solid rgb(216, 222, 228)",
-          }}
-        >
-          <Navigation />
-        </nav>
+        <Navigation />
         <main
           css={{
             flex: "1 1 auto",
@@ -66,78 +65,151 @@ export const AppLayout = () => {
 };
 
 const Navigation = () => {
-  const { stories } = useStories();
-  const { id } = useParams();
-  if (stories.length === 0) {
-    return null;
-  }
+  const { stories, loaded } = useStories();
+  const { id: activeStoryId } = useParams();
+  const listRef = useRef<Record<string, HTMLElement>>({});
+
+  useEffect(() => {
+    if (activeStoryId) {
+      requestAnimationFrame(() =>
+        listRef.current[activeStoryId]?.scrollIntoView({
+          behavior: "instant",
+          block: "center",
+        })
+      );
+    }
+  }, [stories]);
+
+  const groups = useMemo(() => {
+    return orderStringArray(
+      [...new Set(stories.map((s) => s.group ?? ""))],
+      groupOrder
+    ).reduce(
+      (acc, curr) => ({
+        ...acc,
+        [curr]: stories.filter((story) =>
+          curr === "" ? !story.group : story.group === curr
+        ),
+      }),
+      {}
+    ) as Record<string, StoryDef[]>;
+  }, [stories]);
 
   return (
-    <nav>
-      <ul css={{ margin: 0, listStyle: "none", padding: 0, marginTop: "8px" }}>
-        {Object.entries(
-          Object.groupBy(stories, (story) => story.group ?? "")
-        ).map(([group, stories]) => {
-          return (
-            <Fragment key={group}>
-              <li css={{ marginRight: "16px", marginTop: "8px" }}>
-                <span
-                  css={{
-                    fontSize: "12px",
-                    marginLeft: "16px",
-                    height: "30px",
-                    color: "rgb(87, 96, 106)",
-                    display: "flex",
-                    fontWeight: 500,
-                    letterSpacing: "0.015em",
-                    alignItems: "center",
-                    paddingLeft: "8px",
-                    textDecoration: "unset",
-                    borderRadius: "6px",
-                  }}
-                >
-                  {group}
-                </span>
-              </li>
-              {stories?.map((story) => {
-                return (
-                  <li key={story.id} css={{ marginRight: "16px" }}>
-                    <Link
-                      key={story.id}
+    <nav
+      css={{
+        paddingBottom: "48px",
+        flex: "0 0 260px",
+        alignSelf: "stretch",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "calc(100vh - 56px)",
+        borderRight: "1px solid rgb(216, 222, 228)",
+      }}
+    >
+      {!loaded ? (
+        <Loader css={{ margin: "auto", width: "24px", height: "24px" }} />
+      ) : (
+        <ul
+          css={{ margin: 0, listStyle: "none", padding: 0, marginTop: "8px" }}
+        >
+          {Object.entries(groups).map(([group, stories], index, arr) => {
+            const last = index === arr.length - 1;
+            const inGroup = !!group;
+            return (
+              <Fragment key={group}>
+                {inGroup && (
+                  <li css={{ marginRight: "16px", marginTop: "8px" }}>
+                    <span
                       css={{
+                        fontSize: "12px",
                         marginLeft: "16px",
-                        height: "32px",
+                        height: "30px",
+                        color: "rgb(87, 96, 106)",
                         display: "flex",
+                        fontWeight: 500,
+                        letterSpacing: "0.015em",
                         alignItems: "center",
                         paddingLeft: "8px",
-                        color: "rgb(36, 41, 47)",
                         textDecoration: "unset",
                         borderRadius: "6px",
-                        "&:hover, &:active, &:focus-visible": {
-                          backgroundColor: "rgba(208, 215, 222, 0.32)",
-                        },
-                        ...(id === story.id && {
-                          backgroundColor: "rgba(208, 215, 222, 0.32)",
-                        }),
                       }}
-                      to={`/s/${story.id}`}
                     >
-                      {story.name}
-                    </Link>
+                      {group}
+                    </span>
                   </li>
-                );
-              })}
-              <li
-                css={{
-                  backgroundColor: "rgba(208, 215, 222, 0.48)",
-                  height: "1px",
-                  marginTop: "7px",
-                }}
-              />
-            </Fragment>
-          );
-        })}
-      </ul>
+                )}
+                {stories.map((story) => {
+                  return (
+                    <li
+                      ref={(node) => (listRef.current[story.id] = node!)}
+                      key={story.id}
+                      id={`nav-item-${story.id}`}
+                      css={{
+                        marginRight: "16px",
+                        marginTop: inGroup ? "0px" : "8px",
+                      }}
+                    >
+                      <Link
+                        css={{
+                          marginLeft: "16px",
+                          height: "32px",
+                          display: "flex",
+                          alignItems: "center",
+                          paddingLeft: "8px",
+                          color: "rgb(36, 41, 47)",
+                          textDecoration: "unset",
+                          borderRadius: "6px",
+                          "&:hover, &:active, &:focus-visible": {
+                            backgroundColor: "rgba(208, 215, 222, 0.32)",
+                          },
+                          ...(activeStoryId === story.id && {
+                            backgroundColor: "rgba(208, 215, 222, 0.32)",
+                          }),
+                        }}
+                        to={`/s/${story.id}`}
+                      >
+                        {story.name}
+                      </Link>
+                    </li>
+                  );
+                })}
+                {!last && (
+                  <li
+                    css={{
+                      backgroundColor: "rgba(208, 215, 222, 0.48)",
+                      height: "1px",
+                      marginTop: "7px",
+                    }}
+                  />
+                )}
+              </Fragment>
+            );
+          })}
+        </ul>
+      )}
     </nav>
   );
 };
+
+function orderStringArray(arr: string[], order: string[]) {
+  if (order && order.length > 0) {
+    arr.sort((a, b) => {
+      const indexA = order.indexOf(a);
+      const indexB = order.indexOf(b);
+      if (indexA === -1 && indexB === -1) {
+        return 0;
+      } else if (indexA === -1) {
+        return 1;
+      } else if (indexB === -1) {
+        return -1;
+      } else {
+        return indexA - indexB;
+      }
+    });
+  } else {
+    arr.sort();
+  }
+  return arr;
+}

@@ -8,7 +8,6 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { path: "", element: null },
       {
         path: "/s/:id",
         element: <StoryPage />,

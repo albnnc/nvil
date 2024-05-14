@@ -7,19 +7,18 @@ import { HtmlTemplatePlugin } from "../html_template.ts";
 import { RunPlugin } from "../run.ts";
 import { StoryLiveReloadPlugin } from "./_plugins/story_live_reload.ts";
 import { StoryMetaPlugin } from "./_plugins/story_meta.ts";
-import { Theme } from "./_ui/theme.ts";
 import { StoryMeta } from "./_utils/story_meta.ts";
 import { StorySetWatcher } from "./_utils/story_set_watcher.ts";
 
 export interface StorybookPluginOptions {
   globUrl: string;
-  constants?: { theme: Theme };
+  constants?: { groupOrder?: string[] };
   getPlugins?: (entryPoint: string) => Plugin[];
 }
 
 export class StorybookPlugin extends Plugin {
   globUrl: string;
-  constants?: { theme: Theme };
+  constants?: StorybookPluginOptions["constants"];
   getPlugins?: (entryPoint: string) => Plugin[];
 
   private storySetWatcher?: StorySetWatcher;
@@ -42,9 +41,9 @@ export class StorybookPlugin extends Plugin {
       });
       await this.storySetWatcher.walk();
       await Promise.all(
-        Array
-          .from(this.storySetWatcher.data.values())
-          .map((v) => this.onStoryFind(v)),
+        Array.from(this.storySetWatcher.data.values()).map((v) =>
+          this.onStoryFind(v)
+        )
       );
       if (this.project.dev) {
         this.storySetWatcher?.watch();
@@ -96,7 +95,7 @@ export class StorybookPlugin extends Plugin {
   private async onStoryFind(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
-      this.project.rootUrl,
+      this.project.rootUrl
     );
     this.logger.info(`Found story ${storyMeta.entryPoint}`);
     const storyTargetUrl = this.getStoryTargetUrl(storyMeta);
@@ -119,7 +118,7 @@ export class StorybookPlugin extends Plugin {
   private async onStoryLoss(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
-      this.project.rootUrl,
+      this.project.rootUrl
     );
     this.logger.info(`Lost story ${storyMeta.entryPoint}`);
     const storyProject = this.storyProjects.get(entryPoint);
@@ -135,7 +134,7 @@ export class StorybookPlugin extends Plugin {
   private getStoryTargetUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
     return new URL(
       `./stories/${storyMeta.id}/`,
-      this.project.targetUrl,
+      this.project.targetUrl
     ).toString();
   }
 
