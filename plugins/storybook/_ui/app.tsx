@@ -2,7 +2,7 @@
 import { Global, jsx } from "@emotion/react";
 import { Fragment } from "react";
 import { RouterProvider } from "react-router-dom";
-import { router } from "./pages/mod.tsx";
+import { router } from "./router.tsx";
 
 export function App() {
   return (

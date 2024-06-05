@@ -1,17 +1,19 @@
 import { colors, datetime, log } from "../_deps.ts";
 
-class Handler extends log.handlers.BaseHandler {
+class Handler extends log.BaseHandler {
   constructor(getScope: () => string) {
     super("DEBUG", {
       formatter: ({ level, msg }) => {
         const scope = getScope();
-        const levelColor = {
-          [log.LogLevels.CRITICAL]: colors.red,
-          [log.LogLevels.DEBUG]: colors.magenta,
-          [log.LogLevels.ERROR]: colors.red,
-          [log.LogLevels.INFO]: colors.blue,
-          [log.LogLevels.WARNING]: colors.yellow,
-        }[level] || colors.stripAnsiCode;
+        const levelColor =
+          {
+            [log.LogLevels.CRITICAL]: colors.red,
+            [log.LogLevels.DEBUG]: colors.magenta,
+            [log.LogLevels.ERROR]: colors.red,
+            [log.LogLevels.INFO]: colors.blue,
+            [log.LogLevels.NOTSET]: colors.yellow,
+            [log.LogLevels.WARN]: colors.yellow,
+          }[level] || colors.stripAnsiCode;
         let content = colors.stripAnsiCode(msg.trim());
         if (content.includes("\n")) {
           const prefix = "\n  " + colors.dim("|") + " ";

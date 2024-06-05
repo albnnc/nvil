@@ -1,9 +1,10 @@
 /** @jsx jsx */
 import { jsx } from "@emotion/react";
-import { StoryIframe } from "../widgets/story_iframe.tsx";
 import { useParams } from "react-router-dom";
-import { useStories } from "../utils/use_stories.ts";
 import { Loader } from "../shared/ui/loader.tsx";
+import { useStories } from "../utils/use_stories.ts";
+import { StoryControls } from "../widgets/story_controls.tsx";
+import { StoryIframe } from "../widgets/story_iframe.tsx";
 
 export const StoryPage = () => {
   const { id } = useParams();
@@ -39,9 +40,9 @@ export const StoryPage = () => {
         </h1>
       </div>
       <div css={{ flex: "1 1 auto" }}>
-        <StoryIframe />
+        <StoryIframe id={story.id} />
       </div>
-      {!story.hideControls && (
+      {story.controls && (
         <div
           css={{
             display: "flex",
@@ -53,9 +54,11 @@ export const StoryPage = () => {
           <div
             css={{
               borderBottom: "1px solid rgb(208, 215, 222)",
+              padding: "8px",
+              fontWeight: 500,
             }}
           >
-            <div css={{ padding: "8px", fontWeight: 500 }}>Controls</div>
+            Controls
           </div>
           <div
             css={{
@@ -63,11 +66,11 @@ export const StoryPage = () => {
               flex: "1 1 auto",
               display: "flex",
               overflowY: "auto",
-              padding: "8px",
+
               backgroundColor: "rgb(246, 248, 250)",
             }}
           >
-            {/* <InputPanel /> */}
+            <StoryControls controls={story.controls} />
           </div>
         </div>
       )}

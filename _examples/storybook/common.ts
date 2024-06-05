@@ -13,21 +13,24 @@ export function createReactElementLoader(element: ReactElement) {
   };
 }
 
-export function getStoryInput(): unknown {
+export function getStoryControls(): unknown {
   try {
-    const searchParams = new URLSearchParams(location.search);
-    return JSON.parse(searchParams.get("story-input") || "");
+    const searchParams = new URLSearchParams(globalThis.parent.location.search);
+
+    return JSON.parse(searchParams.get("controls") || "");
   } catch {
     return undefined;
   }
 }
 
-export function useStoryInput() {
-  const [storyInput, setStoryInput] = useState<unknown>(getStoryInput);
+export function useStoryControls() {
+  const [storyControls, setStoryControls] = useState<unknown>(getStoryControls);
   useEffect(() => {
-    const listen = () => setStoryInput(getStoryInput);
-    addEventListener("story-input", listen);
-    return () => removeEventListener("story-input", listen);
+    const listen = () => {
+      setStoryControls(getStoryControls);
+    };
+    globalThis.parent.addEventListener("controls-update", listen);
+    return () => removeEventListener("controls-update", listen);
   }, []);
-  return storyInput;
+  return storyControls;
 }

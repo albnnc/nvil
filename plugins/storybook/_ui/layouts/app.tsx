@@ -2,9 +2,10 @@
 import { jsx } from "@emotion/react";
 import { Fragment, useEffect, useMemo, useRef } from "react";
 import { Link, Outlet, useParams } from "react-router-dom";
-import { StoryDef, useStories } from "../utils/use_stories.ts";
-import { groupOrder } from "../constants.ts";
+import { appTitle, groupOrder } from "../constants.ts";
+import { LinkWrapper } from "../shared/ui/link_wrapper.tsx";
 import { Loader } from "../shared/ui/loader.tsx";
+import { StoryDef, useStories } from "../utils/use_stories.ts";
 
 export const AppLayout = () => {
   return (
@@ -40,7 +41,7 @@ export const AppLayout = () => {
           }}
           to="/"
         >
-          Storybook
+          {appTitle}
         </Link>
       </header>
       <div
@@ -82,16 +83,14 @@ const Navigation = () => {
 
   const groups = useMemo(() => {
     return orderStringArray(
-      [...new Set(stories.map((s) => s.group ?? ""))],
-      groupOrder
+      [...new Set(stories.map((s) => s.group ?? ""))].filter((i) => !!i),
+      groupOrder,
     ).reduce(
       (acc, curr) => ({
         ...acc,
-        [curr]: stories.filter((story) =>
-          curr === "" ? !story.group : story.group === curr
-        ),
+        [curr]: stories.filter((s) => s.index !== true),
       }),
-      {}
+      {},
     ) as Record<string, StoryDef[]>;
   }, [stories]);
 
@@ -108,87 +107,91 @@ const Navigation = () => {
         borderRight: "1px solid rgb(216, 222, 228)",
       }}
     >
-      {!loaded ? (
-        <Loader css={{ margin: "auto", width: "24px", height: "24px" }} />
-      ) : (
-        <ul
-          css={{ margin: 0, listStyle: "none", padding: 0, marginTop: "8px" }}
-        >
-          {Object.entries(groups).map(([group, stories], index, arr) => {
-            const last = index === arr.length - 1;
-            const inGroup = !!group;
-            return (
-              <Fragment key={group}>
-                {inGroup && (
-                  <li css={{ marginRight: "16px", marginTop: "8px" }}>
-                    <span
-                      css={{
-                        fontSize: "12px",
-                        marginLeft: "16px",
-                        height: "30px",
-                        color: "rgb(87, 96, 106)",
-                        display: "flex",
-                        fontWeight: 500,
-                        letterSpacing: "0.015em",
-                        alignItems: "center",
-                        paddingLeft: "8px",
-                        textDecoration: "unset",
-                        borderRadius: "6px",
-                      }}
-                    >
-                      {group}
-                    </span>
-                  </li>
-                )}
-                {stories.map((story) => {
-                  return (
-                    <li
-                      ref={(node) => (listRef.current[story.id] = node!)}
-                      key={story.id}
-                      id={`nav-item-${story.id}`}
-                      css={{
-                        marginRight: "16px",
-                        marginTop: inGroup ? "0px" : "8px",
-                      }}
-                    >
-                      <Link
+      {!loaded
+        ? <Loader css={{ margin: "auto", width: "24px", height: "24px" }} />
+        : (
+          <ul
+            css={{ margin: 0, listStyle: "none", padding: 0, marginTop: "8px" }}
+          >
+            {Object.entries(groups).map(([group, stories], index, arr) => {
+              const last = index === arr.length - 1;
+              const inGroup = !!group;
+              return (
+                <Fragment key={group}>
+                  {inGroup && (
+                    <li css={{ marginRight: "16px", marginTop: "8px" }}>
+                      <span
                         css={{
+                          fontSize: "12px",
                           marginLeft: "16px",
-                          height: "32px",
+                          height: "30px",
+                          color: "rgb(87, 96, 106)",
                           display: "flex",
+                          fontWeight: 500,
+                          letterSpacing: "0.015em",
                           alignItems: "center",
                           paddingLeft: "8px",
-                          color: "rgb(36, 41, 47)",
                           textDecoration: "unset",
                           borderRadius: "6px",
-                          "&:hover, &:active, &:focus-visible": {
-                            backgroundColor: "rgba(208, 215, 222, 0.32)",
-                          },
-                          ...(activeStoryId === story.id && {
-                            backgroundColor: "rgba(208, 215, 222, 0.32)",
-                          }),
                         }}
-                        to={`/s/${story.id}`}
                       >
-                        {story.name}
-                      </Link>
+                        {group}
+                      </span>
                     </li>
-                  );
-                })}
-                {!last && (
-                  <li
-                    css={{
-                      backgroundColor: "rgba(208, 215, 222, 0.48)",
-                      height: "1px",
-                      marginTop: "7px",
-                    }}
-                  />
-                )}
-              </Fragment>
-            );
-          })}
-        </ul>
-      )}
+                  )}
+                  {stories.map((story) => {
+                    return (
+                      <li
+                        ref={(node) => (listRef.current[story.id] = node!)}
+                        key={story.id}
+                        id={`nav-item-${story.id}`}
+                        css={{
+                          marginRight: "16px",
+                          marginTop: inGroup ? "0px" : "8px",
+                        }}
+                      >
+                        <LinkWrapper
+                          replace={false}
+                          to={{ pathname: `/s/${story.id}`, search: "" }}
+                        >
+                          <a
+                            css={{
+                              marginLeft: "16px",
+                              height: "32px",
+                              display: "flex",
+                              alignItems: "center",
+                              paddingLeft: "8px",
+                              color: "rgb(36, 41, 47)",
+                              textDecoration: "unset",
+                              borderRadius: "6px",
+                              "&:hover, &:active, &:focus-visible": {
+                                backgroundColor: "rgba(208, 215, 222, 0.32)",
+                              },
+                              ...(activeStoryId === story.id && {
+                                backgroundColor: "rgba(208, 215, 222, 0.32)",
+                              }),
+                            }}
+                          >
+                            {story.name}
+                          </a>
+                        </LinkWrapper>
+                      </li>
+                    );
+                  })}
+                  {!last && (
+                    <li
+                      css={{
+                        backgroundColor: "rgba(208, 215, 222, 0.48)",
+                        height: "1px",
+                        marginTop: "7px",
+                      }}
+                    />
+                  )}
+                </Fragment>
+              );
+            })}
+          </ul>
+        )}
     </nav>
   );
 };

@@ -12,8 +12,14 @@ import { StorySetWatcher } from "./_utils/story_set_watcher.ts";
 
 export interface StorybookPluginOptions {
   globUrl: string;
-  constants?: { groupOrder?: string[] };
+  appTitle?: string;
   getPlugins?: (entryPoint: string) => Plugin[];
+  constants?: StorybookPluginOptionsConstants;
+}
+
+export interface StorybookPluginOptionsConstants {
+  groupOrder?: string[];
+  appTitle?: string;
 }
 
 export class StorybookPlugin extends Plugin {
@@ -23,10 +29,12 @@ export class StorybookPlugin extends Plugin {
 
   private storySetWatcher?: StorySetWatcher;
   private uiProject?: Project;
+  private appTitle?: string;
   private storyProjects = new Map<string, Project>();
 
   constructor(options: StorybookPluginOptions) {
     super("STORYBOOK");
+
     this.globUrl = options.globUrl;
     this.constants = options.constants;
     this.getPlugins = options.getPlugins;
@@ -43,7 +51,7 @@ export class StorybookPlugin extends Plugin {
       await Promise.all(
         Array.from(this.storySetWatcher.data.values()).map((v) =>
           this.onStoryFind(v)
-        )
+        ),
       );
       if (this.project.dev) {
         this.storySetWatcher?.watch();
@@ -65,6 +73,7 @@ export class StorybookPlugin extends Plugin {
             overrideEsbuildOptions: (options) => {
               options.define = {
                 ...options.define,
+
                 STORYBOOK_CONSTANTS: this.constants
                   ? JSON.stringify(this.constants)
                   : "undefined",
@@ -95,7 +104,7 @@ export class StorybookPlugin extends Plugin {
   private async onStoryFind(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
-      this.project.rootUrl
+      this.project.rootUrl,
     );
     this.logger.info(`Found story ${storyMeta.entryPoint}`);
     const storyTargetUrl = this.getStoryTargetUrl(storyMeta);
@@ -118,7 +127,7 @@ export class StorybookPlugin extends Plugin {
   private async onStoryLoss(this: StorybookPlugin, entryPoint: string) {
     const storyMeta = StoryMeta.fromEntryPoint(
       entryPoint,
-      this.project.rootUrl
+      this.project.rootUrl,
     );
     this.logger.info(`Lost story ${storyMeta.entryPoint}`);
     const storyProject = this.storyProjects.get(entryPoint);
@@ -134,7 +143,7 @@ export class StorybookPlugin extends Plugin {
   private getStoryTargetUrl(this: StorybookPlugin, storyMeta: StoryMeta) {
     return new URL(
       `./stories/${storyMeta.id}/`,
-      this.project.targetUrl
+      this.project.targetUrl,
     ).toString();
   }
 

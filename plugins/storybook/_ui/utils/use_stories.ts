@@ -20,10 +20,9 @@ export function useStories() {
 
 export interface StoryDef {
   id: string;
-  description?: string;
-  hideControls?: boolean;
+  index?: boolean;
   entryPoint: string;
   name: string;
   group?: string;
-  inputSchema?: unknown;
+  controls?: Record<string, unknown>;
 }

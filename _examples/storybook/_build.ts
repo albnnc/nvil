@@ -13,6 +13,10 @@ await using project = new Project(
       new CleanPlugin(),
       new StorybookPlugin({
         globUrl: "./stories/**/*.{ts,tsx}",
+        constants: {
+          groupOrder: [],
+          appTitle: "Delta UI-Kit",
+        },
         getPlugins: (entryPoint) => [
           new BuildPlugin({ entryPoint }),
           new HtmlTemplatePlugin({

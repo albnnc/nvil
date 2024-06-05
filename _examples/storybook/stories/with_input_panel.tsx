@@ -1,44 +1,37 @@
 import React from "react";
-import { createReactElementLoader, useStoryInput } from "../common.ts";
+import { createReactElementLoader, useStoryControls } from "../common.ts";
 
 export const meta = {
   name: "With Input Panel",
   group: "Components",
-  inputSchema: {
-    type: "object",
-    properties: {
-      text: {
-        type: "string",
-        title: "Text",
-        default: "Lorem ipsum dolor sit amet.",
-      },
-      boolean: {
-        type: "boolean",
-        title: "Boolean",
-        default: true,
-      },
-      select: {
-        type: "string",
-        title: "Select",
-        default: "2",
-        oneOf: [
-          { const: "1", title: "One" },
-          { const: "2", title: "Two" },
-          { const: "3", title: "Three" },
-        ],
-        layout: {
-          field: "select",
-        },
-      },
+  controls: {
+    label: {
+      type: "text",
+      default: "Lorem ipsum dolor sit amet.",
+    },
+    config: {
+      type: "checkbox",
+      default: true,
+    },
+    select: {
+      type: "select",
+      default: "First",
+      items: ["First", "Second", "Third"],
+    },
+    radio: {
+      type: "radio",
+      default: "First",
+      items: ["First", "Second", "Third"],
     },
   },
 };
 
 const Story = () => {
-  const input = useStoryInput();
+  const controls = useStoryControls();
+
   return (
     <pre>
-      <code>{JSON.stringify(input, null, 2)}</code>
+      <code>{JSON.stringify(controls, null, 2)}</code>
     </pre>
   );
 };
