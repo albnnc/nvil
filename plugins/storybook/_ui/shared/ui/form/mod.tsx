@@ -12,8 +12,8 @@ import {
 import { FormManager } from "../../../types/form.ts";
 import { FormContext } from "./context.ts";
 
-export interface FormProps
-  extends Omit<
+export interface FormProps extends
+  Omit<
     HTMLAttributes<HTMLFormElement>,
     "onChange" | "onSubmit" | "onReset"
   > {
@@ -40,7 +40,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
       onReset,
       ...rest
     },
-    ref
+    ref,
   ) => {
     const submitButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -57,7 +57,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
         submitButtonRef,
         validationTriggers,
       }),
-      [manager, disabled, readOnly, validationTriggers]
+      [manager, disabled, readOnly, validationTriggers],
     );
     const handleSubmit = useCallback(
       async (e: FormEvent<HTMLFormElement>) => {
@@ -80,7 +80,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
           }
         }
       },
-      [manager]
+      [manager],
     );
 
     useEffect(() => {
@@ -102,5 +102,5 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(
         />
       </FormContext.Provider>
     );
-  }
+  },
 );

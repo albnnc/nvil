@@ -29,5 +29,5 @@ export const LinkWrapper = forwardRef<HTMLAnchorElement, LinkWrapperProps>(
       return cloneElement(children, props);
     }
     throw new Error("Invalid children");
-  }
+  },
 );

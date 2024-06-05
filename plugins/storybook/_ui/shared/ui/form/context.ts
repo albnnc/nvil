@@ -1,12 +1,14 @@
 import { createContext, RefObject, useContext } from "react";
 import { FormProps } from "./mod.tsx";
 
-export type FormContextValue = Pick<
-  FormProps,
-  "manager" | "disabled" | "readOnly" | "validationTriggers"
-> & {
-  submitButtonRef: RefObject<HTMLButtonElement>;
-};
+export type FormContextValue =
+  & Pick<
+    FormProps,
+    "manager" | "disabled" | "readOnly" | "validationTriggers"
+  >
+  & {
+    submitButtonRef: RefObject<HTMLButtonElement>;
+  };
 
 export const FormContext = createContext<FormContextValue>(
   new Proxy(
@@ -15,8 +17,8 @@ export const FormContext = createContext<FormContextValue>(
       get() {
         throw new Error("FormContext is not initialized");
       },
-    }
-  ) as FormContextValue
+    },
+  ) as FormContextValue,
 );
 
 export function useFormContext() {

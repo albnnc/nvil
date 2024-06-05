@@ -10,12 +10,12 @@ import {
 } from "react";
 import { FormWidgetProps } from "../../../types/form.ts";
 
-export interface CheckboxProps
-  extends Omit<
-      HTMLAttributes<HTMLLabelElement>,
-      keyof FormWidgetProps | "onKeyDown"
-    >,
-    FormWidgetProps<boolean> {
+export interface CheckboxProps extends
+  Omit<
+    HTMLAttributes<HTMLLabelElement>,
+    keyof FormWidgetProps | "onKeyDown"
+  >,
+  FormWidgetProps<boolean> {
   indeterminate?: boolean;
 }
 
@@ -36,7 +36,7 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
       (e: ChangeEvent<HTMLInputElement>) => {
         onChange?.(Boolean(e.target.checked));
       },
-      [onChange]
+      [onChange],
     );
     useEffect(() => {
       if (ref.current && indeterminate) {
@@ -60,5 +60,5 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
         onFocus={() => onFocus?.()}
       />
     );
-  }
+  },
 );

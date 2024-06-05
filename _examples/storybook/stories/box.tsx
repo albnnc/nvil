@@ -16,5 +16,5 @@ export const load = createReactElementLoader(
     }}
   >
     Box
-  </div>
+  </div>,
 );

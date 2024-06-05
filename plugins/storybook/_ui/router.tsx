@@ -2,8 +2,8 @@
 import { jsx } from "@emotion/react";
 import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "./layouts/app.tsx";
-import { StoryPage } from "./pages/story.tsx";
 import { HomePage } from "./pages/home.tsx";
+import { StoryPage } from "./pages/story.tsx";
 
 export const router = createBrowserRouter([
   {

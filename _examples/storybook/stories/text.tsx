@@ -7,5 +7,5 @@ export const meta = {
 };
 
 export const load = createReactElementLoader(
-  <p>Lorem ipsum dolor sit amet.</p>
+  <p>Lorem ipsum dolor sit amet.</p>,
 );

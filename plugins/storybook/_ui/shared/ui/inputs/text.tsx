@@ -5,7 +5,8 @@ import { forwardRef, InputHTMLAttributes, Ref } from "react";
 import { FormWidgetProps } from "../../../types/form.ts";
 
 export interface TextInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, keyof FormWidgetProps>,
+  extends
+    Omit<InputHTMLAttributes<HTMLInputElement>, keyof FormWidgetProps>,
     FormWidgetProps<string> {}
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
@@ -20,7 +21,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       placeholder,
       ...rest
     },
-    ref
+    ref,
   ) => {
     return (
       <input
@@ -36,5 +37,5 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         {...rest}
       />
     );
-  }
+  },
 );

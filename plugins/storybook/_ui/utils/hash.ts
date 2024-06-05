@@ -16,7 +16,7 @@ function fold(hash: number, text: string) {
 function foldObject(
   hash: number,
   value: Record<string, unknown>,
-  seen: unknown[]
+  seen: unknown[],
 ) {
   const foldKey = (hash: number, key: string) => {
     return foldValue(hash, value[key], key, seen);
@@ -28,7 +28,7 @@ function foldValue(
   input: number,
   value: unknown,
   key: string,
-  seen: unknown[]
+  seen: unknown[],
 ): number {
   const hash = fold(fold(fold(input, key), String(value)), typeof value);
   if (value === null) {

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
+import { get } from "../../../../_utils/get.ts";
 import {
   FormDirtyFields,
   FormErrors,
@@ -8,15 +9,14 @@ import {
   FormValidators,
   FormValues,
 } from "../types/form.ts";
-import { hash } from "../utils/hash.ts";
-import { get } from "../../../../_utils/get.ts";
 import { deepEqual } from "../utils/deep_equal.ts";
+import { hash } from "../utils/hash.ts";
 
 export function useFormManager({
   initialValues: propsInitialValues,
 }: FormManagerOptions = {}): FormManager {
   const [initialValues, setInitialValues] = useState<FormValues>(
-    propsInitialValues ?? {}
+    propsInitialValues ?? {},
   );
   const [dirtyFields, setDirtyFields] = useState<FormDirtyFields>([]);
   const [values, setValues] = useState<FormValues>(initialValues ?? {});

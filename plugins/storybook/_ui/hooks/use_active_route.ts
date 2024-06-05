@@ -8,7 +8,7 @@ export function useActiveRoute() {
       for (const path of candidates) {
         if (path.includes(":")) {
           const regex = new RegExp(
-            "^" + path.replace(/:[^\s/]+/g, "([^/]+)") + "$"
+            "^" + path.replace(/:[^\s/]+/g, "([^/]+)") + "$",
           );
           const match = pathname.match(regex);
           if (match) {
@@ -22,7 +22,7 @@ export function useActiveRoute() {
       }
       return false;
     },
-    [pathname]
+    [pathname],
   );
 
   return [check];

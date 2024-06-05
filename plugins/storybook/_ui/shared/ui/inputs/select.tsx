@@ -5,7 +5,8 @@ import { forwardRef, SelectHTMLAttributes } from "react";
 import { FormWidgetProps } from "../../../types/form.ts";
 
 export interface TextInputProps
-  extends Omit<SelectHTMLAttributes<HTMLSelectElement>, keyof FormWidgetProps>,
+  extends
+    Omit<SelectHTMLAttributes<HTMLSelectElement>, keyof FormWidgetProps>,
     FormWidgetProps<string> {}
 
 export const Select = forwardRef<HTMLSelectElement, TextInputProps>(
@@ -20,7 +21,7 @@ export const Select = forwardRef<HTMLSelectElement, TextInputProps>(
       placeholder,
       ...rest
     },
-    ref
+    ref,
   ) => {
     return (
       <select
@@ -35,5 +36,5 @@ export const Select = forwardRef<HTMLSelectElement, TextInputProps>(
         {...rest}
       />
     );
-  }
+  },
 );
