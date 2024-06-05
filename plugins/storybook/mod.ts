@@ -29,7 +29,6 @@ export class StorybookPlugin extends Plugin {
 
   private storySetWatcher?: StorySetWatcher;
   private uiProject?: Project;
-  private appTitle?: string;
   private storyProjects = new Map<string, Project>();
 
   constructor(options: StorybookPluginOptions) {

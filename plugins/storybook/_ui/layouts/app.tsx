@@ -41,7 +41,7 @@ export const AppLayout = () => {
           }}
           to="/"
         >
-          {appTitle}
+          {appTitle ?? "Storybook"}
         </Link>
       </header>
       <div
