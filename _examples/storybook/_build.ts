@@ -15,7 +15,6 @@ await using project = new Project(
         globUrl: "./stories/**/*.{ts,tsx}",
         constants: {
           groupOrder: [],
-          appTitle: "Delta UI-Kit",
         },
         getPlugins: (entryPoint) => [
           new BuildPlugin({ entryPoint }),
