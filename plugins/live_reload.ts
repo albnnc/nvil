@@ -47,7 +47,7 @@ export class LiveReloadPlugin extends Plugin {
         .then(async (v) => {
           await v.body?.cancel();
           if (!v.ok) {
-            this.logger.warning("Unable to request reload");
+            this.logger.warn("Unable to request reload");
           }
         })
         .catch(() => undefined);
