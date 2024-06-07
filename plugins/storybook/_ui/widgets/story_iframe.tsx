@@ -22,6 +22,7 @@ export const StoryIframe = ({ id }: { id: string }) => {
       ref={ref}
       src={`/stories/${id}`}
       css={{
+        display: "block",
         width: "100%",
         height: "100%",
         border: 0,

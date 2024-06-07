@@ -84,11 +84,11 @@ const Navigation = () => {
   const groups = useMemo(() => {
     return orderStringArray(
       [...new Set(stories.map((s) => s.group ?? ""))].filter((i) => !!i),
-      groupOrder,
+      groupOrder ?? [],
     ).reduce(
       (acc, curr) => ({
         ...acc,
-        [curr]: stories.filter((s) => s.index !== true),
+        [curr]: stories.filter((s) => (s.index !== true) && s.group === curr),
       }),
       {},
     ) as Record<string, StoryDef[]>;
