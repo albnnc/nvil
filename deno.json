@@ -1,4 +1,7 @@
 {
+  "name": "@albnnc/nvil",
+  "version": "0.6.0",
+  "exports": "./mod.ts",
   "tasks": {
     "fmt": "dprint fmt",
     "fmt:check": "dprint check",
