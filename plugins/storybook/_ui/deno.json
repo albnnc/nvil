@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns",
+      "deno.unstable"
+    ]
+  },
+  "importMap": "./import_map.json",
+  "lock": false,
+  "tasks": {
+    "fmt": "dprint fmt",
+    "fmt:check": "dprint check",
+    "lint:check": "deno lint"
+  }
+}

@@ -13,6 +13,9 @@ await using project = new Project(
       new CleanPlugin(),
       new StorybookPlugin({
         globUrl: "./stories/**/*.{ts,tsx}",
+        constants: {
+          groupOrder: [],
+        },
         getPlugins: (entryPoint) => [
           new BuildPlugin({ entryPoint }),
           new HtmlTemplatePlugin({

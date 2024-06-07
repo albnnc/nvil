@@ -7,19 +7,24 @@ import { HtmlTemplatePlugin } from "../html_template.ts";
 import { RunPlugin } from "../run.ts";
 import { StoryLiveReloadPlugin } from "./_plugins/story_live_reload.ts";
 import { StoryMetaPlugin } from "./_plugins/story_meta.ts";
-import { Theme } from "./_ui/theme.ts";
 import { StoryMeta } from "./_utils/story_meta.ts";
 import { StorySetWatcher } from "./_utils/story_set_watcher.ts";
 
 export interface StorybookPluginOptions {
   globUrl: string;
-  constants?: { theme: Theme };
+  appTitle?: string;
   getPlugins?: (entryPoint: string) => Plugin[];
+  constants?: StorybookPluginOptionsConstants;
+}
+
+export interface StorybookPluginOptionsConstants {
+  groupOrder?: string[];
+  appTitle?: string;
 }
 
 export class StorybookPlugin extends Plugin {
   globUrl: string;
-  constants?: { theme: Theme };
+  constants?: StorybookPluginOptions["constants"];
   getPlugins?: (entryPoint: string) => Plugin[];
 
   private storySetWatcher?: StorySetWatcher;
@@ -28,6 +33,7 @@ export class StorybookPlugin extends Plugin {
 
   constructor(options: StorybookPluginOptions) {
     super("STORYBOOK");
+
     this.globUrl = options.globUrl;
     this.constants = options.constants;
     this.getPlugins = options.getPlugins;
@@ -42,9 +48,9 @@ export class StorybookPlugin extends Plugin {
       });
       await this.storySetWatcher.walk();
       await Promise.all(
-        Array
-          .from(this.storySetWatcher.data.values())
-          .map((v) => this.onStoryFind(v)),
+        Array.from(this.storySetWatcher.data.values()).map((v) =>
+          this.onStoryFind(v)
+        ),
       );
       if (this.project.dev) {
         this.storySetWatcher?.watch();
@@ -66,6 +72,7 @@ export class StorybookPlugin extends Plugin {
             overrideEsbuildOptions: (options) => {
               options.define = {
                 ...options.define,
+
                 STORYBOOK_CONSTANTS: this.constants
                   ? JSON.stringify(this.constants)
                   : "undefined",

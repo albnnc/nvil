@@ -3,6 +3,7 @@ import { createReactElementLoader } from "../common.ts";
 
 export const meta = {
   name: "Text",
+  group: "Components",
 };
 
 export const load = createReactElementLoader(

@@ -1,8 +1,10 @@
-import { defaultTheme, Theme } from "./theme.ts";
+import { StorybookPluginOptionsConstants } from "../mod.ts";
 
 // @ts-ignore: compile-time constants
 const constants = STORYBOOK_CONSTANTS || {
-  theme: defaultTheme,
+  groupOrder: [],
+  appTitle: "Storybook",
 };
 
-export const { theme } = constants as { theme: Theme };
+export const { groupOrder, appTitle } =
+  constants as StorybookPluginOptionsConstants;
