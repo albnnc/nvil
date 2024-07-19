@@ -13,7 +13,7 @@ await using project = new Project({
     new CleanPlugin(),
     new BuildPlugin({
       entryPoint: "./index.tsx",
-      metaBundleUrl: "./index.meta.json",
+      bundleMetaUrl: "./index.meta.json",
     }),
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
     new LiveReloadPlugin(),

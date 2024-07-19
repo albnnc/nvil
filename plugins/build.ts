@@ -9,7 +9,7 @@ export type EsbuildOptions = esbuild.BuildOptions;
 export interface BuildPluginOptions {
   entryPoint: string;
   scope?: string;
-  metaBundleUrl?: string;
+  bundleMetaUrl?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 }
 
@@ -55,7 +55,7 @@ export class BuildPlugin extends Plugin {
   constructor(public options: BuildPluginOptions) {
     super("BUILD");
     this.entryPoint = options.entryPoint;
-    this.bundleMetaUrl = options.metaBundleUrl;
+    this.bundleMetaUrl = options.bundleMetaUrl;
     this.scope = options.scope;
     this.overrideEsbuildOptions = options.overrideEsbuildOptions;
   }
@@ -75,7 +75,6 @@ export class BuildPlugin extends Plugin {
     this.logger.info(`Building ${this.relativeEntryPoint}`);
     await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
-      console.log("metaBundleUrl: ", this.bundleMetaUrl);
       const esbuildConfig: EsbuildOptions = {
         entryPoints: [this.absoluteEntryPoint],
         write: false,
