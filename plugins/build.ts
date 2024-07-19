@@ -40,10 +40,6 @@ export class BuildPlugin extends Plugin {
     return this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
   }
 
-  // private get metaBundleUrl(): string {
-  //   return this.metaBundleUrl.replace(/\.js$/, ".meta.json");
-  // }
-
   private get buildStageHandlerOptions(): BuildStageHandlerOptions {
     return {
       entryPoint: this.absoluteEntryPoint,
