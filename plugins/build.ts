@@ -9,18 +9,20 @@ export type EsbuildOptions = esbuild.BuildOptions;
 export interface BuildPluginOptions {
   entryPoint: string;
   scope?: string;
+  metaBundleUrl?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 }
 
 export interface BuildStageHandlerOptions {
   entryPoint: string;
   bundleUrl: string;
-  metaBundleUrl: string;
+  bundleMetaUrl?: string;
 }
 
 export class BuildPlugin extends Plugin {
   encoder = new TextEncoder();
   entryPoint: string;
+  bundleMetaUrl?: string;
   scope?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 
@@ -38,21 +40,22 @@ export class BuildPlugin extends Plugin {
     return this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
   }
 
-  private get metaBundleUrl(): string {
-    return this.bundleUrl.replace(/\.js$/, ".meta.json");
-  }
+  // private get metaBundleUrl(): string {
+  //   return this.metaBundleUrl.replace(/\.js$/, ".meta.json");
+  // }
 
   private get buildStageHandlerOptions(): BuildStageHandlerOptions {
     return {
       entryPoint: this.absoluteEntryPoint,
       bundleUrl: this.bundleUrl,
-      metaBundleUrl: this.metaBundleUrl,
+      bundleMetaUrl: this.bundleMetaUrl,
     };
   }
 
   constructor(public options: BuildPluginOptions) {
     super("BUILD");
     this.entryPoint = options.entryPoint;
+    this.bundleMetaUrl = options.metaBundleUrl;
     this.scope = options.scope;
     this.overrideEsbuildOptions = options.overrideEsbuildOptions;
   }
@@ -72,11 +75,12 @@ export class BuildPlugin extends Plugin {
     this.logger.info(`Building ${this.relativeEntryPoint}`);
     await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
+      console.log("metaBundleUrl: ", this.bundleMetaUrl);
       const esbuildConfig: EsbuildOptions = {
         entryPoints: [this.absoluteEntryPoint],
         write: false,
         bundle: true,
-        metafile: true,
+        metafile: !!this.bundleMetaUrl,
         minify: !dev,
         target: "esnext",
         platform: "browser",
@@ -90,6 +94,7 @@ export class BuildPlugin extends Plugin {
         ],
       };
       this.overrideEsbuildOptions?.(esbuildConfig);
+
       const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
       const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
       if (!mainOutputFile) {
@@ -99,9 +104,12 @@ export class BuildPlugin extends Plugin {
         data: mainOutputFile.contents,
         scope: this.scope,
       });
-      bundle.set(this.metaBundleUrl, {
-        data: this.encoder.encode(JSON.stringify(metafile)),
-      });
+      if (this.bundleMetaUrl) {
+        bundle.set(this.bundleMetaUrl, {
+          data: this.encoder.encode(JSON.stringify(metafile)),
+        });
+      }
+
       await stager.run("BUILD_END", this.buildStageHandlerOptions);
     } catch (e) {
       if (dev) {

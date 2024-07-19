@@ -11,7 +11,10 @@ import {
 await using project = new Project({
   plugins: [
     new CleanPlugin(),
-    new BuildPlugin({ entryPoint: "./index.tsx" }),
+    new BuildPlugin({
+      entryPoint: "./index.tsx",
+      metaBundleUrl: "./index.meta.json",
+    }),
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
     new LiveReloadPlugin(),
     new DevServerPlugin(),
