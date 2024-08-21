@@ -11,16 +11,16 @@ export interface ProjectOptions {
 }
 
 export class Project implements AsyncDisposable {
-  logger = new ScopeLogger("Project");
-  stager = new Stager();
-  bundle = new Bundle();
+  logger: ScopeLogger = new ScopeLogger("Project");
+  stager: Stager = new Stager();
+  bundle: Bundle = new Bundle();
   plugins: Plugin[];
   sourceUrl: string;
   targetUrl: string;
   dev?: boolean;
 
   bootstrapped = false;
-  donePWR = Promise.withResolvers<void>();
+  donePWR: PromiseWithResolvers<void> = Promise.withResolvers();
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
@@ -32,7 +32,7 @@ export class Project implements AsyncDisposable {
     this.dev = options.dev;
   }
 
-  async bootstrap(this: Project) {
+  async bootstrap(this: Project): Promise<void> {
     if (!this.plugins.length) {
       this.logger.info("No plugins found");
       return;
@@ -50,7 +50,7 @@ export class Project implements AsyncDisposable {
     }
   }
 
-  async done(this: Project) {
+  async done(this: Project): Promise<void> {
     await this.donePWR.promise;
   }
 
@@ -58,20 +58,20 @@ export class Project implements AsyncDisposable {
     await Promise.all(this.plugins.map((v) => v[Symbol.asyncDispose]()));
   }
 
-  private async applyPlugins(this: Project) {
+  private async applyPlugins(this: Project): Promise<void> {
     for (const plugin of this.plugins) {
       await plugin.apply({ project: this });
     }
   }
 
-  private async runFirstCycle(this: Project) {
+  private async runFirstCycle(this: Project): Promise<void> {
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
     await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
   }
 
-  private async watch(this: Project) {
+  private async watch(this: Project): Promise<void> {
     while (true) {
       await this.stager.waitCycle();
       const changes = this.bundle.getChanges();

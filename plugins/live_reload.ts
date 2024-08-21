@@ -54,7 +54,7 @@ export class LiveReloadPlugin extends Plugin {
     });
   }
 
-  static liveReloadScript = `
+  static liveReloadScript: string = `
     const eventSource = new EventSource("/live-reload-events");
     eventSource.addEventListener("message", () => {
       location.reload();
@@ -63,7 +63,7 @@ export class LiveReloadPlugin extends Plugin {
     .trim()
     .replace(/\s+/g, " ");
 
-  static handleLiveReloadRequest(request: Request) {
+  static handleLiveReloadRequest(request: Request): Response | undefined {
     const { pathname } = new URL(request.url);
     if (pathname !== "/live-reload-events") {
       return;

@@ -17,7 +17,7 @@ export class Bundle extends Map<string, BundleChunk> {
     super(entries);
   }
 
-  set(url: string, chunk: BundleChunk) {
+  set(url: string, chunk: BundleChunk): this {
     if (!url.startsWith(".")) {
       throw new Error("Only relative paths are allowed");
     }
@@ -26,19 +26,19 @@ export class Bundle extends Map<string, BundleChunk> {
     return this;
   }
 
-  isChanged(url: string) {
+  isChanged(url: string): boolean {
     return this.changes.has(url);
   }
 
-  clearChanges() {
+  clearChanges(): void {
     this.changes.clear();
   }
 
-  getChanges() {
+  getChanges(): string[] {
     return Array.from(this.changes.values());
   }
 
-  async writeChanges(targetUrl: string) {
+  async writeChanges(targetUrl: string): Promise<void> {
     for (const change of this.getChanges()) {
       const { data } = this.get(change) ?? {};
       if (!data) {

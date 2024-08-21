@@ -23,7 +23,7 @@ export interface BuildStageHandlerOptions {
 }
 
 export class BuildPlugin extends Plugin {
-  encoder = new TextEncoder();
+  encoder: TextEncoder = new TextEncoder();
   entryPoint: string;
   bundleMetaUrl?: string;
   scope?: string;

@@ -6,7 +6,7 @@
     "fmt:check": "dprint check",
     "lint:check": "deno lint"
   },
-  "exclude": ["**/.git", "**/.target"],
+  "exclude": ["./**/.git", "./**/.target"],
   "lock": false,
   "imports": {
     "@deno/graph": "jsr:@deno/graph@0.81.2",
@@ -20,8 +20,11 @@
     "@std/http": "jsr:@std/http@1.0.3",
     "@std/log": "jsr:@std/log@0.224.5",
     "@std/path": "jsr:@std/path@0.225.2",
-    "esbuild": "https://deno.land/x/esbuild@v0.23.0/mod.js",
+    "esbuild": "npm:esbuild@0.23.1",
     "mustache": "npm:mustache@4.2.0"
   },
-  "exports": "./mod.ts"
+  "exports": "./mod.ts",
+  "publish": {
+    "exclude": ["./examples"]
+  }
 }
