@@ -1,8 +1,10 @@
 import { denoPlugins as esbuildDenoPlugins } from "@luca/esbuild-deno-loader";
 import * as async from "@std/async";
+import * as jsonc from "@std/jsonc";
 import * as path from "@std/path";
 import * as esbuild from "esbuild";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import { get } from "../utils/get.ts";
 import { ModuleWatcher } from "../utils/module_watcher.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
@@ -74,7 +76,7 @@ export class BuildPlugin extends Plugin {
     this.logger.info(`Building ${this.relativeEntryPoint}`);
     await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
-      const denoConfigUrl = await this.getDenoConfigUrl();
+      const denoConfigSummary = await this.getDenoConfigSummary();
       const esbuildConfig: EsbuildOptions = {
         absWorkingDir: path.dirname(path.fromFileUrl(this.absoluteEntryPoint)),
         entryPoints: [this.absoluteEntryPoint],
@@ -85,17 +87,15 @@ export class BuildPlugin extends Plugin {
         target: "esnext",
         platform: "browser",
         format: "esm",
-        // logLevel: "silent",
         define: { "import.meta.main": "false" },
         jsx: "automatic",
-        // jsxImportSource: "@emotion/react",
-        jsxImportSource: "react",
-        // ?
-        // jsxDev: true,
-        external: ["pnpapi"],
+        jsxImportSource: get(
+          denoConfigSummary.value,
+          "compilerOptions.jsxImportSource",
+        ) || "react",
         plugins: [
           EsbuildPluginFactory.noSideEffects(),
-          ...EsbuildPluginFactory.deno(denoConfigUrl),
+          ...EsbuildPluginFactory.deno(denoConfigSummary.url),
         ],
       };
       this.overrideEsbuildOptions?.(esbuildConfig);
@@ -150,17 +150,23 @@ export class BuildPlugin extends Plugin {
     this.moduleWatcher?.[Symbol.dispose]();
   }
 
-  private async getDenoConfigUrl() {
+  private async getDenoConfigSummary() {
     for (const relativeUrl of ["./deno.json", "./deno.jsonc"]) {
       const candidateUrl = new URL(relativeUrl, this.project.sourceUrl);
-      const ok = await fetch(candidateUrl)
-        .then((v) => v.ok)
-        .catch(() => false);
-      if (ok) {
-        return candidateUrl.toString();
+      const candidate = await fetch(candidateUrl)
+        .then((v) => v.text())
+        .then((v) => {
+          return {
+            value: jsonc.parse(v),
+            url: candidateUrl.toString(),
+          };
+        })
+        .catch(() => undefined);
+      if (candidate) {
+        return candidate;
       }
     }
-    throw new Error("Unable to find Deno config");
+    throw new Error("Failed to get Deno config");
   }
 }
 
