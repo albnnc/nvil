@@ -92,9 +92,9 @@ export class BuildPlugin extends Plugin {
         jsxImportSource: "react",
         // ?
         // jsxDev: true,
+        external: ["pnpapi"],
         plugins: [
-          // EsbuildPluginFactory.esmShPackageJson(),
-          // EsbuildPluginFactory.noSideEffects(),
+          EsbuildPluginFactory.noSideEffects(),
           ...EsbuildPluginFactory.deno(denoConfigUrl),
         ],
       };
@@ -165,10 +165,6 @@ export class BuildPlugin extends Plugin {
 }
 
 export class EsbuildPluginFactory {
-  static deno(denoConfigUrl: string): EsbuildPlugin[] {
-    return esbuildDenoPlugins({ configPath: path.fromFileUrl(denoConfigUrl) });
-  }
-
   static noSideEffects(): EsbuildPlugin {
     return {
       // https://github.com/evanw/esbuild/issues/1895#issuecomment-1003404929
@@ -186,5 +182,9 @@ export class EsbuildPluginFactory {
         });
       },
     };
+  }
+
+  static deno(denoConfigUrl: string): EsbuildPlugin[] {
+    return esbuildDenoPlugins({ configPath: path.fromFileUrl(denoConfigUrl) });
   }
 }

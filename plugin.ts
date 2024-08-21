@@ -1,5 +1,5 @@
-import { ScopeLogger } from "./mod.ts";
 import type { Project } from "./project.ts";
+import { ScopeLogger } from "./utils/scope_logger.ts";
 
 export interface PluginApplyOptions {
   project: Project;

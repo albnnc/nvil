@@ -1,3 +1,4 @@
+// import { LiveReloadPlugin } from "../../plugins/live_reload.ts";
 import { LiveReloadPlugin } from "@albnnc/nvil";
 import { serveDir, serveFile } from "@std/http/file-server";
 import * as log from "@std/log";

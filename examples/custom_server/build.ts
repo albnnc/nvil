@@ -18,7 +18,7 @@ await using project = new Project({
     new RunPlugin({ scope: "SERVER", args: ["-A"] }),
   ],
   sourceUrl: import.meta.resolve("./"),
-  targetUrl: "./target/",
+  targetUrl: "./.target/",
   dev: Deno.args[0] === "dev",
 });
 
