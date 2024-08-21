@@ -1,5 +1,0 @@
-{
-  "imports": {
-    "echarts": "https://esm.sh/echarts@5.4.1/dist/echarts.esm?target=esnext&bundle"
-  }
-}

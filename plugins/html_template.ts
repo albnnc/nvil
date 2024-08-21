@@ -1,5 +1,7 @@
-import { mustache } from "../_deps.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { default as mustache } from "mustache";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+
+mustache.escape = (v: unknown) => v;
 
 export interface HtmlTemplatePluginOptions {
   entryPoint: string;
@@ -42,7 +44,7 @@ export class HtmlTemplatePlugin extends Plugin {
         DEV: !!this.project.dev,
       };
       const indexHtmlTemplate = await fetch(
-        new URL(this.entryPoint, this.project.rootUrl),
+        new URL(this.entryPoint, this.project.sourceUrl),
       ).then((v) => v.text());
       const indexHtmlString = mustache.render(indexHtmlTemplate, view);
       const textEncoder = new TextEncoder();

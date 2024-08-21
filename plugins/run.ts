@@ -1,6 +1,6 @@
-import { path } from "../_deps.ts";
-import { relativiseUrl } from "../_utils/relativise_url.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import * as path from "@std/path";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface RunPluginOptions {
   scope: string;

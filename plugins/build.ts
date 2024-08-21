@@ -1,7 +1,10 @@
-import { async, esbuild, esbuildDenoPlugins } from "../_deps.ts";
-import { ModuleWatcher } from "../_utils/module_watcher.ts";
-import { relativiseUrl } from "../_utils/relativise_url.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { denoPlugins as esbuildDenoPlugins } from "@luca/esbuild-deno-loader";
+import * as async from "@std/async";
+import * as path from "@std/path";
+import * as esbuild from "esbuild";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import { ModuleWatcher } from "../utils/module_watcher.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export type EsbuildPlugin = esbuild.Plugin;
 export type EsbuildOptions = esbuild.BuildOptions;
@@ -29,11 +32,11 @@ export class BuildPlugin extends Plugin {
   private moduleWatcher?: ModuleWatcher;
 
   private get absoluteEntryPoint(): string {
-    return new URL(this.entryPoint, this.project.rootUrl).toString();
+    return new URL(this.entryPoint, this.project.sourceUrl).toString();
   }
 
   private get relativeEntryPoint(): string {
-    return relativiseUrl(this.absoluteEntryPoint, this.project.rootUrl);
+    return relativiseUrl(this.absoluteEntryPoint, this.project.sourceUrl);
   }
 
   private get bundleUrl(): string {
@@ -67,11 +70,13 @@ export class BuildPlugin extends Plugin {
   }
 
   async build(this: BuildPlugin) {
-    const { bundle, stager, importMapUrl, dev } = this.project;
+    const { bundle, stager, dev } = this.project;
     this.logger.info(`Building ${this.relativeEntryPoint}`);
     await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
+      const denoConfigUrl = await this.getDenoConfigUrl();
       const esbuildConfig: EsbuildOptions = {
+        absWorkingDir: path.dirname(path.fromFileUrl(this.absoluteEntryPoint)),
         entryPoints: [this.absoluteEntryPoint],
         write: false,
         bundle: true,
@@ -80,16 +85,20 @@ export class BuildPlugin extends Plugin {
         target: "esnext",
         platform: "browser",
         format: "esm",
-        logLevel: "silent",
+        // logLevel: "silent",
         define: { "import.meta.main": "false" },
+        jsx: "automatic",
+        // jsxImportSource: "@emotion/react",
+        jsxImportSource: "react",
+        // ?
+        // jsxDev: true,
         plugins: [
-          EsbuildPluginFactory.esmShPackageJson(),
-          EsbuildPluginFactory.noSideEffects(),
-          ...EsbuildPluginFactory.deno(importMapUrl),
+          // EsbuildPluginFactory.esmShPackageJson(),
+          // EsbuildPluginFactory.noSideEffects(),
+          ...EsbuildPluginFactory.deno(denoConfigUrl),
         ],
       };
       this.overrideEsbuildOptions?.(esbuildConfig);
-
       const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
       const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
       if (!mainOutputFile) {
@@ -104,7 +113,6 @@ export class BuildPlugin extends Plugin {
           data: this.encoder.encode(JSON.stringify(metafile)),
         });
       }
-
       await stager.run("BUILD_END", this.buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
@@ -141,11 +149,24 @@ export class BuildPlugin extends Plugin {
   async [Symbol.asyncDispose](this: BuildPlugin) {
     this.moduleWatcher?.[Symbol.dispose]();
   }
+
+  private async getDenoConfigUrl() {
+    for (const relativeUrl of ["./deno.json", "./deno.jsonc"]) {
+      const candidateUrl = new URL(relativeUrl, this.project.sourceUrl);
+      const ok = await fetch(candidateUrl)
+        .then((v) => v.ok)
+        .catch(() => false);
+      if (ok) {
+        return candidateUrl.toString();
+      }
+    }
+    throw new Error("Unable to find Deno config");
+  }
 }
 
 export class EsbuildPluginFactory {
-  static deno(importMapUrl?: string): EsbuildPlugin[] {
-    return esbuildDenoPlugins({ importMapURL: importMapUrl });
+  static deno(denoConfigUrl: string): EsbuildPlugin[] {
+    return esbuildDenoPlugins({ configPath: path.fromFileUrl(denoConfigUrl) });
   }
 
   static noSideEffects(): EsbuildPlugin {
@@ -162,20 +183,6 @@ export class EsbuildPluginFactory {
           const result = await build.resolve(path, rest);
           result.sideEffects = false;
           return result;
-        });
-      },
-    };
-  }
-
-  static esmShPackageJson(): EsbuildPlugin {
-    return {
-      name: "esm-sh-package-json",
-      setup(build) {
-        build.onLoad({ filter: /package\.json\.js/ }, () => {
-          return {
-            contents: `{ "name": "UNKNOWN", "version": "UNKNOWN" }`,
-            loader: "json",
-          };
         });
       },
     };

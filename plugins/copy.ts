@@ -1,6 +1,8 @@
-import { async, fs, path } from "../_deps.ts";
-import { relativiseUrl } from "../_utils/relativise_url.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import * as async from "@std/async";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface CopyPluginOptions {
   /**
@@ -28,11 +30,11 @@ export class CopyPlugin extends Plugin {
   private fsWatcher?: Deno.FsWatcher;
 
   private get absoluteUrl(): string {
-    return new URL(this.entryPoint, this.project.rootUrl).toString();
+    return new URL(this.entryPoint, this.project.sourceUrl).toString();
   }
 
   private get relativeUrl(): string {
-    return relativiseUrl(this.entryPoint, this.project.rootUrl);
+    return relativiseUrl(this.entryPoint, this.project.sourceUrl);
   }
 
   constructor(options: CopyPluginOptions) {
@@ -72,7 +74,7 @@ export class CopyPlugin extends Plugin {
       ).toString();
       bundle.set(fileBundleUrl, { data });
     } else {
-      const fileBundleUrl = relativiseUrl(fileUrl, this.project.rootUrl);
+      const fileBundleUrl = relativiseUrl(fileUrl, this.project.sourceUrl);
       bundle.set(fileBundleUrl, { data });
     }
   }

@@ -1,5 +1,6 @@
-import { fileServer, path } from "../_deps.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import * as fileServer from "@std/http/file-server";
+import * as path from "@std/path";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 import { LiveReloadPlugin } from "./live_reload.ts";
 
 export class DevServerPlugin extends Plugin {

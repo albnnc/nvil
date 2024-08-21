@@ -1,4 +1,4 @@
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 
 export interface LiveReloadPluginOptions {
   scope?: string;

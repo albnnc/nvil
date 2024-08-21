@@ -1,4 +1,5 @@
-import { fs, path } from "./_deps.ts";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
 
 export interface BundleChunk {
   data: Uint8Array;

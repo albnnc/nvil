@@ -1,14 +1,23 @@
 {
-  "name": "@albnnc/nvil",
-  "version": "0.6.1",
-  "tasks": {
-    "fmt": "dprint fmt",
-    "fmt:check": "dprint check",
-    "lint:check": "deno lint"
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "jsxImportSourceTypes": "@types/react",
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
   },
-  "exclude": ["**/.git", "**/.target"],
   "lock": false,
   "imports": {
+    "@types/react": "npm:@types/react@18",
+    "react": "npm:react@18.2.0",
+    "react-dom": "npm:react-dom@18.2.0",
+    // ?
+    "@albnnc/nvil": "../../mod.ts",
     "@deno/graph": "jsr:@deno/graph@0.81.2",
     "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@0.10.3",
     "@std/assert": "jsr:@std/assert@1.0.2",
@@ -22,6 +31,5 @@
     "@std/path": "jsr:@std/path@0.225.2",
     "esbuild": "https://deno.land/x/esbuild@v0.23.0/mod.js",
     "mustache": "npm:mustache@4.2.0"
-  },
-  "exports": "./mod.ts"
+  }
 }
