@@ -1,5 +1,5 @@
 import * as datetime from "@std/datetime";
-import * as fmt from "@std/fmt";
+import * as colors from "@std/fmt/colors";
 import * as log from "@std/log";
 
 class Handler extends log.BaseHandler {
@@ -8,24 +8,24 @@ class Handler extends log.BaseHandler {
       formatter: ({ level, msg }) => {
         const scope = getScope();
         const levelColor = {
-          [log.LogLevels.CRITICAL]: fmt.red,
-          [log.LogLevels.DEBUG]: fmt.magenta,
-          [log.LogLevels.ERROR]: fmt.red,
-          [log.LogLevels.INFO]: fmt.blue,
-          [log.LogLevels.NOTSET]: fmt.yellow,
-          [log.LogLevels.WARN]: fmt.yellow,
-        }[level] || fmt.stripAnsiCode;
-        let content = fmt.stripAnsiCode(msg.trim());
+          [log.LogLevels.CRITICAL]: colors.red,
+          [log.LogLevels.DEBUG]: colors.magenta,
+          [log.LogLevels.ERROR]: colors.red,
+          [log.LogLevels.INFO]: colors.blue,
+          [log.LogLevels.NOTSET]: colors.yellow,
+          [log.LogLevels.WARN]: colors.yellow,
+        }[level] || colors.stripAnsiCode;
+        let content = colors.stripAnsiCode(msg.trim());
         if (content.includes("\n")) {
-          const prefix = "\n  " + fmt.dim("|") + " ";
+          const prefix = "\n  " + colors.dim("|") + " ";
           content = prefix + content.replace("\n", prefix);
         }
         return (
-          fmt.dim(datetime.format(new Date(), "HH:mm:ss")) +
+          colors.dim(datetime.format(new Date(), "HH:mm:ss")) +
           " " +
           levelColor(log.getLevelName(level as log.LogLevel) || "") +
           (scope
-            ? levelColor("(") + fmt.dim(scope) + levelColor("):")
+            ? levelColor("(") + colors.dim(scope) + levelColor("):")
             : levelColor(":")) +
           " " +
           content
