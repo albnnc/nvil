@@ -76,7 +76,7 @@ export class BuildPlugin extends Plugin {
     this.logger.info(`Building ${this.relativeEntryPoint}`);
     await stager.run("BUILD_START", this.buildStageHandlerOptions);
     try {
-      const denoConfigSummary = await this.getDenoConfigSummary();
+      await using denoConfigSummary = await this.getDenoConfigSummary();
       const esbuildConfig: EsbuildOptions = {
         absWorkingDir: path.dirname(path.fromFileUrl(this.absoluteEntryPoint)),
         entryPoints: [this.absoluteEntryPoint],
@@ -95,7 +95,7 @@ export class BuildPlugin extends Plugin {
         ) || "react",
         plugins: [
           EsbuildPluginFactory.noSideEffects(),
-          ...EsbuildPluginFactory.deno(denoConfigSummary.url),
+          ...EsbuildPluginFactory.deno(denoConfigSummary.path),
         ],
       };
       this.overrideEsbuildOptions?.(esbuildConfig);
@@ -151,22 +151,46 @@ export class BuildPlugin extends Plugin {
   }
 
   private async getDenoConfigSummary() {
+    const summary = {
+      url: "" as string,
+      path: "" as string,
+      value: undefined as unknown,
+    };
     for (const relativeUrl of ["./deno.json", "./deno.jsonc"]) {
-      const candidateUrl = new URL(relativeUrl, this.project.sourceUrl);
-      const candidate = await fetch(candidateUrl)
+      const candidateUrl = new URL(relativeUrl, this.project.sourceUrl)
+        .toString();
+      summary.value = await fetch(candidateUrl)
         .then((v) => v.text())
-        .then((v) => {
-          return {
-            value: jsonc.parse(v),
-            url: candidateUrl.toString(),
-          };
-        })
+        .then((v) => jsonc.parse(v))
         .catch(() => undefined);
-      if (candidate) {
-        return candidate;
+      if (summary.value) {
+        summary.url = candidateUrl;
+        break;
       }
     }
-    throw new Error("Failed to get Deno config");
+    if (!summary.value) {
+      throw new Error("Failed to get Deno config");
+    }
+    if (summary.url.startsWith("file:")) {
+      summary.path = path.fromFileUrl(summary.url);
+      return {
+        ...summary,
+        async [Symbol.asyncDispose]() {
+          // Doing nothing.
+        },
+      };
+    }
+    summary.path = await Deno.makeTempFile();
+    await Deno.writeTextFile(
+      summary.path,
+      JSON.stringify(summary.value, null, 2),
+    );
+    return {
+      ...summary,
+      async [Symbol.asyncDispose]() {
+        await Deno.remove(summary.path).catch(() => undefined);
+      },
+    };
   }
 }
 
@@ -190,7 +214,7 @@ export class EsbuildPluginFactory {
     };
   }
 
-  static deno(denoConfigUrl: string): EsbuildPlugin[] {
-    return esbuildDenoPlugins({ configPath: path.fromFileUrl(denoConfigUrl) });
+  static deno(configPath: string): EsbuildPlugin[] {
+    return esbuildDenoPlugins({ configPath });
   }
 }
