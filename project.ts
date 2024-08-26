@@ -11,16 +11,16 @@ export interface ProjectOptions {
 }
 
 export class Project implements AsyncDisposable {
-  stager: Stager = new Stager();
-  bundle: Bundle = new Bundle();
   plugins: Plugin[];
   sourceUrl: string;
   targetUrl: string;
   dev?: boolean;
-
+  stager: Stager = new Stager();
+  bundle: Bundle = new Bundle();
   logger: ScopeLogger = new ScopeLogger("PROJECT");
-  donePWR: PromiseWithResolvers<void> = Promise.withResolvers();
-  bootstrapped = false;
+
+  #donePwr: PromiseWithResolvers<void> = Promise.withResolvers();
+  #bootstrapped = false;
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
@@ -37,41 +37,41 @@ export class Project implements AsyncDisposable {
       this.logger.info("No plugins found");
       return;
     }
-    if (this.bootstrapped) {
+    if (this.#bootstrapped) {
       throw new Error("Already bootstrapped");
     }
-    this.bootstrapped = true;
-    await this.applyPlugins();
-    await this.runFirstCycle();
+    this.#bootstrapped = true;
+    await this.#applyPlugins();
+    await this.#runFirstCycle();
     if (this.dev) {
-      this.watch();
+      this.#watch();
     } else {
-      this.donePWR.resolve();
+      this.#donePwr.resolve();
     }
   }
 
   async done(this: Project): Promise<void> {
-    await this.donePWR.promise;
+    await this.#donePwr.promise;
   }
 
   async [Symbol.asyncDispose](this: Project) {
     await Promise.all(this.plugins.map((v) => v[Symbol.asyncDispose]()));
   }
 
-  private async applyPlugins(this: Project): Promise<void> {
+  async #applyPlugins(this: Project): Promise<void> {
     for (const plugin of this.plugins) {
       await plugin.apply({ project: this });
     }
   }
 
-  private async runFirstCycle(this: Project): Promise<void> {
+  async #runFirstCycle(this: Project): Promise<void> {
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
     await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
   }
 
-  private async watch(this: Project): Promise<void> {
+  async #watch(this: Project): Promise<void> {
     while (true) {
       await this.stager.waitCycle();
       const changes = this.bundle.getChanges();
