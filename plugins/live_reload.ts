@@ -6,13 +6,13 @@ export interface LiveReloadPluginOptions {
 }
 
 export class LiveReloadPlugin extends Plugin {
-  scope?: string;
-  port = getAvailablePort({ preferredPort: 43000 });
-  callbacks = new Map<string, () => void>();
+  #scope?: string;
+  #port = getAvailablePort({ preferredPort: 43000 });
+  #callbacks = new Map<string, () => void>();
 
-  get liveReloadScript() {
+  get #liveReloadScript() {
     return `
-      const eventSource = new EventSource("http://localhost:${this.port}");
+      const eventSource = new EventSource("http://localhost:${this.#port}");
       eventSource.addEventListener("message", () => {
         location.reload();
       });
@@ -23,7 +23,7 @@ export class LiveReloadPlugin extends Plugin {
 
   constructor(options: LiveReloadPluginOptions = {}) {
     super("LIVE_RELOAD");
-    this.scope = options.scope;
+    this.#scope = options.scope;
   }
 
   apply(options: PluginApplyOptions) {
@@ -31,11 +31,11 @@ export class LiveReloadPlugin extends Plugin {
     if (!this.project.dev) {
       return;
     }
-    this.serve();
+    this.#serve();
     const scriptUrl = "./live-reload.js";
     this.project.stager.on("BOOTSTRAP", async () => {
       const encoder = new TextEncoder();
-      const data = encoder.encode(this.liveReloadScript);
+      const data = encoder.encode(this.#liveReloadScript);
       this.logger.info(`Populating ${scriptUrl}`);
       this.project.bundle.set(scriptUrl, { data });
       await this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE");
@@ -47,7 +47,7 @@ export class LiveReloadPlugin extends Plugin {
       const shouldReload = (changes as string[])
         .reduce<boolean>((p, v) => {
           const entry = this.project.bundle.get(v);
-          return p || !!(entry && entry.scope === this.scope);
+          return p || !!(entry && entry.scope === this.#scope);
         }, false);
       if (!shouldReload) {
         return;
@@ -56,10 +56,10 @@ export class LiveReloadPlugin extends Plugin {
     });
   }
 
-  // TODO: Implement disposal.
-  private serve() {
+  #serve() {
     Deno.serve({
-      port: this.port,
+      signal: this.disposalSignal,
+      port: this.#port,
       onListen: ({ hostname, port }) => {
         this.logger.info(`Listening events on ${hostname}:${port}`);
       },
@@ -71,7 +71,7 @@ export class LiveReloadPlugin extends Plugin {
       }
       if (req.method === "GET") {
         const id = crypto.randomUUID();
-        const { callbacks } = this;
+        const callbacks = this.#callbacks;
         const body = new ReadableStream({
           start(controller) {
             callbacks.set(id, () => controller.enqueue(`data: null\n\n`));
@@ -103,6 +103,6 @@ export class LiveReloadPlugin extends Plugin {
 
   private reload() {
     this.logger.info("Reloading");
-    this.callbacks.forEach((fn) => fn());
+    this.#callbacks.forEach((fn) => fn());
   }
 }

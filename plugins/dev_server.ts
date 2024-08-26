@@ -3,8 +3,6 @@ import * as path from "@std/path";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 
 export class DevServerPlugin extends Plugin {
-  private httpServer?: Deno.HttpServer;
-
   constructor() {
     super("DEV_SERVER");
   }
@@ -15,33 +13,27 @@ export class DevServerPlugin extends Plugin {
       return;
     }
     this.project.stager.on("BOOTSTRAP", () => {
-      const indexHtmlUrl = new URL(
-        "./index.html",
-        this.project.targetUrl,
-      ).toString();
-      this.httpServer = Deno.serve({
-        handler: (req) => {
-          return (
-            fileServer
-              .serveDir(req, {
-                fsRoot: path.fromFileUrl(this.project.targetUrl),
-                quiet: true,
-              })
-              .then((v) =>
-                v.status === 404
-                  ? fileServer.serveFile(req, path.fromFileUrl(indexHtmlUrl))
-                  : v
-              )
-          );
-        },
+      const indexHtmlUrl = new URL("./index.html", this.project.targetUrl)
+        .toString();
+      Deno.serve({
+        signal: this.disposalSignal,
         onListen: ({ hostname, port }) => {
           this.logger.info(`Listening on ${hostname}:${port}`);
         },
+      }, (request) => {
+        return (
+          fileServer
+            .serveDir(request, {
+              fsRoot: path.fromFileUrl(this.project.targetUrl),
+              quiet: true,
+            })
+            .then((v) =>
+              v.status === 404
+                ? fileServer.serveFile(request, path.fromFileUrl(indexHtmlUrl))
+                : v
+            )
+        );
       });
     });
-  }
-
-  async [Symbol.asyncDispose]() {
-    await this.httpServer?.[Symbol.asyncDispose]();
   }
 }

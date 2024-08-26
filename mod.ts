@@ -9,4 +9,3 @@ export * from "./plugins/live_reload.ts";
 export * from "./plugins/run.ts";
 export * from "./project.ts";
 export * from "./stager.ts";
-export * from "./utils/scope_logger.ts";

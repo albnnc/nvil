@@ -23,25 +23,24 @@ export interface CopyPluginOptions {
 }
 
 export class CopyPlugin extends Plugin {
-  entryPoint: string;
-  bundleUrl?: string;
-  glob?: boolean;
+  #entryPoint: string;
+  #bundleUrl?: string;
+  #glob?: boolean;
+  #fsWatcher?: Deno.FsWatcher;
 
-  private fsWatcher?: Deno.FsWatcher;
-
-  private get absoluteUrl(): string {
-    return new URL(this.entryPoint, this.project.sourceUrl).toString();
+  get #absoluteUrl(): string {
+    return new URL(this.#entryPoint, this.project.sourceUrl).toString();
   }
 
-  private get relativeUrl(): string {
-    return relativiseUrl(this.entryPoint, this.project.sourceUrl);
+  get #relativeUrl(): string {
+    return relativiseUrl(this.#entryPoint, this.project.sourceUrl);
   }
 
   constructor(options: CopyPluginOptions) {
     super("COPY");
-    this.entryPoint = options.entryPoint;
-    this.bundleUrl = options.bundleUrl;
-    this.glob = options.glob;
+    this.#entryPoint = options.entryPoint;
+    this.#bundleUrl = options.bundleUrl;
+    this.#glob = options.glob;
   }
 
   apply(this: CopyPlugin, options: PluginApplyOptions) {
@@ -60,9 +59,9 @@ export class CopyPlugin extends Plugin {
       const arrayBuffer = await v.arrayBuffer();
       return new Uint8Array(arrayBuffer);
     });
-    if (this.bundleUrl) {
+    if (this.#bundleUrl) {
       const fileUrlSegments = fileUrl.split("/");
-      const absoluteBundleUrl = new URL(this.bundleUrl, this.project.targetUrl)
+      const absoluteBundleUrl = new URL(this.#bundleUrl, this.project.targetUrl)
         .toString();
       const absoluteFileBundleUrl = new URL(
         fileUrlSegments[fileUrlSegments.length - 1],
@@ -81,15 +80,15 @@ export class CopyPlugin extends Plugin {
 
   async copy(this: CopyPlugin) {
     const { stager } = this.project;
-    this.logger.info(`Copying ${decodeURIComponent(this.relativeUrl)}`);
+    this.logger.info(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
     await stager.run("COPY_START");
-    if (this.glob) {
-      if (!this.absoluteUrl.startsWith("file:")) {
+    if (this.#glob) {
+      if (!this.#absoluteUrl.startsWith("file:")) {
         throw new Error("Glob to copy must be a file: URL");
       }
       const fileUrls: string[] = [];
       const fsWalker = fs.expandGlob(
-        path.fromFileUrl(decodeURIComponent(this.absoluteUrl)),
+        path.fromFileUrl(decodeURIComponent(this.#absoluteUrl)),
       );
       for await (const v of fsWalker) {
         if (v.isFile) {
@@ -98,27 +97,27 @@ export class CopyPlugin extends Plugin {
       }
       await Promise.all(fileUrls.map((v) => this.copyFile(v)));
     } else {
-      await this.copyFile(this.absoluteUrl);
+      await this.copyFile(this.#absoluteUrl);
     }
     await stager.run("COPY_END");
   }
 
   async watch(this: CopyPlugin) {
-    const targetRegExp = this.absoluteUrl.startsWith("file:")
-      ? path.globToRegExp(path.fromFileUrl(this.absoluteUrl), {
+    const targetRegExp = this.#absoluteUrl.startsWith("file:")
+      ? path.globToRegExp(path.fromFileUrl(this.#absoluteUrl), {
         globstar: true,
       })
       : undefined;
     if (!targetRegExp) {
       return;
     }
-    this.logger.info(`Watching ${decodeURIComponent(this.relativeUrl)}`);
+    this.logger.info(`Watching ${decodeURIComponent(this.#relativeUrl)}`);
     const dirToWatch = path.dirname(
-      path.fromFileUrl(this.absoluteUrl).replace(/\*.*$/, ""),
+      path.fromFileUrl(this.#absoluteUrl).replace(/\*.*$/, ""),
     );
-    this.fsWatcher = Deno.watchFs(dirToWatch);
+    this.#fsWatcher = Deno.watchFs(dirToWatch);
     const debounced = async.debounce(() => this.copy(), 200);
-    for await (const event of this.fsWatcher) {
+    for await (const event of this.#fsWatcher) {
       if (
         event.paths.some((v) => targetRegExp.test(v)) &&
         (event.kind === "modify" ||
@@ -132,6 +131,6 @@ export class CopyPlugin extends Plugin {
 
   // deno-lint-ignore require-await
   async [Symbol.asyncDispose](this: CopyPlugin) {
-    this.fsWatcher?.[Symbol.dispose]();
+    this.#fsWatcher?.[Symbol.dispose]();
   }
 }

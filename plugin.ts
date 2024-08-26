@@ -9,7 +9,8 @@ export abstract class Plugin implements AsyncDisposable {
   name: string;
   logger: ScopeLogger;
 
-  private applyOptions?: PluginApplyOptions;
+  #project?: Project;
+  #disposalAbortController = new AbortController();
 
   constructor(name: string) {
     this.name = name;
@@ -17,20 +18,25 @@ export abstract class Plugin implements AsyncDisposable {
   }
 
   get project(): Project {
-    if (!this.applyOptions) {
+    if (!this.#project) {
       throw new Error("Unapplied");
     }
-    return this.applyOptions.project;
+    return this.#project;
+  }
+
+  get disposalSignal(): AbortSignal {
+    return this.#disposalAbortController.signal;
   }
 
   apply(this: Plugin, options: PluginApplyOptions): void | Promise<void> {
-    if (this.applyOptions) {
+    if (this.#project) {
       throw new Error("Already applied");
     }
-    this.applyOptions = options;
+    this.#project = options.project;
   }
 
+  // deno-lint-ignore require-await
   async [Symbol.asyncDispose]() {
-    // Does nothing by default.
+    this.#disposalAbortController.abort();
   }
 }

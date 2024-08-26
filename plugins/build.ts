@@ -25,40 +25,39 @@ export interface BuildStageHandlerOptions {
 }
 
 export class BuildPlugin extends Plugin {
-  encoder: TextEncoder = new TextEncoder();
-  entryPoint: string;
-  bundleMetaUrl?: string;
-  scope?: string;
-  overrideEsbuildOptions?: (options: EsbuildOptions) => void;
+  #entryPoint: string;
+  #bundleMetaUrl?: string;
+  #scope?: string;
+  #overrideEsbuildOptions?: (options: EsbuildOptions) => void;
+  #encoder: TextEncoder = new TextEncoder();
+  #moduleWatcher?: ModuleWatcher;
 
-  private moduleWatcher?: ModuleWatcher;
-
-  private get absoluteEntryPoint(): string {
-    return new URL(this.entryPoint, this.project.sourceUrl).toString();
+  get #absoluteEntryPoint(): string {
+    return new URL(this.#entryPoint, this.project.sourceUrl).toString();
   }
 
-  private get relativeEntryPoint(): string {
-    return relativiseUrl(this.absoluteEntryPoint, this.project.sourceUrl);
+  get #relativeEntryPoint(): string {
+    return relativiseUrl(this.#absoluteEntryPoint, this.project.sourceUrl);
   }
 
-  private get bundleUrl(): string {
-    return this.relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
+  get #bundleUrl(): string {
+    return this.#relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
   }
 
-  private get buildStageHandlerOptions(): BuildStageHandlerOptions {
+  get #buildStageHandlerOptions(): BuildStageHandlerOptions {
     return {
-      entryPoint: this.absoluteEntryPoint,
-      bundleUrl: this.bundleUrl,
-      bundleMetaUrl: this.bundleMetaUrl,
+      entryPoint: this.#absoluteEntryPoint,
+      bundleUrl: this.#bundleUrl,
+      bundleMetaUrl: this.#bundleMetaUrl,
     };
   }
 
   constructor(public options: BuildPluginOptions) {
     super("BUILD");
-    this.entryPoint = options.entryPoint;
-    this.bundleMetaUrl = options.bundleMetaUrl;
-    this.scope = options.scope;
-    this.overrideEsbuildOptions = options.overrideEsbuildOptions;
+    this.#entryPoint = options.entryPoint;
+    this.#bundleMetaUrl = options.bundleMetaUrl;
+    this.#scope = options.scope;
+    this.#overrideEsbuildOptions = options.overrideEsbuildOptions;
   }
 
   apply(this: BuildPlugin, options: PluginApplyOptions) {
@@ -73,16 +72,16 @@ export class BuildPlugin extends Plugin {
 
   async build(this: BuildPlugin) {
     const { bundle, stager, dev } = this.project;
-    this.logger.info(`Building ${this.relativeEntryPoint}`);
-    await stager.run("BUILD_START", this.buildStageHandlerOptions);
+    this.logger.info(`Building ${this.#relativeEntryPoint}`);
+    await stager.run("BUILD_START", this.#buildStageHandlerOptions);
     try {
-      await using denoConfigSummary = await this.getDenoConfigSummary();
+      await using denoConfigSummary = await this.#getDenoConfigSummary();
       const esbuildConfig: EsbuildOptions = {
-        absWorkingDir: path.dirname(path.fromFileUrl(this.absoluteEntryPoint)),
-        entryPoints: [this.absoluteEntryPoint],
+        absWorkingDir: path.dirname(path.fromFileUrl(this.#absoluteEntryPoint)),
+        entryPoints: [this.#absoluteEntryPoint],
         write: false,
         bundle: true,
-        metafile: !!this.bundleMetaUrl,
+        metafile: !!this.#bundleMetaUrl,
         minify: !dev,
         target: "esnext",
         platform: "browser",
@@ -98,22 +97,22 @@ export class BuildPlugin extends Plugin {
           ...EsbuildPluginFactory.deno(denoConfigSummary.path),
         ],
       };
-      this.overrideEsbuildOptions?.(esbuildConfig);
+      this.#overrideEsbuildOptions?.(esbuildConfig);
       const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
       const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
       if (!mainOutputFile) {
         return;
       }
-      bundle.set(this.bundleUrl, {
+      bundle.set(this.#bundleUrl, {
         data: mainOutputFile.contents,
-        scope: this.scope,
+        scope: this.#scope,
       });
-      if (this.bundleMetaUrl) {
-        bundle.set(this.bundleMetaUrl, {
-          data: this.encoder.encode(JSON.stringify(metafile)),
+      if (this.#bundleMetaUrl) {
+        bundle.set(this.#bundleMetaUrl, {
+          data: this.#encoder.encode(JSON.stringify(metafile)),
         });
       }
-      await stager.run("BUILD_END", this.buildStageHandlerOptions);
+      await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
         this.logger.error(e.message);
@@ -124,17 +123,17 @@ export class BuildPlugin extends Plugin {
   }
 
   async watch(this: BuildPlugin) {
-    if (!this.absoluteEntryPoint.startsWith("file:")) {
+    if (!this.#absoluteEntryPoint.startsWith("file:")) {
       return;
     }
-    this.logger.info(`Watching ${this.relativeEntryPoint}`);
-    this.moduleWatcher = new ModuleWatcher({
-      specifier: this.absoluteEntryPoint,
+    this.logger.info(`Watching ${this.#relativeEntryPoint}`);
+    this.#moduleWatcher = new ModuleWatcher({
+      specifier: this.#absoluteEntryPoint,
     });
     const debounced = async.debounce(() => {
       this.build();
     }, 200);
-    for await (const event of this.moduleWatcher || []) {
+    for await (const event of this.#moduleWatcher || []) {
       if (
         event.kind === "modify" ||
         event.kind === "create" ||
@@ -147,10 +146,10 @@ export class BuildPlugin extends Plugin {
 
   // deno-lint-ignore require-await
   async [Symbol.asyncDispose](this: BuildPlugin) {
-    this.moduleWatcher?.[Symbol.dispose]();
+    this.#moduleWatcher?.[Symbol.dispose]();
   }
 
-  private async getDenoConfigSummary() {
+  async #getDenoConfigSummary() {
     const summary = {
       url: "" as string,
       path: "" as string,

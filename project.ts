@@ -11,7 +11,6 @@ export interface ProjectOptions {
 }
 
 export class Project implements AsyncDisposable {
-  logger: ScopeLogger = new ScopeLogger("Project");
   stager: Stager = new Stager();
   bundle: Bundle = new Bundle();
   plugins: Plugin[];
@@ -19,8 +18,9 @@ export class Project implements AsyncDisposable {
   targetUrl: string;
   dev?: boolean;
 
-  bootstrapped = false;
+  logger: ScopeLogger = new ScopeLogger("PROJECT");
   donePWR: PromiseWithResolvers<void> = Promise.withResolvers();
+  bootstrapped = false;
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
