@@ -3,7 +3,6 @@ import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 
 export interface LiveReloadPluginOptions {
   scope?: string;
-  url?: string;
 }
 
 export class LiveReloadPlugin extends Plugin {
