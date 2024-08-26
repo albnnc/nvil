@@ -61,6 +61,9 @@ export class LiveReloadPlugin extends Plugin {
   private serve() {
     Deno.serve({
       port: this.port,
+      onListen: ({ hostname, port }) => {
+        this.logger.info(`Listening events on ${hostname}:${port}`);
+      },
     }, (req) => {
       if (req.method === "OPTIONS") {
         return new Response(null, {

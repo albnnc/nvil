@@ -35,7 +35,7 @@ export class DevServerPlugin extends Plugin {
           );
         },
         onListen: ({ hostname, port }) => {
-          this.logger.info(`Listening ${hostname}:${port}`);
+          this.logger.info(`Listening on ${hostname}:${port}`);
         },
       });
     });
