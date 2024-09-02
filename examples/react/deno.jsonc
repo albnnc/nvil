@@ -1,22 +1,12 @@
 {
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "jsxImportSourceTypes": "@types/react",
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable",
-      "dom.asynciterable",
-      "deno.ns"
-    ]
-  },
-  "lock": false,
   "imports": {
     "@types/react": "npm:@types/react@18",
     "react": "npm:react@18.2.0",
     "react-dom": "npm:react-dom@18.2.0",
-    // ?
+    // "@albnnc/nvil": "jsr:@albnnc/nvil"
+    //
+    // The following is for local development
+    // and can be replaced with line commented above.
     "@albnnc/nvil": "../../mod.ts",
     "@deno/graph": "jsr:@deno/graph@0.81.2",
     "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@0.10.3",
