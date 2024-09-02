@@ -1,11 +1,15 @@
-/// <reference no-default-lib="true" />
-/// <reference lib="dom" />
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.unstable" />
+import { useState } from "react";
+import { createRoot } from "react-dom/client";
 
-import { render } from "react-dom";
-import { App } from "./app.tsx";
+const App = () => {
+  const [value, setValue] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setValue(value + 1)}>Value is {value}</button>
+    </div>
+  );
+};
 
-const root = document.getElementById("root");
-
-render(<App />, root);
+const container = document.getElementById("root");
+const root = createRoot(container!);
+root.render(<App />);

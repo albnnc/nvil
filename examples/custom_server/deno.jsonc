@@ -1,9 +1,9 @@
 {
   "lock": false,
   "imports": {
-    "@types/react": "npm:@types/react@18",
-    "react": "npm:react@18.2.0",
-    "react-dom": "npm:react-dom@18.2.0",
+    "@types/react": "npm:@types/react@18.3",
+    "react": "npm:react@18.3.1",
+    "react-dom": "npm:react-dom@18.3.1",
     // "@albnnc/nvil": "jsr:@albnnc/nvil"
     //
     // The following is for local development

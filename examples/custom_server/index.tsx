@@ -1,4 +1,4 @@
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 
 const App = () => {
   return (
@@ -15,6 +15,6 @@ const App = () => {
   );
 };
 
-const root = document.getElementById("root");
-
-render(<App />, root);
+const container = document.getElementById("root");
+const root = createRoot(container!);
+root.render(<App />);

@@ -1,6 +1,23 @@
-import { render } from "react-dom";
-import { App } from "./app.tsx";
+import { createRoot } from "react-dom/client";
 
-const root = document.getElementById("root");
+const App = () => {
+  return (
+    <div
+      css={{
+        display: "inline-block",
+        padding: "1rem",
+        borderRadius: "4px",
+        background: "green",
+        color: "white",
+        fontFamily: "sans-serif",
+        fontWeight: 600,
+      }}
+    >
+      TEST
+    </div>
+  );
+};
 
-render(<App />, root);
+const container = document.getElementById("root");
+const root = createRoot(container!);
+root.render(<App />);
