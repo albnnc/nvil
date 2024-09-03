@@ -14,7 +14,7 @@ export abstract class Plugin implements AsyncDisposable {
 
   constructor(name: string) {
     this.name = name;
-    this.logger = new ScopeLogger("PROJECT", "INFO");
+    this.logger = new ScopeLogger(this.name, "INFO");
   }
 
   get project(): Project {

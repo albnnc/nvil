@@ -10,10 +10,15 @@ import {
 } from "@std/log";
 
 export class ScopeLogger extends Logger {
-  constructor(loggerName: string, levelName: LevelName) {
-    super(loggerName, levelName, {
-      handlers: [new ScopeHandler(() => this.loggerName)],
-    });
+  scope: string;
+
+  constructor(scope: string, levelName: LevelName) {
+    super(
+      "SCOPE",
+      levelName,
+      { handlers: [new ScopeHandler(() => this.scope)] },
+    );
+    this.scope = scope;
   }
 }
 
