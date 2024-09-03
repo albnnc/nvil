@@ -27,6 +27,11 @@
   },
   "exports": "./mod.ts",
   "publish": {
-    "exclude": ["./examples"]
+    "exclude": [
+      "./examples",
+      "./.editorconfig",
+      "./gitignore",
+      "./dprint.json"
+    ]
   }
 }
