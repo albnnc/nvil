@@ -33,10 +33,7 @@ export class Project implements AsyncDisposable {
     ).toString();
     this.dev = options.dev;
     this.debug = options.debug;
-    this.logger = new ScopeLogger({
-      scope: "PROJECT",
-      debug: options.debug,
-    });
+    this.logger = new ScopeLogger("PROJECT", this.debug ? "DEBUG" : "INFO");
   }
 
   async bootstrap(this: Project): Promise<void> {
