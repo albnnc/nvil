@@ -1,95 +1,115 @@
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import { getAvailablePort } from "@std/net";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 
 export interface LiveReloadPluginOptions {
   scope?: string;
-  url?: string;
 }
 
 export class LiveReloadPlugin extends Plugin {
-  scope?: string;
-  url?: string;
+  #scope?: string;
+  #port = getAvailablePort({ preferredPort: 43000 });
+  #callbacks = new Map<string, () => void>();
+
+  get #liveReloadScript() {
+    return `
+      new EventSource("http://localhost:${this.#port}")
+        .addEventListener("message", () => {
+          location.reload();
+        });
+    `
+      .trim()
+      .replace(/\s+/g, " ");
+  }
 
   constructor(options: LiveReloadPluginOptions = {}) {
     super("LIVE_RELOAD");
-    this.scope = options.scope;
-    this.url = options.url;
+    this.#scope = options.scope;
   }
 
-  apply(this: LiveReloadPlugin, options: PluginApplyOptions) {
+  apply(options: PluginApplyOptions) {
     super.apply(options);
     if (!this.project.dev) {
       return;
     }
+    this.#serve();
     const scriptUrl = "./live-reload.js";
     this.project.stager.on("BOOTSTRAP", async () => {
+      this.logger.debug(`Populating ${scriptUrl}`);
       const encoder = new TextEncoder();
-      const data = encoder.encode(LiveReloadPlugin.liveReloadScript);
-      this.logger.info(`Populating ${scriptUrl}`);
-      this.project.bundle.set(scriptUrl, { data });
+      const data = encoder.encode(this.#liveReloadScript);
+      this.project.bundle.set(scriptUrl, {
+        data,
+        scope: [this.#scope, "LIVE_RELOAD"]
+          .filter((v) => v).join("_"),
+      });
       await this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE");
     });
-    this.project.stager.on("WRITE_END", async (changes) => {
+    this.project.stager.on("WRITE_END", (changes) => {
       if (!this.project.bundle.has(scriptUrl)) {
         return;
       }
-      const shouldReload = (changes as string[]).reduce<boolean>((p, v) => {
-        const entry = this.project.bundle.get(v);
-        return p || !!(entry && entry.scope === this.scope);
-      }, false);
+      for (const change of changes as string[]) {
+        this.logger.debug(`Handling change of ${change}`);
+      }
+      const shouldReload = (changes as string[])
+        .reduce<boolean>((p, v) => {
+          const entry = this.project.bundle.get(v);
+          return p || !!(entry && entry.scope === this.#scope);
+        }, false);
       if (!shouldReload) {
         return;
       }
-      this.logger.info("Reloading");
-      await fetch(
-        new URL("/live-reload-events", this.url ?? "http://localhost:8000"),
-        { method: "POST" },
-      )
-        .then(async (v) => {
-          await v.body?.cancel();
-          if (!v.ok) {
-            this.logger.warn("Unable to request reload");
-          }
-        })
-        .catch(() => undefined);
+      this.reload();
     });
   }
 
-  static liveReloadScript = `
-    const eventSource = new EventSource("/live-reload-events");
-    eventSource.addEventListener("message", () => {
-      location.reload();
+  #serve() {
+    Deno.serve({
+      signal: this.disposalSignal,
+      port: this.#port,
+      onListen: ({ hostname, port }) => {
+        this.logger.debug(`Listening events on ${hostname}:${port}`);
+      },
+    }, (req) => {
+      if (req.method === "OPTIONS") {
+        return new Response(null, {
+          headers: { "Access-Control-Allow-Origin": "*" },
+        });
+      }
+      if (req.method === "GET") {
+        const id = crypto.randomUUID();
+        const callbacks = this.#callbacks;
+        const body = new ReadableStream({
+          start(controller) {
+            callbacks.set(id, () => controller.enqueue(`data: null\n\n`));
+          },
+          cancel() {
+            callbacks.delete(id);
+          },
+        });
+        return new Response(body.pipeThrough(new TextEncoderStream()), {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      }
+      if (req.method === "POST") {
+        this.reload();
+        return new Response(null, {
+          status: 200,
+          headers: { "Access-Control-Allow-Origin": "*" },
+        });
+      }
+      return new Response(null, {
+        status: 404,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
     });
-  `
-    .trim()
-    .replace(/\s+/g, " ");
-
-  static handleLiveReloadRequest(request: Request) {
-    const { pathname } = new URL(request.url);
-    if (pathname !== "/live-reload-events") {
-      return;
-    }
-    if (request.method === "GET") {
-      const id = crypto.randomUUID();
-      const body = new ReadableStream({
-        start(controller) {
-          LiveReloadPlugin.callbacks.set(
-            id,
-            () => controller.enqueue(`data: null\n\n`),
-          );
-        },
-        cancel() {
-          LiveReloadPlugin.callbacks.delete(id);
-        },
-      });
-      return new Response(body.pipeThrough(new TextEncoderStream()), {
-        headers: { "Content-Type": "text/event-stream" },
-      });
-    }
-    if (request.method === "POST") {
-      LiveReloadPlugin.callbacks.forEach((fn) => fn());
-      return new Response(null, { status: 200 });
-    }
   }
 
-  private static callbacks = new Map<string, () => void>();
+  private reload() {
+    this.logger.debug("Reloading");
+    this.#callbacks.forEach((fn) => fn());
+  }
 }

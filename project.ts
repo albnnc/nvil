@@ -1,82 +1,84 @@
-import { ScopeLogger } from "./_utils/scope_logger.ts";
 import { Bundle } from "./bundle.ts";
-import { Stager } from "./mod.ts";
-import { Plugin } from "./plugin.ts";
+import type { Plugin } from "./plugin.ts";
+import { Stager } from "./stager.ts";
+import { ScopeLogger } from "./utils/scope_logger.ts";
 
 export interface ProjectOptions {
   plugins: Plugin[];
-  rootUrl: string;
+  sourceUrl: string;
   targetUrl: string;
-  importMapUrl?: string;
   dev?: boolean;
+  debug?: boolean;
 }
 
 export class Project implements AsyncDisposable {
-  logger = new ScopeLogger("Project");
-  stager = new Stager();
-  bundle = new Bundle();
   plugins: Plugin[];
-  rootUrl: string;
+  sourceUrl: string;
   targetUrl: string;
-  importMapUrl?: string;
   dev?: boolean;
+  debug?: boolean;
+  logger: ScopeLogger;
+  stager: Stager = new Stager();
+  bundle: Bundle = new Bundle();
 
-  bootstrapped = false;
-  donePWR = Promise.withResolvers<void>();
+  #donePwr: PromiseWithResolvers<void> = Promise.withResolvers();
+  #bootstrapped = false;
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
-    this.rootUrl = new URL("./", options.rootUrl).toString();
+    this.sourceUrl = new URL("./", options.sourceUrl).toString();
     this.targetUrl = new URL(
       "./",
-      new URL(options.targetUrl, this.rootUrl),
+      new URL(options.targetUrl, this.sourceUrl),
     ).toString();
-    this.importMapUrl = options.importMapUrl
-      ? new URL(options.importMapUrl, this.rootUrl).toString()
-      : undefined;
     this.dev = options.dev;
+    this.debug = options.debug;
+    this.logger = new ScopeLogger({
+      scope: "PROJECT",
+      debug: options.debug,
+    });
   }
 
-  async bootstrap(this: Project) {
+  async bootstrap(this: Project): Promise<void> {
     if (!this.plugins.length) {
-      this.logger.info("No plugins found");
+      this.logger.debug("No plugins found");
       return;
     }
-    if (this.bootstrapped) {
+    if (this.#bootstrapped) {
       throw new Error("Already bootstrapped");
     }
-    this.bootstrapped = true;
-    await this.applyPlugins();
-    await this.runFirstCycle();
+    this.#bootstrapped = true;
+    await this.#applyPlugins();
+    await this.#runFirstCycle();
     if (this.dev) {
-      this.watch();
+      this.#watch();
     } else {
-      this.donePWR.resolve();
+      this.#donePwr.resolve();
     }
   }
 
-  async done(this: Project) {
-    await this.donePWR.promise;
+  async done(this: Project): Promise<void> {
+    await this.#donePwr.promise;
   }
 
   async [Symbol.asyncDispose](this: Project) {
     await Promise.all(this.plugins.map((v) => v[Symbol.asyncDispose]()));
   }
 
-  private async applyPlugins(this: Project) {
+  async #applyPlugins(this: Project): Promise<void> {
     for (const plugin of this.plugins) {
       await plugin.apply({ project: this });
     }
   }
 
-  private async runFirstCycle(this: Project) {
+  async #runFirstCycle(this: Project): Promise<void> {
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
     await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
   }
 
-  private async watch(this: Project) {
+  async #watch(this: Project): Promise<void> {
     while (true) {
       await this.stager.waitCycle();
       const changes = this.bundle.getChanges();

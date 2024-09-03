@@ -1,14 +1,14 @@
 {
-  "name": "@albnnc/nvil",
-  "version": "0.6.1",
-  "tasks": {
-    "fmt": "dprint fmt",
-    "fmt:check": "dprint check",
-    "lint:check": "deno lint"
-  },
-  "exclude": ["./**/.git", "./**/.target"],
   "lock": false,
   "imports": {
+    "@types/react": "npm:@types/react@18.3",
+    "react": "npm:react@18.3.1",
+    "react-dom": "npm:react-dom@18.3.1",
+    // "@albnnc/nvil": "jsr:@albnnc/nvil"
+    //
+    // The following is for local development
+    // and can be replaced with commented line above.
+    "@albnnc/nvil": "../../mod.ts",
     "@deno/graph": "jsr:@deno/graph@0.81.2",
     "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@0.10.3",
     "@std/assert": "jsr:@std/assert@1.0.2",
@@ -25,14 +25,16 @@
     "esbuild": "npm:esbuild@0.23.1",
     "mustache": "npm:mustache@4.2.0"
   },
-  "exports": "./mod.ts",
-  "publish": {
-    "exclude": [
-      "./.editorconfig",
-      "./.github",
-      "./.gitignore",
-      "./dprint.json",
-      "./examples"
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "jsxImportSourceTypes": "@types/react",
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
     ]
   }
 }

@@ -1,5 +1,5 @@
-import { ScopeLogger } from "./mod.ts";
-import { Project } from "./project.ts";
+import type { Project } from "./project.ts";
+import { ScopeLogger } from "./utils/scope_logger.ts";
 
 export interface PluginApplyOptions {
   project: Project;
@@ -9,28 +9,43 @@ export abstract class Plugin implements AsyncDisposable {
   name: string;
   logger: ScopeLogger;
 
-  private applyOptions?: PluginApplyOptions;
+  #project?: Project;
+  #disposalAbortController = new AbortController();
 
   constructor(name: string) {
     this.name = name;
-    this.logger = new ScopeLogger(name);
+    this.logger = new ScopeLogger({
+      scope: name,
+      debug: false,
+    });
   }
 
   get project(): Project {
-    if (!this.applyOptions) {
+    if (!this.#project) {
       throw new Error("Unapplied");
     }
-    return this.applyOptions.project;
+    return this.#project;
+  }
+
+  get disposalSignal(): AbortSignal {
+    return this.#disposalAbortController.signal;
   }
 
   apply(this: Plugin, options: PluginApplyOptions): void | Promise<void> {
-    if (this.applyOptions) {
+    if (this.#project) {
       throw new Error("Already applied");
     }
-    this.applyOptions = options;
+    this.#project = options.project;
+    if (this.#project.debug) {
+      this.logger = new ScopeLogger({
+        scope: this.name,
+        debug: true,
+      });
+    }
   }
 
+  // deno-lint-ignore require-await
   async [Symbol.asyncDispose]() {
-    // Does nothing by default.
+    this.#disposalAbortController.abort();
   }
 }

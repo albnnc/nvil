@@ -1,4 +1,3 @@
-export * from "./_utils/scope_logger.ts";
 export * from "./bundle.ts";
 export * from "./plugin.ts";
 export * from "./plugins/build.ts";
@@ -8,6 +7,5 @@ export * from "./plugins/dev_server.ts";
 export * from "./plugins/html_template.ts";
 export * from "./plugins/live_reload.ts";
 export * from "./plugins/run.ts";
-export * from "./plugins/storybook/mod.ts";
 export * from "./project.ts";
 export * from "./stager.ts";

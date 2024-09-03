@@ -1,0 +1,20 @@
+name: Publish
+
+on:
+  push:
+    tags:        
+      - '*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: "1.46.2"
+      - name: Publish to JSR
+        run: deno publish

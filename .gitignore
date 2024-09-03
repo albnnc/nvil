@@ -1,7 +1,6 @@
-**/.cache
-**/.data
 **/.DS_Store
 **/.idea
+**/.target
 **/.vscode
 **/target
 tmp

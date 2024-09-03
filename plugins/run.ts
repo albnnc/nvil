@@ -1,6 +1,6 @@
-import { path } from "../_deps.ts";
-import { relativiseUrl } from "../_utils/relativise_url.ts";
-import { Plugin, PluginApplyOptions } from "../plugin.ts";
+import * as path from "@std/path";
+import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface RunPluginOptions {
   scope: string;
@@ -9,17 +9,16 @@ export interface RunPluginOptions {
 }
 
 export class RunPlugin extends Plugin {
-  scope: string;
-  args?: string[];
-  env?: Record<string, string>;
-
-  private childProcess?: Deno.ChildProcess;
+  #scope: string;
+  #args?: string[];
+  #env?: Record<string, string>;
+  #childProcess?: Deno.ChildProcess;
 
   constructor(options: RunPluginOptions) {
     super("RUN");
-    this.scope = options.scope;
-    this.args = options.args;
-    this.env = options.env;
+    this.#scope = options.scope;
+    this.#args = options.args;
+    this.#env = options.env;
   }
 
   apply(options: PluginApplyOptions) {
@@ -30,7 +29,7 @@ export class RunPlugin extends Plugin {
     this.project.stager.on("WRITE_END", (changes) => {
       for (const v of changes as string[]) {
         const entry = this.project.bundle.get(v);
-        if (entry && entry.scope === this.scope) {
+        if (entry && entry.scope === this.#scope) {
           const absoluteUrl = new URL(v, this.project.targetUrl).toString();
           this.run(absoluteUrl);
         }
@@ -39,18 +38,18 @@ export class RunPlugin extends Plugin {
   }
 
   async [Symbol.asyncDispose]() {
-    await this.childProcess?.[Symbol.asyncDispose]();
+    await this.#childProcess?.[Symbol.asyncDispose]();
   }
 
   private run(entryPoint: string) {
-    this.logger.info(
+    this.logger.debug(
       `Running ${relativiseUrl(entryPoint, this.project.targetUrl)}`,
     );
-    this.childProcess?.[Symbol.asyncDispose]();
-    this.childProcess = new Deno.Command("deno", {
-      args: ["run", ...(this.args ?? []), entryPoint],
+    this.#childProcess?.[Symbol.asyncDispose]();
+    this.#childProcess = new Deno.Command("deno", {
+      args: ["run", ...(this.#args ?? []), entryPoint],
       cwd: path.dirname(path.fromFileUrl(entryPoint)),
-      env: this.env,
+      env: this.#env,
       stdout: "piped",
       stderr: "piped",
     }).spawn();
@@ -71,7 +70,7 @@ export class RunPlugin extends Plugin {
         }
       }
     };
-    handleOutput(this.childProcess.stdout);
-    handleOutput(this.childProcess.stderr, true);
+    handleOutput(this.#childProcess.stdout);
+    handleOutput(this.#childProcess.stderr, true);
   }
 }
