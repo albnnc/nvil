@@ -28,10 +28,11 @@
   "exports": "./mod.ts",
   "publish": {
     "exclude": [
-      "./examples",
       "./.editorconfig",
-      "./gitignore",
-      "./dprint.json"
+      "./.github",
+      "./.gitignore",
+      "./dprint.json",
+      "./examples"
     ]
   }
 }
