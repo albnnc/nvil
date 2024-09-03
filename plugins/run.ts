@@ -42,7 +42,7 @@ export class RunPlugin extends Plugin {
   }
 
   private run(entryPoint: string) {
-    this.logger.info(
+    this.logger.debug(
       `Running ${relativiseUrl(entryPoint, this.project.targetUrl)}`,
     );
     this.#childProcess?.[Symbol.asyncDispose]();

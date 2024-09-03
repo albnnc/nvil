@@ -13,7 +13,7 @@ export class CleanPlugin extends Plugin {
         this.project.targetUrl,
         this.project.sourceUrl,
       );
-      this.logger.info(`Deleting ${relativeTargetUrl}`);
+      this.logger.debug(`Deleting ${relativeTargetUrl}`);
       await Deno
         .remove(
           new URL(this.project.targetUrl),

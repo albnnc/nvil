@@ -8,6 +8,7 @@ export interface ProjectOptions {
   sourceUrl: string;
   targetUrl: string;
   dev?: boolean;
+  debug?: boolean;
 }
 
 export class Project implements AsyncDisposable {
@@ -15,9 +16,10 @@ export class Project implements AsyncDisposable {
   sourceUrl: string;
   targetUrl: string;
   dev?: boolean;
+  debug?: boolean;
+  logger: ScopeLogger;
   stager: Stager = new Stager();
   bundle: Bundle = new Bundle();
-  logger: ScopeLogger = new ScopeLogger("PROJECT");
 
   #donePwr: PromiseWithResolvers<void> = Promise.withResolvers();
   #bootstrapped = false;
@@ -30,11 +32,16 @@ export class Project implements AsyncDisposable {
       new URL(options.targetUrl, this.sourceUrl),
     ).toString();
     this.dev = options.dev;
+    this.debug = options.debug;
+    this.logger = new ScopeLogger({
+      scope: "PROJECT",
+      debug: options.debug,
+    });
   }
 
   async bootstrap(this: Project): Promise<void> {
     if (!this.plugins.length) {
-      this.logger.info("No plugins found");
+      this.logger.debug("No plugins found");
       return;
     }
     if (this.#bootstrapped) {

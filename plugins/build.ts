@@ -73,6 +73,7 @@ export class BuildPlugin extends Plugin {
   async build(this: BuildPlugin) {
     const { bundle, stager, dev } = this.project;
     this.logger.info(`Building ${this.#relativeEntryPoint}`);
+    const buildStart = performance.now();
     await stager.run("BUILD_START", this.#buildStageHandlerOptions);
     try {
       await using denoConfigSummary = await this.#getDenoConfigSummary();
@@ -87,6 +88,7 @@ export class BuildPlugin extends Plugin {
         platform: "browser",
         format: "esm",
         define: { "import.meta.main": "false" },
+        logLevel: "silent",
         jsx: "automatic",
         jsxImportSource: get(
           denoConfigSummary.value,
@@ -112,6 +114,11 @@ export class BuildPlugin extends Plugin {
           data: this.#encoder.encode(JSON.stringify(metafile)),
         });
       }
+      const buildEnd = performance.now();
+      this.logger.info(
+        `Done in ${((buildEnd - buildStart) / 1000).toFixed(2)} s`,
+      );
+
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
@@ -126,7 +133,7 @@ export class BuildPlugin extends Plugin {
     if (!this.#absoluteEntryPoint.startsWith("file:")) {
       return;
     }
-    this.logger.info(`Watching ${this.#relativeEntryPoint}`);
+    this.logger.debug(`Watching ${this.#relativeEntryPoint}`);
     this.#moduleWatcher = new ModuleWatcher({
       specifier: this.#absoluteEntryPoint,
     });

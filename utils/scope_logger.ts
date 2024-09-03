@@ -2,23 +2,36 @@ import * as datetime from "@std/datetime";
 import * as colors from "@std/fmt/colors";
 import * as log from "@std/log";
 
+export interface ScopeLoggerOptions {
+  scope: string;
+  debug?: boolean;
+}
+
+export class ScopeLogger extends log.Logger {
+  constructor(options: ScopeLoggerOptions) {
+    super("PROJECT_LOGGER", options.debug ? "DEBUG" : "INFO", {
+      handlers: [new Handler(options)],
+    });
+  }
+}
+
 class Handler extends log.BaseHandler {
-  constructor(getScope: () => string) {
-    super("DEBUG", {
+  constructor(options: ScopeLoggerOptions) {
+    super(options.debug ? "DEBUG" : "INFO", {
       formatter: ({ level, msg }) => {
-        const scope = getScope();
+        const scope = options.scope;
         const levelColor = {
           [log.LogLevels.CRITICAL]: colors.red,
-          [log.LogLevels.DEBUG]: colors.magenta,
           [log.LogLevels.ERROR]: colors.red,
-          [log.LogLevels.INFO]: colors.blue,
-          [log.LogLevels.NOTSET]: colors.yellow,
           [log.LogLevels.WARN]: colors.yellow,
+          [log.LogLevels.INFO]: colors.blue,
+          [log.LogLevels.DEBUG]: colors.magenta,
+          [log.LogLevels.NOTSET]: undefined,
         }[level] || colors.stripAnsiCode;
         let content = colors.stripAnsiCode(msg.trim());
         if (content.includes("\n")) {
           const prefix = "\n  " + colors.dim("|") + " ";
-          content = prefix + content.replace("\n", prefix);
+          content = prefix + content.replace(/\n/g, prefix);
         }
         return (
           colors.dim(datetime.format(new Date(), "HH:mm:ss")) +
@@ -36,13 +49,5 @@ class Handler extends log.BaseHandler {
 
   override log(msg: string) {
     console.log(msg);
-  }
-}
-
-export class ScopeLogger extends log.Logger {
-  constructor(public scope: string) {
-    super("PROJECT_LOGGER", "DEBUG", {
-      handlers: [new Handler(() => this.scope)],
-    });
   }
 }

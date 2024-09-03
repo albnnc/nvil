@@ -14,7 +14,10 @@ export abstract class Plugin implements AsyncDisposable {
 
   constructor(name: string) {
     this.name = name;
-    this.logger = new ScopeLogger(name);
+    this.logger = new ScopeLogger({
+      scope: name,
+      debug: false,
+    });
   }
 
   get project(): Project {
@@ -33,6 +36,12 @@ export abstract class Plugin implements AsyncDisposable {
       throw new Error("Already applied");
     }
     this.#project = options.project;
+    if (this.#project.debug) {
+      this.logger = new ScopeLogger({
+        scope: this.name,
+        debug: true,
+      });
+    }
   }
 
   // deno-lint-ignore require-await

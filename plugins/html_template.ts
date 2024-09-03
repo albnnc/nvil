@@ -34,7 +34,7 @@ export class HtmlTemplatePlugin extends Plugin {
   // TODO: Watch entry point changes.
   async #populate(this: HtmlTemplatePlugin) {
     try {
-      this.logger.info(`Populating ./index.html`);
+      this.logger.debug(`Populating ./index.html`);
       const scriptUrl = Array.from(this.project.bundle.entries())
         .filter(([k, v]) => k.endsWith(".js") && v.scope === this.#scope)
         ?.[0]?.[0];

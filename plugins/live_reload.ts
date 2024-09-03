@@ -12,10 +12,10 @@ export class LiveReloadPlugin extends Plugin {
 
   get #liveReloadScript() {
     return `
-      const eventSource = new EventSource("http://localhost:${this.#port}");
-      eventSource.addEventListener("message", () => {
-        location.reload();
-      });
+      new EventSource("http://localhost:${this.#port}")
+        .addEventListener("message", () => {
+          location.reload();
+        });
     `
       .trim()
       .replace(/\s+/g, " ");
@@ -34,15 +34,22 @@ export class LiveReloadPlugin extends Plugin {
     this.#serve();
     const scriptUrl = "./live-reload.js";
     this.project.stager.on("BOOTSTRAP", async () => {
+      this.logger.debug(`Populating ${scriptUrl}`);
       const encoder = new TextEncoder();
       const data = encoder.encode(this.#liveReloadScript);
-      this.logger.info(`Populating ${scriptUrl}`);
-      this.project.bundle.set(scriptUrl, { data });
+      this.project.bundle.set(scriptUrl, {
+        data,
+        scope: [this.#scope, "LIVE_RELOAD"]
+          .filter((v) => v).join("_"),
+      });
       await this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE");
     });
     this.project.stager.on("WRITE_END", (changes) => {
       if (!this.project.bundle.has(scriptUrl)) {
         return;
+      }
+      for (const change of changes as string[]) {
+        this.logger.debug(`Handling change of ${change}`);
       }
       const shouldReload = (changes as string[])
         .reduce<boolean>((p, v) => {
@@ -61,7 +68,7 @@ export class LiveReloadPlugin extends Plugin {
       signal: this.disposalSignal,
       port: this.#port,
       onListen: ({ hostname, port }) => {
-        this.logger.info(`Listening events on ${hostname}:${port}`);
+        this.logger.debug(`Listening events on ${hostname}:${port}`);
       },
     }, (req) => {
       if (req.method === "OPTIONS") {
@@ -102,7 +109,7 @@ export class LiveReloadPlugin extends Plugin {
   }
 
   private reload() {
-    this.logger.info("Reloading");
+    this.logger.debug("Reloading");
     this.#callbacks.forEach((fn) => fn());
   }
 }

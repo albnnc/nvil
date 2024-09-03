@@ -25,7 +25,8 @@ await using project = new Project({
   ],
   sourceUrl: import.meta.resolve("./"),
   targetUrl: "./.target/",
-  dev: Deno.args[0] === "dev",
+  dev: Deno.args.includes("--dev"),
+  debug: Deno.args.includes("--debug"),
 });
 
 await project.bootstrap();

@@ -80,8 +80,8 @@ export class CopyPlugin extends Plugin {
 
   async copy(this: CopyPlugin) {
     const { stager } = this.project;
-    this.logger.info(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
     await stager.run("COPY_START");
+    this.logger.debug(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
     if (this.#glob) {
       if (!this.#absoluteUrl.startsWith("file:")) {
         throw new Error("Glob to copy must be a file: URL");
@@ -111,7 +111,7 @@ export class CopyPlugin extends Plugin {
     if (!targetRegExp) {
       return;
     }
-    this.logger.info(`Watching ${decodeURIComponent(this.#relativeUrl)}`);
+    this.logger.debug(`Watching ${decodeURIComponent(this.#relativeUrl)}`);
     const dirToWatch = path.dirname(
       path.fromFileUrl(this.#absoluteUrl).replace(/\*.*$/, ""),
     );
