@@ -1,6 +1,6 @@
 {
   "name": "@albnnc/nvil",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "tasks": {
     "fmt": "dprint fmt",
     "fmt:check": "dprint check",
