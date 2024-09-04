@@ -71,6 +71,7 @@ export class Project implements AsyncDisposable {
   async #runFirstCycle(): Promise<void> {
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
+    await this.stager.run("WRITE_START", changes);
     await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
   }
@@ -79,6 +80,10 @@ export class Project implements AsyncDisposable {
     while (true) {
       await this.stager.waitCycle();
       const changes = this.bundle.getChanges();
+      if (!changes.length) {
+        continue;
+      }
+      await this.stager.run("WRITE_START", changes);
       await this.bundle.writeChanges(this.targetUrl);
       await this.stager.run("WRITE_END", changes);
     }
