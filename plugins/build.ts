@@ -78,7 +78,6 @@ export class BuildPlugin extends Plugin {
     try {
       await using denoConfigSummary = await this.#getDenoConfigSummary();
       const esbuildConfig: EsbuildOptions = {
-        absWorkingDir: path.dirname(path.fromFileUrl(this.#absoluteEntryPoint)),
         entryPoints: [this.#absoluteEntryPoint],
         write: false,
         bundle: true,
