@@ -60,7 +60,7 @@ export class BuildPlugin extends Plugin {
     this.#overrideEsbuildOptions = options.overrideEsbuildOptions;
   }
 
-  apply(this: BuildPlugin, options: PluginApplyOptions) {
+  apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       await this.build();
@@ -70,7 +70,7 @@ export class BuildPlugin extends Plugin {
     });
   }
 
-  async build(this: BuildPlugin) {
+  async build() {
     const { bundle, stager, dev } = this.project;
     this.logger.info(`Building ${this.#relativeEntryPoint}`);
     const buildStart = performance.now();
@@ -129,7 +129,7 @@ export class BuildPlugin extends Plugin {
     }
   }
 
-  async watch(this: BuildPlugin) {
+  async watch() {
     if (!this.#absoluteEntryPoint.startsWith("file:")) {
       return;
     }
@@ -152,7 +152,7 @@ export class BuildPlugin extends Plugin {
   }
 
   // deno-lint-ignore require-await
-  async [Symbol.asyncDispose](this: BuildPlugin) {
+  async [Symbol.asyncDispose]() {
     this.#moduleWatcher?.[Symbol.dispose]();
   }
 

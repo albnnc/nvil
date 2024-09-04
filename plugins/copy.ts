@@ -43,7 +43,7 @@ export class CopyPlugin extends Plugin {
     this.#glob = options.glob;
   }
 
-  apply(this: CopyPlugin, options: PluginApplyOptions) {
+  apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       await this.copy();
@@ -53,7 +53,7 @@ export class CopyPlugin extends Plugin {
     });
   }
 
-  async copyFile(this: CopyPlugin, fileUrl: string) {
+  async copyFile(fileUrl: string) {
     const { bundle } = this.project;
     const data = await fetch(fileUrl).then(async (v) => {
       const arrayBuffer = await v.arrayBuffer();
@@ -78,7 +78,7 @@ export class CopyPlugin extends Plugin {
     }
   }
 
-  async copy(this: CopyPlugin) {
+  async copy() {
     const { stager } = this.project;
     await stager.run("COPY_START");
     this.logger.debug(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
@@ -102,7 +102,7 @@ export class CopyPlugin extends Plugin {
     await stager.run("COPY_END");
   }
 
-  async watch(this: CopyPlugin) {
+  async watch() {
     const targetRegExp = this.#absoluteUrl.startsWith("file:")
       ? path.globToRegExp(path.fromFileUrl(this.#absoluteUrl), {
         globstar: true,
@@ -130,7 +130,7 @@ export class CopyPlugin extends Plugin {
   }
 
   // deno-lint-ignore require-await
-  async [Symbol.asyncDispose](this: CopyPlugin) {
+  async [Symbol.asyncDispose]() {
     this.#fsWatcher?.[Symbol.dispose]();
   }
 }

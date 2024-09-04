@@ -7,7 +7,7 @@ export class DevServerPlugin extends Plugin {
     super("DEV_SERVER");
   }
 
-  apply(this: DevServerPlugin, options: PluginApplyOptions) {
+  apply(options: PluginApplyOptions) {
     super.apply(options);
     if (!this.project.dev) {
       return;

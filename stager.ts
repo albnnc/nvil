@@ -5,7 +5,7 @@ export class Stager {
   #runCount = 0;
   #runCyclePwr = Promise.withResolvers<void>();
 
-  on(this: Stager, stageName: string, fn: StageHandler): () => void {
+  on(stageName: string, fn: StageHandler): () => void {
     if (this.#stages[stageName]) {
       this.#stages[stageName].push(fn);
     } else {
@@ -17,7 +17,7 @@ export class Stager {
     };
   }
 
-  async run(this: Stager, stageName: string, context?: unknown): Promise<void> {
+  async run(stageName: string, context?: unknown): Promise<void> {
     ++this.#runCount;
     for (const fn of this.#stages[stageName] || []) {
       await fn(context);
@@ -29,7 +29,7 @@ export class Stager {
     }
   }
 
-  async waitCycle(this: Stager): Promise<void> {
+  async waitCycle(): Promise<void> {
     return await this.#runCyclePwr.promise;
   }
 }

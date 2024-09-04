@@ -63,6 +63,11 @@ export class LiveReloadPlugin extends Plugin {
     });
   }
 
+  reload() {
+    this.logger.debug("Reloading");
+    this.#callbacks.forEach((fn) => fn());
+  }
+
   #serve() {
     Deno.serve({
       signal: this.disposalSignal,
@@ -106,10 +111,5 @@ export class LiveReloadPlugin extends Plugin {
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     });
-  }
-
-  private reload() {
-    this.logger.debug("Reloading");
-    this.#callbacks.forEach((fn) => fn());
   }
 }

@@ -36,7 +36,7 @@ export class Project implements AsyncDisposable {
     this.logger = new ScopeLogger("PROJECT", this.debug ? "DEBUG" : "INFO");
   }
 
-  async bootstrap(this: Project): Promise<void> {
+  async bootstrap(): Promise<void> {
     if (!this.plugins.length) {
       this.logger.debug("No plugins found");
       return;
@@ -54,28 +54,28 @@ export class Project implements AsyncDisposable {
     }
   }
 
-  async done(this: Project): Promise<void> {
+  async done(): Promise<void> {
     await this.#donePwr.promise;
   }
 
-  async [Symbol.asyncDispose](this: Project) {
+  async [Symbol.asyncDispose]() {
     await Promise.all(this.plugins.map((v) => v[Symbol.asyncDispose]()));
   }
 
-  async #applyPlugins(this: Project): Promise<void> {
+  async #applyPlugins(): Promise<void> {
     for (const plugin of this.plugins) {
       await plugin.apply({ project: this });
     }
   }
 
-  async #runFirstCycle(this: Project): Promise<void> {
+  async #runFirstCycle(): Promise<void> {
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
     await this.bundle.writeChanges(this.targetUrl);
     await this.stager.run("WRITE_END", changes);
   }
 
-  async #watch(this: Project): Promise<void> {
+  async #watch(): Promise<void> {
     while (true) {
       await this.stager.waitCycle();
       const changes = this.bundle.getChanges();

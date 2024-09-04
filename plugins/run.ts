@@ -31,7 +31,7 @@ export class RunPlugin extends Plugin {
         const entry = this.project.bundle.get(v);
         if (entry && entry.scope === this.#scope) {
           const absoluteUrl = new URL(v, this.project.targetUrl).toString();
-          this.run(absoluteUrl);
+          this.#run(absoluteUrl);
         }
       }
     });
@@ -41,7 +41,7 @@ export class RunPlugin extends Plugin {
     await this.#childProcess?.[Symbol.asyncDispose]();
   }
 
-  private run(entryPoint: string) {
+  #run(entryPoint: string) {
     this.logger.debug(
       `Running ${relativiseUrl(entryPoint, this.project.targetUrl)}`,
     );

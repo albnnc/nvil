@@ -28,7 +28,7 @@ export abstract class Plugin implements AsyncDisposable {
     return this.#disposalAbortController.signal;
   }
 
-  apply(this: Plugin, options: PluginApplyOptions): void | Promise<void> {
+  apply(options: PluginApplyOptions): void | Promise<void> {
     if (this.#project) {
       throw new Error("Already applied");
     }

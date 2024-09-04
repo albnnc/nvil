@@ -21,7 +21,7 @@ export class HtmlTemplatePlugin extends Plugin {
     this.#constants = options.constants;
   }
 
-  apply(this: HtmlTemplatePlugin, options: PluginApplyOptions) {
+  apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", () => this.#populate());
     this.project.stager.on("BUILD_END", () => this.#populate());
@@ -32,7 +32,7 @@ export class HtmlTemplatePlugin extends Plugin {
   }
 
   // TODO: Watch entry point changes.
-  async #populate(this: HtmlTemplatePlugin) {
+  async #populate() {
     try {
       this.logger.debug(`Populating ./index.html`);
       const scriptUrl = Array.from(this.project.bundle.entries())
