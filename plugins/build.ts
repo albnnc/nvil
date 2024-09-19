@@ -10,6 +10,7 @@ import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export type EsbuildPlugin = esbuild.Plugin;
 export type EsbuildOptions = esbuild.BuildOptions;
+export type EsbuildContext = esbuild.BuildContext;
 
 export interface BuildPluginOptions {
   entryPoint: string;
@@ -30,6 +31,7 @@ export class BuildPlugin extends Plugin {
   #scope?: string;
   #overrideEsbuildOptions?: (options: EsbuildOptions) => void;
   #encoder: TextEncoder = new TextEncoder();
+  #esbuildContext?: EsbuildContext;
   #moduleWatcher?: ModuleWatcher;
 
   get #absoluteEntryPoint(): string {
@@ -63,11 +65,39 @@ export class BuildPlugin extends Plugin {
   apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
+      await this.init();
       await this.build();
       if (this.project.dev) {
         this.watch();
       }
     });
+  }
+
+  async init() {
+    const denoConfigSummary = await this.#getDenoConfigSummary();
+    const esbuildConfig: EsbuildOptions = {
+      entryPoints: [this.#absoluteEntryPoint],
+      write: false,
+      bundle: true,
+      metafile: !!this.#bundleMetaUrl,
+      minify: !this.project.dev,
+      target: "esnext",
+      platform: "browser",
+      format: "esm",
+      define: { "import.meta.main": "false" },
+      logLevel: "silent",
+      jsx: "automatic",
+      jsxImportSource: get(
+        denoConfigSummary.value,
+        "compilerOptions.jsxImportSource",
+      ) || "react",
+      plugins: [
+        // EsbuildPluginFactory.noSideEffects(),
+        ...EsbuildPluginFactory.deno(denoConfigSummary.path),
+      ],
+    };
+    this.#overrideEsbuildOptions?.(esbuildConfig);
+    this.#esbuildContext = await esbuild.context(esbuildConfig);
   }
 
   async build() {
@@ -76,30 +106,11 @@ export class BuildPlugin extends Plugin {
     const buildStart = performance.now();
     await stager.run("BUILD_START", this.#buildStageHandlerOptions);
     try {
-      await using denoConfigSummary = await this.#getDenoConfigSummary();
-      const esbuildConfig: EsbuildOptions = {
-        entryPoints: [this.#absoluteEntryPoint],
-        write: false,
-        bundle: true,
-        metafile: !!this.#bundleMetaUrl,
-        minify: !dev,
-        target: "esnext",
-        platform: "browser",
-        format: "esm",
-        define: { "import.meta.main": "false" },
-        logLevel: "silent",
-        jsx: "automatic",
-        jsxImportSource: get(
-          denoConfigSummary.value,
-          "compilerOptions.jsxImportSource",
-        ) || "react",
-        plugins: [
-          EsbuildPluginFactory.noSideEffects(),
-          ...EsbuildPluginFactory.deno(denoConfigSummary.path),
-        ],
-      };
-      this.#overrideEsbuildOptions?.(esbuildConfig);
-      const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
+      const buildResult = await this.#esbuildContext?.rebuild();
+      if (!buildResult) {
+        return;
+      }
+      const { outputFiles, metafile } = buildResult;
       const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
       if (!mainOutputFile) {
         return;
@@ -117,7 +128,6 @@ export class BuildPlugin extends Plugin {
       this.logger.info(
         `Done in ${((buildEnd - buildStart) / 1000).toFixed(2)} s`,
       );
-
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
@@ -136,8 +146,8 @@ export class BuildPlugin extends Plugin {
     this.#moduleWatcher = new ModuleWatcher({
       specifier: this.#absoluteEntryPoint,
     });
-    const debounced = async.debounce(() => {
-      this.build();
+    const debounced = async.debounce(async () => {
+      await this.build();
     }, 200);
     for await (const event of this.#moduleWatcher || []) {
       if (
@@ -150,8 +160,10 @@ export class BuildPlugin extends Plugin {
     }
   }
 
-  // deno-lint-ignore require-await
   async [Symbol.asyncDispose]() {
+    await this.#esbuildContext
+      ?.cancel()
+      .catch(() => undefined);
     this.#moduleWatcher?.[Symbol.dispose]();
   }
 
@@ -192,9 +204,9 @@ export class BuildPlugin extends Plugin {
     );
     return {
       ...summary,
-      async [Symbol.asyncDispose]() {
-        await Deno.remove(summary.path).catch(() => undefined);
-      },
+      // async [Symbol.asyncDispose]() {
+      //   await Deno.remove(summary.path).catch(() => undefined);
+      // },
     };
   }
 }
