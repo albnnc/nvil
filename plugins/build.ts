@@ -84,7 +84,10 @@ export class BuildPlugin extends Plugin {
       target: "esnext",
       platform: "browser",
       format: "esm",
-      define: { "import.meta.main": "false" },
+      define: {
+        "import.meta.main": "false",
+        ...(this.project.dev ? {} : { "process.env.NODE_ENV": '"production"' }),
+      },
       logLevel: "silent",
       jsx: "automatic",
       jsxImportSource: get(
@@ -92,11 +95,12 @@ export class BuildPlugin extends Plugin {
         "compilerOptions.jsxImportSource",
       ) || "react",
       plugins: [
-        // EsbuildPluginFactory.noSideEffects(),
+        EsbuildPluginFactory.noSideEffects(),
         ...EsbuildPluginFactory.deno(denoConfigSummary.path),
       ],
     };
     this.#overrideEsbuildOptions?.(esbuildConfig);
+    this.logger.debug(`Initializing context for ${this.#relativeEntryPoint}`);
     this.#esbuildContext = await esbuild.context(esbuildConfig);
   }
 
@@ -162,7 +166,7 @@ export class BuildPlugin extends Plugin {
 
   async [Symbol.asyncDispose]() {
     await this.#esbuildContext
-      ?.cancel()
+      ?.dispose()
       .catch(() => undefined);
     this.#moduleWatcher?.[Symbol.dispose]();
   }
