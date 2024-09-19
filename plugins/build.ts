@@ -4,12 +4,14 @@ import * as jsonc from "@std/jsonc";
 import * as path from "@std/path";
 import * as esbuild from "esbuild";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import type { Project } from "../project.ts";
 import { get } from "../utils/get.ts";
 import { ModuleWatcher } from "../utils/module_watcher.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export type EsbuildPlugin = esbuild.Plugin;
 export type EsbuildOptions = esbuild.BuildOptions;
+export type EsbuildContext = esbuild.BuildContext;
 
 export interface BuildPluginOptions {
   entryPoint: string;
@@ -30,6 +32,8 @@ export class BuildPlugin extends Plugin {
   #scope?: string;
   #overrideEsbuildOptions?: (options: EsbuildOptions) => void;
   #encoder: TextEncoder = new TextEncoder();
+  #denoConfigSummary?: DenoConfigSummary;
+  #esbuildContext?: EsbuildContext;
   #moduleWatcher?: ModuleWatcher;
 
   get #absoluteEntryPoint(): string {
@@ -63,11 +67,44 @@ export class BuildPlugin extends Plugin {
   apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
+      await this.init();
       await this.build();
       if (this.project.dev) {
         this.watch();
       }
     });
+  }
+
+  async init() {
+    this.#denoConfigSummary = new DenoConfigSummary(this.project);
+    await this.#denoConfigSummary.collect();
+    const esbuildConfig: EsbuildOptions = {
+      entryPoints: [this.#absoluteEntryPoint],
+      write: false,
+      bundle: true,
+      metafile: !!this.#bundleMetaUrl,
+      minify: !this.project.dev,
+      target: "esnext",
+      platform: "browser",
+      format: "esm",
+      define: {
+        "import.meta.main": "false",
+        ...(this.project.dev ? {} : { "process.env.NODE_ENV": '"production"' }),
+      },
+      logLevel: "silent",
+      jsx: "automatic",
+      jsxImportSource: get(
+        this.#denoConfigSummary.value,
+        "compilerOptions.jsxImportSource",
+      ) || "react",
+      plugins: [
+        EsbuildPluginFactory.noSideEffects(),
+        ...EsbuildPluginFactory.deno(this.#denoConfigSummary.path),
+      ],
+    };
+    this.#overrideEsbuildOptions?.(esbuildConfig);
+    this.logger.debug(`Initializing context for ${this.#relativeEntryPoint}`);
+    this.#esbuildContext = await esbuild.context(esbuildConfig);
   }
 
   async build() {
@@ -76,30 +113,11 @@ export class BuildPlugin extends Plugin {
     const buildStart = performance.now();
     await stager.run("BUILD_START", this.#buildStageHandlerOptions);
     try {
-      await using denoConfigSummary = await this.#getDenoConfigSummary();
-      const esbuildConfig: EsbuildOptions = {
-        entryPoints: [this.#absoluteEntryPoint],
-        write: false,
-        bundle: true,
-        metafile: !!this.#bundleMetaUrl,
-        minify: !dev,
-        target: "esnext",
-        platform: "browser",
-        format: "esm",
-        define: { "import.meta.main": "false" },
-        logLevel: "silent",
-        jsx: "automatic",
-        jsxImportSource: get(
-          denoConfigSummary.value,
-          "compilerOptions.jsxImportSource",
-        ) || "react",
-        plugins: [
-          EsbuildPluginFactory.noSideEffects(),
-          ...EsbuildPluginFactory.deno(denoConfigSummary.path),
-        ],
-      };
-      this.#overrideEsbuildOptions?.(esbuildConfig);
-      const { outputFiles, metafile } = await esbuild.build(esbuildConfig);
+      const buildResult = await this.#esbuildContext?.rebuild();
+      if (!buildResult) {
+        return;
+      }
+      const { outputFiles, metafile } = buildResult;
       const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
       if (!mainOutputFile) {
         return;
@@ -117,7 +135,6 @@ export class BuildPlugin extends Plugin {
       this.logger.info(
         `Done in ${((buildEnd - buildStart) / 1000).toFixed(2)} s`,
       );
-
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
@@ -150,52 +167,14 @@ export class BuildPlugin extends Plugin {
     }
   }
 
-  // deno-lint-ignore require-await
   async [Symbol.asyncDispose]() {
+    await this.#denoConfigSummary
+      ?.[Symbol.asyncDispose]()
+      .catch(() => undefined);
+    await this.#esbuildContext
+      ?.dispose()
+      .catch(() => undefined);
     this.#moduleWatcher?.[Symbol.dispose]();
-  }
-
-  async #getDenoConfigSummary() {
-    const summary = {
-      url: "" as string,
-      path: "" as string,
-      value: undefined as unknown,
-    };
-    for (const relativeUrl of ["./deno.json", "./deno.jsonc"]) {
-      const candidateUrl = new URL(relativeUrl, this.project.sourceUrl)
-        .toString();
-      summary.value = await fetch(candidateUrl)
-        .then((v) => v.text())
-        .then((v) => jsonc.parse(v))
-        .catch(() => undefined);
-      if (summary.value) {
-        summary.url = candidateUrl;
-        break;
-      }
-    }
-    if (!summary.value) {
-      throw new Error("Failed to get Deno config");
-    }
-    if (summary.url.startsWith("file:")) {
-      summary.path = path.fromFileUrl(summary.url);
-      return {
-        ...summary,
-        async [Symbol.asyncDispose]() {
-          // Doing nothing.
-        },
-      };
-    }
-    summary.path = await Deno.makeTempFile();
-    await Deno.writeTextFile(
-      summary.path,
-      JSON.stringify(summary.value, null, 2),
-    );
-    return {
-      ...summary,
-      async [Symbol.asyncDispose]() {
-        await Deno.remove(summary.path).catch(() => undefined);
-      },
-    };
   }
 }
 
@@ -221,5 +200,50 @@ export class EsbuildPluginFactory {
 
   static deno(configPath: string): EsbuildPlugin[] {
     return esbuildDenoPlugins({ configPath });
+  }
+}
+
+class DenoConfigSummary {
+  url = "" as string;
+  path = "" as string;
+  value = undefined as unknown;
+  temporary = false;
+
+  constructor(public project: Project) {}
+
+  async collect() {
+    for (const relativeUrl of ["./deno.json", "./deno.jsonc"]) {
+      const candidateUrl = new URL(relativeUrl, this.project.sourceUrl)
+        .toString();
+      this.value = await fetch(candidateUrl)
+        .then((v) => v.text())
+        .then((v) => jsonc.parse(v))
+        .catch(() => undefined);
+      if (this.value) {
+        this.url = candidateUrl;
+        break;
+      }
+    }
+    if (!this.value) {
+      throw new Error("Failed to get Deno config");
+    }
+    if (this.url.startsWith("file:")) {
+      this.path = path.fromFileUrl(this.url);
+      return;
+    }
+    this.temporary = true;
+    this.path = await Deno.makeTempFile();
+    await Deno.writeTextFile(
+      this.path,
+      JSON.stringify(this.value, null, 2),
+    );
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.temporary) {
+      await Deno
+        .remove(this.path)
+        .catch(() => undefined);
+    }
   }
 }
