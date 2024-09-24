@@ -16,6 +16,7 @@ export type EsbuildContext = esbuild.BuildContext;
 export interface BuildPluginOptions {
   entryPoint: string;
   scope?: string;
+  bundleUrl?: string;
   bundleMetaUrl?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
 }
@@ -28,6 +29,7 @@ export interface BuildStageHandlerOptions {
 
 export class BuildPlugin extends Plugin {
   #entryPoint: string;
+  #bundleUrlOrUndefined?: string;
   #bundleMetaUrl?: string;
   #scope?: string;
   #overrideEsbuildOptions?: (options: EsbuildOptions) => void;
@@ -45,7 +47,12 @@ export class BuildPlugin extends Plugin {
   }
 
   get #bundleUrl(): string {
-    return this.#relativeEntryPoint.replace(/\.(j|t)sx?$/, ".js");
+    return this.#bundleUrlOrUndefined ||
+      "./" +
+        this.#absoluteEntryPoint
+          .split("/")
+          .pop()!
+          .replace(/\.(j|t)sx?$/, ".js");
   }
 
   get #buildStageHandlerOptions(): BuildStageHandlerOptions {
@@ -59,6 +66,7 @@ export class BuildPlugin extends Plugin {
   constructor(public options: BuildPluginOptions) {
     super("BUILD");
     this.#entryPoint = options.entryPoint;
+    this.#bundleUrlOrUndefined = options.bundleUrl;
     this.#bundleMetaUrl = options.bundleMetaUrl;
     this.#scope = options.scope;
     this.#overrideEsbuildOptions = options.overrideEsbuildOptions;
