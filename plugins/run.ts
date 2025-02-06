@@ -21,7 +21,7 @@ export class RunPlugin extends Plugin {
     this.#env = options.env;
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     if (!this.project.dev) {
       return;
@@ -37,7 +37,7 @@ export class RunPlugin extends Plugin {
     });
   }
 
-  async [Symbol.asyncDispose]() {
+  override async [Symbol.asyncDispose]() {
     await this.#childProcess?.[Symbol.asyncDispose]();
   }
 

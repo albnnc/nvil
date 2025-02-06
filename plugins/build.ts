@@ -72,7 +72,7 @@ export class BuildPlugin extends Plugin {
     this.#overrideEsbuildOptions = options.overrideEsbuildOptions;
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       await this.init();
@@ -146,7 +146,7 @@ export class BuildPlugin extends Plugin {
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
-        this.logger.error(e.message);
+        this.logger.error(e instanceof Error ? e.message : "Unknown error");
       } else {
         throw e;
       }
@@ -175,7 +175,7 @@ export class BuildPlugin extends Plugin {
     }
   }
 
-  async [Symbol.asyncDispose]() {
+  override async [Symbol.asyncDispose]() {
     await this.#denoConfigSummary
       ?.[Symbol.asyncDispose]()
       .catch(() => undefined);

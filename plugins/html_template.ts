@@ -21,7 +21,7 @@ export class HtmlTemplatePlugin extends Plugin {
     this.#constants = options.constants;
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", () => this.#populate());
     this.project.stager.on("BUILD_END", () => this.#populate());
@@ -51,7 +51,7 @@ export class HtmlTemplatePlugin extends Plugin {
       const data = textEncoder.encode(indexHtmlString);
       this.project.bundle.set("./index.html", { data });
     } catch (e) {
-      this.logger.error(e.message);
+      this.logger.error(e instanceof Error ? e.message : "Unknown error");
     }
   }
 }

@@ -43,7 +43,7 @@ export class CopyPlugin extends Plugin {
     this.#glob = options.glob;
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       await this.copy();
@@ -130,7 +130,7 @@ export class CopyPlugin extends Plugin {
   }
 
   // deno-lint-ignore require-await
-  async [Symbol.asyncDispose]() {
+  override async [Symbol.asyncDispose]() {
     this.#fsWatcher?.[Symbol.dispose]();
   }
 }

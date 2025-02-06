@@ -3,16 +3,17 @@ import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 
 export interface LiveReloadPluginOptions {
   scope?: string;
+  port?: number;
 }
 
 export class LiveReloadPlugin extends Plugin {
   #scope?: string;
-  #port = getAvailablePort({ preferredPort: 43000 });
+  #port?: number;
   #callbacks = new Map<string, () => void>();
 
   get #liveReloadScript() {
     return `
-      new EventSource("http://localhost:${this.#port}")
+      new EventSource("http://" + location.hostname + ":${this.#port}")
         .addEventListener("message", () => {
           location.reload();
         });
@@ -24,9 +25,10 @@ export class LiveReloadPlugin extends Plugin {
   constructor(options: LiveReloadPluginOptions = {}) {
     super("LIVE_RELOAD");
     this.#scope = options.scope;
+    this.#port = options.port ?? getAvailablePort({ preferredPort: 8001 });
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     if (!this.project.dev) {
       return;

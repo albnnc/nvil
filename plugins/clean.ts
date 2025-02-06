@@ -6,7 +6,7 @@ export class CleanPlugin extends Plugin {
     super("CLEAN");
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       const relativeTargetUrl = relativiseUrl(
