@@ -17,7 +17,7 @@ export class Bundle extends Map<string, BundleChunk> {
     super(entries);
   }
 
-  set(url: string, chunk: BundleChunk): this {
+  override set(url: string, chunk: BundleChunk): this {
     if (!url.startsWith(".")) {
       throw new Error("Only relative paths are allowed");
     }
