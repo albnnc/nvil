@@ -51,7 +51,7 @@ export class HtmlTemplatePlugin extends Plugin {
       const data = textEncoder.encode(indexHtmlString);
       this.project.bundle.set("./index.html", { data });
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e instanceof Error ? e.message : "Unknown error");
     }
   }
 }

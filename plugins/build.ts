@@ -146,7 +146,7 @@ export class BuildPlugin extends Plugin {
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
-        this.logger.error(e);
+        this.logger.error(e instanceof Error ? e.message : "Unknown error");
       } else {
         throw e;
       }
