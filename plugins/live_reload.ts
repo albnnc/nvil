@@ -26,7 +26,7 @@ export class LiveReloadPlugin extends Plugin {
     this.#scope = options.scope;
   }
 
-  apply(options: PluginApplyOptions) {
+  override apply(options: PluginApplyOptions) {
     super.apply(options);
     if (!this.project.dev) {
       return;
