@@ -71,7 +71,6 @@ export class LiveReloadPlugin extends Plugin {
   }
 
   #serve() {
-    console.log("!!! srv");
     Deno.serve({
       signal: this.disposalSignal,
       port: this.#port,
@@ -79,7 +78,6 @@ export class LiveReloadPlugin extends Plugin {
         this.logger.debug(`Listening events on ${hostname}:${port}`);
       },
     }, (req) => {
-      console.log("!!!");
       if (req.method === "OPTIONS") {
         return new Response(null, {
           headers: { "Access-Control-Allow-Origin": "*" },
