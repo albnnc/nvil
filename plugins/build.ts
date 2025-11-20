@@ -1,4 +1,4 @@
-import { denoPlugins as esbuildDenoPlugins } from "@luca/esbuild-deno-loader";
+import { denoPlugin as esbuildDenoPlugin } from "@deno/esbuild-plugin";
 import * as async from "@std/async";
 import * as jsonc from "@std/jsonc";
 import * as path from "@std/path";
@@ -106,10 +106,15 @@ export class BuildPlugin extends Plugin {
         "compilerOptions.jsxImportSource",
       ) || "react",
       plugins: [
-        EsbuildPluginFactory.noSideEffects(),
-        ...EsbuildPluginFactory.deno(this.#denoConfigSummary.path),
+        EsbuildPluginFactory.breakCache(
+          this.#denoConfigSummary.localUrl,
+        ),
+        esbuildDenoPlugin({
+          configPath: this.#denoConfigSummary.localPath,
+        }),
       ],
     };
+    console.log(esbuildConfig);
     this.#overrideEsbuildOptions?.(esbuildConfig);
     this.logger.debug(`Initializing context for ${this.#relativeEntryPoint}`);
     this.#esbuildContext = await esbuild.context(esbuildConfig);
@@ -206,14 +211,38 @@ export class EsbuildPluginFactory {
     };
   }
 
-  static deno(configPath: string): EsbuildPlugin[] {
-    return esbuildDenoPlugins({ configPath });
+  static breakCache(baseUrl: string): EsbuildPlugin {
+    const loaders = ["js", "jsx", "ts", "tsx"] as const;
+    return {
+      name: "break-cache",
+      setup: (build) => {
+        build.onLoad(
+          { filter: /.+/, namespace: "file" },
+          async (args) => {
+            const url = args.path.startsWith("/")
+              ? path.toFileUrl(args.path).toString()
+              : args.path;
+            if (!url.startsWith(baseUrl)) {
+              return;
+            }
+            const ext = path.extname(args.path);
+            const loader = loaders.find((v) => v === ext.slice(1));
+            if (!loader) {
+              return;
+            }
+            const contents = await fetch(args.path).then((v) => v.text());
+            return { contents, loader };
+          },
+        );
+      },
+    };
   }
 }
 
 class DenoConfigSummary {
   url = "" as string;
-  path = "" as string;
+  localUrl = "" as string;
+  localPath = "" as string;
   value = undefined as unknown;
   temporary = false;
 
@@ -236,13 +265,15 @@ class DenoConfigSummary {
       throw new Error("Failed to get Deno config");
     }
     if (this.url.startsWith("file:")) {
-      this.path = path.fromFileUrl(this.url);
+      this.localUrl = this.url;
+      this.localPath = path.fromFileUrl(this.url);
       return;
     }
     this.temporary = true;
-    this.path = await Deno.makeTempFile();
+    this.localPath = await Deno.makeTempFile();
+    this.localUrl = path.toFileUrl(this.localPath).toString();
     await Deno.writeTextFile(
-      this.path,
+      this.localPath,
       JSON.stringify(this.value, null, 2),
     );
   }
@@ -250,7 +281,7 @@ class DenoConfigSummary {
   async [Symbol.asyncDispose]() {
     if (this.temporary) {
       await Deno
-        .remove(this.path)
+        .remove(this.localPath)
         .catch(() => undefined);
     }
   }

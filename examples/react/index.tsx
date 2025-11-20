@@ -5,7 +5,9 @@ const App = () => {
   const [value, setValue] = useState(0);
   return (
     <div>
-      <button onClick={() => setValue(value + 1)}>Value is {value}</button>
+      <button type="button" onClick={() => setValue(value + 1)}>
+        Value is {value}
+      </button>
     </div>
   );
 };
