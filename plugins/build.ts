@@ -114,7 +114,6 @@ export class BuildPlugin extends Plugin {
         }),
       ],
     };
-    console.log(esbuildConfig);
     this.#overrideEsbuildOptions?.(esbuildConfig);
     this.logger.debug(`Initializing context for ${this.#relativeEntryPoint}`);
     this.#esbuildContext = await esbuild.context(esbuildConfig);
