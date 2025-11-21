@@ -3,6 +3,10 @@ import type { Plugin } from "./plugin.ts";
 import { Stager } from "./stager.ts";
 import { ScopeLogger } from "./utils/scope_logger.ts";
 
+export interface WriteStageContext {
+  changes: string[];
+}
+
 export interface ProjectOptions {
   plugins: Plugin[];
   sourceUrl: string;
@@ -45,6 +49,10 @@ export class Project implements AsyncDisposable {
       throw new Error("Already bootstrapped");
     }
     this.#bootstrapped = true;
+    this.stager.on(
+      "WRITE",
+      () => this.bundle.writeChanges(this.targetUrl),
+    );
     await this.#applyPlugins();
     await this.#runFirstCycle();
     if (this.dev) {
@@ -70,15 +78,12 @@ export class Project implements AsyncDisposable {
 
   async #runFirstCycle(): Promise<void> {
     if (this.dev) {
-      // console.clear();
-      console.log("clear");
+      console.clear();
     }
     const t1 = performance.now();
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
-    await this.stager.run("WRITE_START", changes);
-    await this.bundle.writeChanges(this.targetUrl);
-    await this.stager.run("WRITE_END", changes);
+    await this.stager.run("WRITE", { changes });
     const t2 = performance.now();
     this.#logTime(t1, t2);
   }
@@ -86,10 +91,8 @@ export class Project implements AsyncDisposable {
   async #watch(): Promise<void> {
     while (true) {
       await this.stager.waitStart();
-      console.log("resolved");
       if (this.dev) {
-        // console.clear();
-        console.log("clear");
+        console.clear();
       }
       const t1 = performance.now();
       await this.stager.waitEnd();
@@ -99,14 +102,12 @@ export class Project implements AsyncDisposable {
       if (!changes.length) {
         continue;
       }
-      await this.stager.run("WRITE_START", changes);
-      await this.bundle.writeChanges(this.targetUrl);
-      await this.stager.run("WRITE_END", changes);
+      await this.stager.run("WRITE", { changes });
     }
   }
 
   #logTime(t1: number, t2: number) {
     const d = ((t2 - t1) / 1_000).toFixed(2);
-    this.logger.info(`Done in ${d} seconds`);
+    this.logger.info(`Ready in ${d} seconds`);
   }
 }

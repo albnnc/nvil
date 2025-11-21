@@ -1,5 +1,6 @@
 import { getAvailablePort } from "@std/net";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import type { WriteStageContext } from "../project.ts";
 
 export interface LiveReloadPluginOptions {
   scope?: string;
@@ -10,6 +11,8 @@ export class LiveReloadPlugin extends Plugin {
   #scope?: string;
   #port?: number;
   #callbacks = new Map<string, () => void>();
+
+  #scriptUrl = "./live-reload.js";
 
   get #liveReloadScript() {
     return `
@@ -34,20 +37,17 @@ export class LiveReloadPlugin extends Plugin {
       return;
     }
     this.#serve();
-    const scriptUrl = "./live-reload.js";
-    this.project.stager.on("BOOTSTRAP", async () => {
-      this.logger.debug(`Populating ${scriptUrl}`);
-      const encoder = new TextEncoder();
-      const data = encoder.encode(this.#liveReloadScript);
-      this.project.bundle.set(scriptUrl, {
-        data,
-        scope: [this.#scope, "LIVE_RELOAD"]
-          .filter((v) => v).join("_"),
-      });
-      await this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE");
-    });
-    this.project.stager.on("WRITE_END", (changes) => {
-      if (!this.project.bundle.has(scriptUrl)) {
+
+    this.project.stager.on(
+      "BOOTSTRAP",
+      () => this.project.stager.run("LIVE_RELOAD_SCRIPT_POPULATE"),
+    );
+    this.project.stager.on(
+      "LIVE_RELOAD_SCRIPT_POPULATE",
+      () => this.populate(),
+    );
+    this.project.stager.after("WRITE", ({ changes }: WriteStageContext) => {
+      if (!this.project.bundle.has(this.#scriptUrl)) {
         return;
       }
       for (const change of changes as string[]) {
@@ -62,6 +62,17 @@ export class LiveReloadPlugin extends Plugin {
         return;
       }
       this.reload();
+    });
+  }
+
+  populate() {
+    this.logger.debug(`Populating ${this.#scriptUrl}`);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(this.#liveReloadScript);
+    this.project.bundle.set(this.#scriptUrl, {
+      data,
+      scope: [this.#scope, "LIVE_RELOAD"]
+        .filter((v) => v).join("_"),
     });
   }
 
