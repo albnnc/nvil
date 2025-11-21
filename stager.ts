@@ -1,4 +1,7 @@
-export type StageHandler = (context?: unknown) => void | Promise<void>;
+import { delay } from "@std/async/delay";
+
+// deno-lint-ignore no-explicit-any
+export type StageHandler = (context?: any) => void | Promise<void>;
 
 export class Stager {
   #stages: Record<string, StageHandler[]> = {};
@@ -18,20 +21,37 @@ export class Stager {
     };
   }
 
+  before(stageName: string, fn: StageHandler): () => void {
+    return this.on(`${stageName}__BEFORE`, fn);
+  }
+
+  after(stageName: string, fn: StageHandler): () => void {
+    return this.on(`${stageName}__AFTER`, fn);
+  }
+
   async run(stageName: string, context?: unknown): Promise<void> {
     if (!this.#runCount) {
       this.#runStartPwr.resolve();
       this.#runStartPwr = Promise.withResolvers();
     }
     ++this.#runCount;
+    await delay(0);
+    for (const fn of this.#stages[`${stageName}__BEFORE`] || []) {
+      await fn(context);
+    }
     for (const fn of this.#stages[stageName] || []) {
       await fn(context);
     }
-    --this.#runCount;
-    if (!this.#runCount) {
-      this.#runEndPwr.resolve();
-      this.#runEndPwr = Promise.withResolvers();
+    for (const fn of this.#stages[`${stageName}__AFTER`] || []) {
+      await fn(context);
     }
+    --this.#runCount;
+    delay(100).then(() => {
+      if (!this.#runCount) {
+        this.#runEndPwr.resolve();
+        this.#runEndPwr = Promise.withResolvers();
+      }
+    });
   }
 
   async waitStart(): Promise<void> {

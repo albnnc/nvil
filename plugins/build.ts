@@ -13,18 +13,18 @@ export type EsbuildPlugin = esbuild.Plugin;
 export type EsbuildOptions = esbuild.BuildOptions;
 export type EsbuildContext = esbuild.BuildContext;
 
+export interface BuildStageContext {
+  entryPoint: string;
+  bundleUrl: string;
+  bundleMetaUrl?: string;
+}
+
 export interface BuildPluginOptions {
   entryPoint: string;
   scope?: string;
   bundleUrl?: string;
   bundleMetaUrl?: string;
   overrideEsbuildOptions?: (options: EsbuildOptions) => void;
-}
-
-export interface BuildStageHandlerOptions {
-  entryPoint: string;
-  bundleUrl: string;
-  bundleMetaUrl?: string;
 }
 
 export class BuildPlugin extends Plugin {
@@ -57,7 +57,7 @@ export class BuildPlugin extends Plugin {
           .replace(/\.(j|t)sx?$/, ".js");
   }
 
-  get #buildStageHandlerOptions(): BuildStageHandlerOptions {
+  get #context(): BuildStageContext {
     return {
       entryPoint: this.#absoluteEntryPoint,
       bundleUrl: this.#bundleUrl,
@@ -78,11 +78,49 @@ export class BuildPlugin extends Plugin {
     super.apply(options);
     this.project.stager.on("BOOTSTRAP", async () => {
       await this.init();
-      await this.build();
+      await this.trigger();
       if (this.project.dev) {
         this.watch();
       }
     });
+    this.project.stager.on(
+      "BUILD",
+      (context: BuildStageContext) => this.build(context),
+    );
+  }
+
+  async build(context: BuildStageContext = this.#context) {
+    if (context.entryPoint !== this.#context.entryPoint) {
+      return;
+    }
+    try {
+      this.logger.info(`Building ${this.#relativeEntryPoint}`);
+      const buildResult = await this.#esbuildContext?.rebuild();
+      if (!buildResult) {
+        return;
+      }
+      const { outputFiles, metafile } = buildResult;
+      const mainOutputFile = outputFiles
+        ?.find((v) => v.path === "<stdout>");
+      if (!mainOutputFile) {
+        return;
+      }
+      this.project.bundle.set(this.#bundleUrl, {
+        data: mainOutputFile.contents,
+        scope: this.#scope,
+      });
+      if (this.#bundleMetaUrl) {
+        this.project.bundle.set(this.#bundleMetaUrl, {
+          data: this.#encoder.encode(JSON.stringify(metafile)),
+        });
+      }
+    } catch (e) {
+      if (this.project.dev) {
+        this.logger.error(e instanceof Error ? e.message : "Unknown error");
+      } else {
+        throw e;
+      }
+    }
   }
 
   async init() {
@@ -121,48 +159,18 @@ export class BuildPlugin extends Plugin {
     this.#esbuildContext = await esbuild.context(esbuildConfig);
   }
 
-  async build() {
+  async trigger() {
     if (this.#active) {
       this.#postponed = true;
       return;
     }
     this.#active = true;
-    const { bundle, stager, dev } = this.project;
-    try {
-      console.log("bf");
-      await stager.run("BUILD_START", this.#buildStageHandlerOptions);
-      this.logger.info(`Building ${this.#relativeEntryPoint}`);
-      const buildResult = await this.#esbuildContext?.rebuild();
-      if (!buildResult) {
-        return;
-      }
-      const { outputFiles, metafile } = buildResult;
-      const mainOutputFile = outputFiles?.find((v) => v.path === "<stdout>");
-      if (!mainOutputFile) {
-        return;
-      }
-      bundle.set(this.#bundleUrl, {
-        data: mainOutputFile.contents,
-        scope: this.#scope,
-      });
-      if (this.#bundleMetaUrl) {
-        bundle.set(this.#bundleMetaUrl, {
-          data: this.#encoder.encode(JSON.stringify(metafile)),
-        });
-      }
-      await stager.run("BUILD_END", this.#buildStageHandlerOptions);
-    } catch (e) {
-      if (dev) {
-        this.logger.error(e instanceof Error ? e.message : "Unknown error");
-      } else {
-        throw e;
-      }
-    }
+    await this.project.stager.run("BUILD", this.#context);
     this.#active = false;
     if (this.#postponed) {
       this.#postponed = false;
       this.logger.debug(`Triggering postponed build`);
-      this.build();
+      this.trigger();
     }
   }
 
@@ -174,16 +182,14 @@ export class BuildPlugin extends Plugin {
     this.#moduleWatcher = new ModuleWatcher({
       specifier: this.#absoluteEntryPoint,
     });
-    const debounced = async.debounce(() => {
-      this.build();
-    }, 200);
+    const trigger = async.debounce(() => this.trigger(), 200);
     for await (const event of this.#moduleWatcher || []) {
       if (
         event.kind === "modify" ||
         event.kind === "create" ||
         event.kind === "remove"
       ) {
-        debounced();
+        trigger();
       }
     }
   }
