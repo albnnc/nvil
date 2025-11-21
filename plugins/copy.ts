@@ -27,6 +27,8 @@ export class CopyPlugin extends Plugin {
   #bundleUrl?: string;
   #glob?: boolean;
   #fsWatcher?: Deno.FsWatcher;
+  #active?: boolean;
+  #postponed?: boolean;
 
   get #absoluteUrl(): string {
     return new URL(this.#entryPoint, this.project.sourceUrl).toString();
@@ -79,6 +81,11 @@ export class CopyPlugin extends Plugin {
   }
 
   async copy() {
+    if (this.#active) {
+      this.#postponed = true;
+      return;
+    }
+    this.#active = true;
     const { stager } = this.project;
     await stager.run("COPY_START");
     this.logger.debug(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
@@ -100,6 +107,12 @@ export class CopyPlugin extends Plugin {
       await this.copyFile(this.#absoluteUrl);
     }
     await stager.run("COPY_END");
+    this.#active = false;
+    if (this.#postponed) {
+      this.#postponed = false;
+      this.logger.debug(`Triggering postponed copy`);
+      this.copy();
+    }
   }
 
   async watch() {

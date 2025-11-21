@@ -37,6 +37,8 @@ export class BuildPlugin extends Plugin {
   #denoConfigSummary?: DenoConfigSummary;
   #esbuildContext?: EsbuildContext;
   #moduleWatcher?: ModuleWatcher;
+  #active?: boolean;
+  #postponed?: boolean;
 
   get #absoluteEntryPoint(): string {
     return new URL(this.#entryPoint, this.project.sourceUrl).toString();
@@ -120,6 +122,11 @@ export class BuildPlugin extends Plugin {
   }
 
   async build() {
+    if (this.#active) {
+      this.#postponed = true;
+      return;
+    }
+    this.#active = true;
     const { bundle, stager, dev } = this.project;
     this.logger.info(`Building ${this.#relativeEntryPoint}`);
     const buildStart = performance.now();
@@ -154,6 +161,12 @@ export class BuildPlugin extends Plugin {
       } else {
         throw e;
       }
+    }
+    this.#active = false;
+    if (this.#postponed) {
+      this.#postponed = false;
+      this.logger.debug(`Triggering postponed build`);
+      this.build();
     }
   }
 
