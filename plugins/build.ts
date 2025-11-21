@@ -128,10 +128,10 @@ export class BuildPlugin extends Plugin {
     }
     this.#active = true;
     const { bundle, stager, dev } = this.project;
-    this.logger.info(`Building ${this.#relativeEntryPoint}`);
-    const buildStart = performance.now();
-    await stager.run("BUILD_START", this.#buildStageHandlerOptions);
     try {
+      console.log("bf");
+      await stager.run("BUILD_START", this.#buildStageHandlerOptions);
+      this.logger.info(`Building ${this.#relativeEntryPoint}`);
       const buildResult = await this.#esbuildContext?.rebuild();
       if (!buildResult) {
         return;
@@ -150,10 +150,6 @@ export class BuildPlugin extends Plugin {
           data: this.#encoder.encode(JSON.stringify(metafile)),
         });
       }
-      const buildEnd = performance.now();
-      this.logger.info(
-        `Done in ${((buildEnd - buildStart) / 1000).toFixed(2)} s`,
-      );
       await stager.run("BUILD_END", this.#buildStageHandlerOptions);
     } catch (e) {
       if (dev) {
