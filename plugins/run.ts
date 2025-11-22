@@ -1,5 +1,6 @@
 import * as path from "@std/path";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
+import type { WriteStageContext } from "../project.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
 export interface RunPluginOptions {
@@ -26,7 +27,7 @@ export class RunPlugin extends Plugin {
     if (!this.project.dev) {
       return;
     }
-    this.project.stager.on("WRITE_END", (changes) => {
+    this.project.stager.after("WRITE", ({ changes }: WriteStageContext) => {
       for (const v of changes as string[]) {
         const entry = this.project.bundle.get(v);
         if (entry && entry.scope === this.#scope) {

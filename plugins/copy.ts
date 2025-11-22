@@ -4,6 +4,10 @@ import * as path from "@std/path";
 import { Plugin, type PluginApplyOptions } from "../plugin.ts";
 import { relativiseUrl } from "../utils/relativise_url.ts";
 
+export interface CopyStageContext {
+  entryPoint: string;
+}
+
 export interface CopyPluginOptions {
   /**
    * A file URL or glob URL.
@@ -27,6 +31,12 @@ export class CopyPlugin extends Plugin {
   #bundleUrl?: string;
   #glob?: boolean;
   #fsWatcher?: Deno.FsWatcher;
+  #active?: boolean;
+  #postponed?: boolean;
+
+  get #absoluteEntryPoint(): string {
+    return new URL(this.#entryPoint, this.project.sourceUrl).toString();
+  }
 
   get #absoluteUrl(): string {
     return new URL(this.#entryPoint, this.project.sourceUrl).toString();
@@ -34,6 +44,12 @@ export class CopyPlugin extends Plugin {
 
   get #relativeUrl(): string {
     return relativiseUrl(this.#entryPoint, this.project.sourceUrl);
+  }
+
+  get #context(): CopyStageContext {
+    return {
+      entryPoint: this.#absoluteEntryPoint,
+    };
   }
 
   constructor(options: CopyPluginOptions) {
@@ -51,6 +67,42 @@ export class CopyPlugin extends Plugin {
         this.watch();
       }
     });
+    this.project.stager.on(
+      "COPY",
+      (context: CopyStageContext) => this.copy(context),
+    );
+  }
+
+  async copy(context: CopyStageContext = this.#context) {
+    if (context.entryPoint !== this.#context.entryPoint) {
+      return;
+    }
+    try {
+      this.logger.debug(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
+      if (this.#glob) {
+        if (!this.#absoluteUrl.startsWith("file:")) {
+          throw new Error("Glob to copy must be a file: URL");
+        }
+        const fileUrls: string[] = [];
+        const fsWalker = fs.expandGlob(
+          path.fromFileUrl(decodeURIComponent(this.#absoluteUrl)),
+        );
+        for await (const v of fsWalker) {
+          if (v.isFile) {
+            fileUrls.push(path.toFileUrl(v.path).toString());
+          }
+        }
+        await Promise.all(fileUrls.map((v) => this.copyFile(v)));
+      } else {
+        await this.copyFile(this.#absoluteUrl);
+      }
+    } catch (e) {
+      if (this.project.dev) {
+        this.logger.error(e instanceof Error ? e.message : "Unknown error");
+      } else {
+        throw e;
+      }
+    }
   }
 
   async copyFile(fileUrl: string) {
@@ -78,28 +130,19 @@ export class CopyPlugin extends Plugin {
     }
   }
 
-  async copy() {
-    const { stager } = this.project;
-    await stager.run("COPY_START");
-    this.logger.debug(`Copying ${decodeURIComponent(this.#relativeUrl)}`);
-    if (this.#glob) {
-      if (!this.#absoluteUrl.startsWith("file:")) {
-        throw new Error("Glob to copy must be a file: URL");
-      }
-      const fileUrls: string[] = [];
-      const fsWalker = fs.expandGlob(
-        path.fromFileUrl(decodeURIComponent(this.#absoluteUrl)),
-      );
-      for await (const v of fsWalker) {
-        if (v.isFile) {
-          fileUrls.push(path.toFileUrl(v.path).toString());
-        }
-      }
-      await Promise.all(fileUrls.map((v) => this.copyFile(v)));
-    } else {
-      await this.copyFile(this.#absoluteUrl);
+  async trigger() {
+    if (this.#active) {
+      this.#postponed = true;
+      return;
     }
-    await stager.run("COPY_END");
+    this.#active = true;
+    await this.project.stager.run("COPY", this.#context);
+    this.#active = false;
+    if (this.#postponed) {
+      this.#postponed = false;
+      this.logger.debug(`Triggering postponed copy`);
+      this.trigger();
+    }
   }
 
   async watch() {
@@ -116,7 +159,7 @@ export class CopyPlugin extends Plugin {
       path.fromFileUrl(this.#absoluteUrl).replace(/\*.*$/, ""),
     );
     this.#fsWatcher = Deno.watchFs(dirToWatch);
-    const debounced = async.debounce(() => this.copy(), 200);
+    const trigger = async.debounce(() => this.trigger(), 200);
     for await (const event of this.#fsWatcher) {
       if (
         event.paths.some((v) => targetRegExp.test(v)) &&
@@ -124,7 +167,7 @@ export class CopyPlugin extends Plugin {
           event.kind === "create" ||
           event.kind === "remove")
       ) {
-        debounced();
+        trigger();
       }
     }
   }

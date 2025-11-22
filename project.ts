@@ -1,7 +1,14 @@
+import { Table } from "@cliffy/table";
+import * as datetime from "@std/datetime";
 import { Bundle } from "./bundle.ts";
+import denoJson from "./deno.json" with { type: "json" };
 import type { Plugin } from "./plugin.ts";
 import { Stager } from "./stager.ts";
 import { ScopeLogger } from "./utils/scope_logger.ts";
+
+export interface WriteStageContext {
+  changes: string[];
+}
 
 export interface ProjectOptions {
   plugins: Plugin[];
@@ -23,6 +30,7 @@ export class Project implements AsyncDisposable {
 
   #donePwr: PromiseWithResolvers<void> = Promise.withResolvers();
   #bootstrapped = false;
+  #bootstrapDate?: Date;
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
@@ -45,6 +53,11 @@ export class Project implements AsyncDisposable {
       throw new Error("Already bootstrapped");
     }
     this.#bootstrapped = true;
+    this.#bootstrapDate = new Date();
+    this.stager.on(
+      "WRITE",
+      () => this.bundle.writeChanges(this.targetUrl),
+    );
     await this.#applyPlugins();
     await this.#runFirstCycle();
     if (this.dev) {
@@ -69,23 +82,56 @@ export class Project implements AsyncDisposable {
   }
 
   async #runFirstCycle(): Promise<void> {
+    if (this.dev) {
+      console.clear();
+      this.#logBanner();
+    }
+    const t1 = performance.now();
     await this.stager.run("BOOTSTRAP");
     const changes = this.bundle.getChanges();
-    await this.stager.run("WRITE_START", changes);
-    await this.bundle.writeChanges(this.targetUrl);
-    await this.stager.run("WRITE_END", changes);
+    await this.stager.run("WRITE", { changes });
+    const t2 = performance.now();
+    this.#logTime(t1, t2);
   }
 
   async #watch(): Promise<void> {
     while (true) {
-      await this.stager.waitCycle();
+      await this.stager.waitRunStart();
+      if (this.dev) {
+        console.clear();
+        this.#logBanner();
+      }
+      const t1 = performance.now();
+      await this.stager.waitRunEnd();
+      const t2 = performance.now();
+      this.#logTime(t1, t2);
       const changes = this.bundle.getChanges();
       if (!changes.length) {
         continue;
       }
-      await this.stager.run("WRITE_START", changes);
-      await this.bundle.writeChanges(this.targetUrl);
-      await this.stager.run("WRITE_END", changes);
+      await this.stager.run("WRITE", { changes });
     }
+  }
+
+  #logTime(t1: number, t2: number) {
+    const d = ((t2 - t1) / 1_000).toFixed(2);
+    this.logger.info(`Ready in ${d} seconds`);
+  }
+
+  #logBanner() {
+    const startedAt = datetime.format(this.#bootstrapDate!, "HH:mm:ss");
+    const content = new Table()
+      .body([
+        [`Version`, denoJson.version],
+        ["Plugin Count", this.plugins.length],
+        ["Started At", startedAt],
+      ])
+      .padding(4)
+      .toString();
+    new Table()
+      .header(["nvil"])
+      .body([[content]])
+      .border(true)
+      .render();
   }
 }

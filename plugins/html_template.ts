@@ -23,16 +23,22 @@ export class HtmlTemplatePlugin extends Plugin {
 
   override apply(options: PluginApplyOptions) {
     super.apply(options);
-    this.project.stager.on("BOOTSTRAP", () => this.#populate());
-    this.project.stager.on("BUILD_END", () => this.#populate());
     this.project.stager.on(
+      "BOOTSTRAP",
+      () => this.populate(),
+    );
+    this.project.stager.after(
+      "BUILD",
+      () => this.populate(),
+    );
+    this.project.stager.after(
       "LIVE_RELOAD_SCRIPT_POPULATE",
-      () => this.#populate(),
+      () => this.populate(),
     );
   }
 
   // TODO: Watch entry point changes.
-  async #populate() {
+  async populate() {
     try {
       this.logger.debug(`Populating ./index.html`);
       const scriptUrl = Array.from(this.project.bundle.entries())
@@ -51,7 +57,11 @@ export class HtmlTemplatePlugin extends Plugin {
       const data = textEncoder.encode(indexHtmlString);
       this.project.bundle.set("./index.html", { data });
     } catch (e) {
-      this.logger.error(e instanceof Error ? e.message : "Unknown error");
+      if (this.project.dev) {
+        this.logger.error(e instanceof Error ? e.message : "Unknown error");
+      } else {
+        throw e;
+      }
     }
   }
 }
