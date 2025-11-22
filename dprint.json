@@ -18,5 +18,5 @@
     "https://plugins.dprint.dev/markdown-0.15.3.wasm",
     "https://plugins.dprint.dev/dockerfile-0.3.0.wasm",
     "https://plugins.dprint.dev/g-plane/malva-v0.11.1.wasm"
-  ],
+  ]
 }
