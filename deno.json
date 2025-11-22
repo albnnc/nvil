@@ -6,8 +6,16 @@
     "fmt:check": "dprint check",
     "lint:check": "deno lint"
   },
-  "exclude": ["./**/.git", "./**/.target"],
+  "workspace": {
+    "members": [
+      "./examples/custom_server",
+      "./examples/emotion",
+      "./examples/react",
+      "./examples/static_files"
+    ]
+  },
   "lock": false,
+  "exclude": ["./**/.git", "./**/.target"],
   "imports": {
     "@cliffy/table": "jsr:@cliffy/table@^1.0.0-rc.8",
     "@deno/esbuild-plugin": "jsr:@deno/esbuild-plugin@^1.2.0",

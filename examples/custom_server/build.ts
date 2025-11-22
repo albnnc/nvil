@@ -14,7 +14,7 @@ await using project = new Project({
     new BuildPlugin({ entryPoint: "./index.tsx" }),
     new HtmlTemplatePlugin({ entryPoint: "./index.html" }),
     new LiveReloadPlugin(),
-    new BuildPlugin({ entryPoint: "./server.ts", scope: "SERVER" }),
+    new BuildPlugin({ scope: "SERVER", entryPoint: "./server.ts" }),
     new RunPlugin({ scope: "SERVER", args: ["-A"] }),
   ],
   sourceUrl: import.meta.resolve("./"),

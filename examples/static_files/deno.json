@@ -1,0 +1,19 @@
+{
+  "imports": {
+    "@types/react": "npm:@types/react@^19.2",
+    "react": "npm:react@^19.2.0",
+    "react-dom": "npm:react-dom@^19.2.0"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "jsxImportSourceTypes": "@types/react",
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns"
+    ]
+  }
+}
