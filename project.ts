@@ -1,4 +1,7 @@
+import { Table } from "@cliffy/table";
+import * as datetime from "@std/datetime";
 import { Bundle } from "./bundle.ts";
+import denoJson from "./deno.json" with { type: "json" };
 import type { Plugin } from "./plugin.ts";
 import { Stager } from "./stager.ts";
 import { ScopeLogger } from "./utils/scope_logger.ts";
@@ -27,6 +30,7 @@ export class Project implements AsyncDisposable {
 
   #donePwr: PromiseWithResolvers<void> = Promise.withResolvers();
   #bootstrapped = false;
+  #bootstrapDate?: Date;
 
   constructor(options: ProjectOptions) {
     this.plugins = options.plugins;
@@ -49,6 +53,7 @@ export class Project implements AsyncDisposable {
       throw new Error("Already bootstrapped");
     }
     this.#bootstrapped = true;
+    this.#bootstrapDate = new Date();
     this.stager.on(
       "WRITE",
       () => this.bundle.writeChanges(this.targetUrl),
@@ -79,6 +84,7 @@ export class Project implements AsyncDisposable {
   async #runFirstCycle(): Promise<void> {
     if (this.dev) {
       console.clear();
+      this.#logBanner();
     }
     const t1 = performance.now();
     await this.stager.run("BOOTSTRAP");
@@ -93,6 +99,7 @@ export class Project implements AsyncDisposable {
       await this.stager.waitStart();
       if (this.dev) {
         console.clear();
+        this.#logBanner();
       }
       const t1 = performance.now();
       await this.stager.waitEnd();
@@ -109,5 +116,22 @@ export class Project implements AsyncDisposable {
   #logTime(t1: number, t2: number) {
     const d = ((t2 - t1) / 1_000).toFixed(2);
     this.logger.info(`Ready in ${d} seconds`);
+  }
+
+  #logBanner() {
+    const startedAt = datetime.format(this.#bootstrapDate!, "HH:mm:ss");
+    const content = new Table()
+      .body([
+        [`Version`, denoJson.version],
+        ["Plugin Count", this.plugins.length],
+        ["Started At", startedAt],
+      ])
+      .padding(4)
+      .toString();
+    new Table()
+      .header(["nvil"])
+      .body([[content]])
+      .border(true)
+      .render();
   }
 }
