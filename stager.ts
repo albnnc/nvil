@@ -54,11 +54,11 @@ export class Stager {
     });
   }
 
-  async waitStart(): Promise<void> {
+  async waitRunStart(): Promise<void> {
     return await this.#runStartPwr.promise;
   }
 
-  async waitEnd(): Promise<void> {
+  async waitRunEnd(): Promise<void> {
     return await this.#runEndPwr.promise;
   }
 }

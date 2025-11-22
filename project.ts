@@ -96,13 +96,13 @@ export class Project implements AsyncDisposable {
 
   async #watch(): Promise<void> {
     while (true) {
-      await this.stager.waitStart();
+      await this.stager.waitRunStart();
       if (this.dev) {
         console.clear();
         this.#logBanner();
       }
       const t1 = performance.now();
-      await this.stager.waitEnd();
+      await this.stager.waitRunEnd();
       const t2 = performance.now();
       this.#logTime(t1, t2);
       const changes = this.bundle.getChanges();
